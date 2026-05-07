@@ -1,14 +1,22 @@
 import { NextResponse } from 'next/server'
 
 export async function middleware(req) {
-  const token = req.cookies.get('sb-vutwcjjzufystleuefnz-auth-token')
-  const isAuthPage = req.nextUrl.pathname.startsWith('/auth')
+  const { pathname } = req.nextUrl
+  const isAuthPage = pathname.startsWith('/auth')
 
-  if (!token && !isAuthPage) {
+  // Buscar cualquier cookie de sesion de Supabase
+  const cookies = req.cookies.getAll()
+  const hasSession = cookies.some(c => 
+    c.name.includes('supabase') || 
+    c.name.includes('sb-') || 
+    c.name.includes('auth-token')
+  )
+
+  if (!hasSession && !isAuthPage) {
     return NextResponse.redirect(new URL('/auth/login', req.url))
   }
 
-  if (token && isAuthPage) {
+  if (hasSession && isAuthPage) {
     return NextResponse.redirect(new URL('/', req.url))
   }
 
@@ -16,5 +24,5 @@ export async function middleware(req) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)']
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|_next/data).*)']
 }
