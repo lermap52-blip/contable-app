@@ -7,7 +7,8 @@ import "./globals.css"
 import {
   LayoutDashboard, TrendingUp, TrendingDown, FileText,
   Users, Calculator, FolderOpen, Settings, LogOut,
-  ChevronLeft, ChevronRight, ChevronDown, AlertTriangle
+  ChevronLeft, ChevronRight, ChevronDown, AlertTriangle,
+  Building2
 } from 'lucide-react'
 
 const menuItems = [
@@ -62,10 +63,11 @@ function SelectorCliente({ collapsed }) {
   if (collapsed) {
     return (
       <div style={{padding:'8px',borderBottom:'0.5px solid #f3f4f6',display:'flex',justifyContent:'center'}}>
-        <div style={{width:34,height:34,borderRadius:8,background:clienteActivo?'#185FA5':'#f3f4f6',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:clienteActivo?'white':'#9ca3af',cursor:'pointer'}}
-          title={clienteActivo?.nombre || 'Seleccionar cliente'}
-          onClick={() => setOpen(!open)}>
-          {clienteActivo ? clienteActivo.nombre.charAt(0) : '?'}
+        <div
+          title={clienteActivo?.nombre || 'Mi Despacho'}
+          onClick={() => setOpen(!open)}
+          style={{width:34,height:34,borderRadius:8,background:clienteActivo?'#185FA5':'#f0fdf4',border:`1px solid ${clienteActivo?'#bfdbfe':'#bbf7d0'}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:clienteActivo?'white':'#16a34a',cursor:'pointer'}}>
+          {clienteActivo ? clienteActivo.nombre.charAt(0) : '🏢'}
         </div>
       </div>
     )
@@ -73,9 +75,9 @@ function SelectorCliente({ collapsed }) {
 
   return (
     <div ref={ref} style={{padding:'8px 10px',borderBottom:'0.5px solid #f3f4f6',position:'relative'}}>
-      <div style={{fontSize:9,fontWeight:600,color:'#c4c4c4',textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:5}}>Cliente activo</div>
+      <div style={{fontSize:9,fontWeight:600,color:'#c4c4c4',textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:5}}>Contexto activo</div>
       <button onClick={() => setOpen(!open)}
-        style={{width:'100%',padding:'8px 10px',background:clienteActivo?'#EFF6FF':'#f9fafb',border:`0.5px solid ${clienteActivo?'#bfdbfe':'#e5e7eb'}`,borderRadius:8,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
+        style={{width:'100%',padding:'8px 10px',background:clienteActivo?'#eff6ff':'#f0fdf4',border:`0.5px solid ${clienteActivo?'#bfdbfe':'#bbf7d0'}`,borderRadius:8,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
         <div style={{display:'flex',alignItems:'center',gap:8,overflow:'hidden',flex:1}}>
           {clienteActivo ? (
             <>
@@ -83,12 +85,20 @@ function SelectorCliente({ collapsed }) {
                 {clienteActivo.nombre.charAt(0)}
               </div>
               <div style={{overflow:'hidden'}}>
-                <div style={{fontSize:12,fontWeight:500,color:'#0f172a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{clienteActivo.nombre.split(' ').slice(0,2).join(' ')}</div>
-                <div style={{fontSize:10,color:'#94a3b8',fontFamily:'monospace'}}>{clienteActivo.rfc}</div>
+                <div style={{fontSize:12,fontWeight:500,color:'#1e3a8a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{clienteActivo.nombre.split(' ').slice(0,2).join(' ')}</div>
+                <div style={{fontSize:10,color:'#93c5fd',fontFamily:'monospace'}}>{clienteActivo.rfc}</div>
               </div>
             </>
           ) : (
-            <span style={{fontSize:12,color:'#94a3b8'}}>Seleccionar cliente...</span>
+            <div style={{display:'flex',alignItems:'center',gap:8}}>
+              <div style={{width:24,height:24,minWidth:24,borderRadius:6,background:'#16a34a',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <Building2 size={13} color="white" />
+              </div>
+              <div>
+                <div style={{fontSize:12,fontWeight:600,color:'#15803d'}}>Mi Despacho</div>
+                <div style={{fontSize:10,color:'#4ade80'}}>Vista personal</div>
+              </div>
+            </div>
           )}
         </div>
         <ChevronDown size={14} color="#94a3b8" style={{flexShrink:0,transform:open?'rotate(180deg)':'rotate(0deg)',transition:'transform 0.15s'}} />
@@ -105,37 +115,58 @@ function SelectorCliente({ collapsed }) {
 
       {open && (
         <div style={{position:'absolute',top:'calc(100% + 4px)',left:10,right:10,background:'white',border:'0.5px solid #e5e7eb',borderRadius:10,boxShadow:'0 4px 16px rgba(0,0,0,0.08)',zIndex:200,overflow:'hidden'}}>
-          <div style={{maxHeight:200,overflowY:'auto'}}>
+          <div style={{maxHeight:220,overflowY:'auto'}}>
+
+            {/* Opcion Mi Despacho */}
             <button onClick={() => { seleccionarCliente(null); setOpen(false) }}
-              style={{width:'100%',padding:'9px 12px',background:'none',border:'none',cursor:'pointer',textAlign:'left',fontSize:12,color:'#6b7280',borderBottom:'0.5px solid #f3f4f6',display:'flex',alignItems:'center',gap:8}}
-              onMouseEnter={e => e.currentTarget.style.background='#f9fafb'}
-              onMouseLeave={e => e.currentTarget.style.background='none'}>
-              <div style={{width:22,height:22,borderRadius:6,background:'#f3f4f6',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,color:'#9ca3af'}}>—</div>
-              Ver todos los clientes
+              style={{width:'100%',padding:'10px 12px',background:!clienteActivo?'#f0fdf4':'none',border:'none',cursor:'pointer',textAlign:'left',borderBottom:'0.5px solid #f3f4f6',display:'flex',alignItems:'center',gap:8}}
+              onMouseEnter={e => { if (clienteActivo) e.currentTarget.style.background='#f9fafb' }}
+              onMouseLeave={e => { if (clienteActivo) e.currentTarget.style.background='none' }}>
+              <div style={{width:26,height:26,borderRadius:7,background:'#16a34a',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <Building2 size={14} color="white" />
+              </div>
+              <div>
+                <div style={{fontSize:12,fontWeight:600,color:'#15803d'}}>Mi Despacho</div>
+                <div style={{fontSize:10,color:'#94a3b8'}}>Ver mi informacion personal</div>
+              </div>
+              {!clienteActivo && <span style={{marginLeft:'auto',fontSize:10,background:'#dcfce7',color:'#16a34a',padding:'2px 7px',borderRadius:20,fontWeight:500}}>Activo</span>}
             </button>
+
+            {/* Separador */}
+            {clientes.length > 0 && (
+              <div style={{padding:'6px 12px',fontSize:9,fontWeight:600,color:'#c4c4c4',textTransform:'uppercase',letterSpacing:'0.1em',background:'#fafafa'}}>
+                Clientes
+              </div>
+            )}
+
+            {/* Lista de clientes */}
             {clientes.map(c => {
               const dias = diasParaVencimiento(c.vencimiento_efirma)
               const alerta = dias !== null && dias <= 30
+              const isActive = clienteActivo?.id === c.id
               return (
                 <button key={c.id} onClick={() => { seleccionarCliente(c); setOpen(false) }}
-                  style={{width:'100%',padding:'9px 12px',background:clienteActivo?.id===c.id?'#EFF6FF':'none',border:'none',cursor:'pointer',textAlign:'left',borderBottom:'0.5px solid #f3f4f6',display:'flex',alignItems:'center',gap:8}}
-                  onMouseEnter={e => e.currentTarget.style.background='#f9fafb'}
-                  onMouseLeave={e => e.currentTarget.style.background=clienteActivo?.id===c.id?'#EFF6FF':'none'}>
-                  <div style={{width:22,height:22,minWidth:22,borderRadius:6,background:'#185FA5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:'white'}}>
+                  style={{width:'100%',padding:'9px 12px',background:isActive?'#eff6ff':'none',border:'none',cursor:'pointer',textAlign:'left',borderBottom:'0.5px solid #f3f4f6',display:'flex',alignItems:'center',gap:8}}
+                  onMouseEnter={e => { if (!isActive) e.currentTarget.style.background='#f9fafb' }}
+                  onMouseLeave={e => { if (!isActive) e.currentTarget.style.background=isActive?'#eff6ff':'none' }}>
+                  <div style={{width:26,height:26,minWidth:26,borderRadius:7,background:'#185FA5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:'white'}}>
                     {c.nombre.charAt(0)}
                   </div>
                   <div style={{flex:1,overflow:'hidden'}}>
                     <div style={{fontSize:12,fontWeight:500,color:'#0f172a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{c.nombre.split(' ').slice(0,3).join(' ')}</div>
                     <div style={{fontSize:10,color:'#94a3b8',fontFamily:'monospace'}}>{c.rfc}</div>
                   </div>
-                  {alerta && <AlertTriangle size={12} color="#d97706" />}
+                  {alerta && <AlertTriangle size={12} color="#d97706" style={{flexShrink:0}} />}
+                  {isActive && <span style={{marginLeft:4,fontSize:10,background:'#dbeafe',color:'#1d4ed8',padding:'2px 7px',borderRadius:20,fontWeight:500,flexShrink:0}}>Activo</span>}
                 </button>
               )
             })}
+
             {clientes.length === 0 && (
               <div style={{padding:'12px',fontSize:12,color:'#94a3b8',textAlign:'center'}}>No hay clientes registrados</div>
             )}
           </div>
+
           <a href="/clientes" onClick={() => setOpen(false)}
             style={{display:'block',padding:'8px 12px',fontSize:11,color:'#185FA5',textDecoration:'none',borderTop:'0.5px solid #f3f4f6',textAlign:'center',background:'#f9fafb'}}
             onMouseEnter={e => e.currentTarget.style.background='#eff6ff'}
@@ -225,6 +256,7 @@ function CalculadoraFlotante() {
 
 function Sidebar({ user, collapsed, setCollapsed }) {
   const pathname = usePathname()
+  const { clienteActivo } = useCliente()
   const [config, setConfig] = useState({})
 
   useEffect(() => {
@@ -245,27 +277,31 @@ function Sidebar({ user, collapsed, setCollapsed }) {
   const appNombre = config.appNombre || 'ContableApp'
   const initials = nombre.charAt(0).toUpperCase()
 
+  // Color de acento cambia cuando hay cliente activo
+  const accentColor = clienteActivo ? '#1d4ed8' : avatarColor
+  const sidebarBg = clienteActivo ? '#f8faff' : 'white'
+
   return (
     <aside style={{
       width: collapsed ? 64 : 240,
       minWidth: collapsed ? 64 : 240,
-      background: 'white',
-      borderRight: '0.5px solid #e5e7eb',
+      background: sidebarBg,
+      borderRight: `0.5px solid ${clienteActivo?'#bfdbfe':'#e5e7eb'}`,
       display: 'flex',
       flexDirection: 'column',
-      transition: 'width 0.25s ease, min-width 0.25s ease',
+      transition: 'width 0.25s ease, min-width 0.25s ease, background 0.3s ease',
       overflow: 'hidden',
       position: 'sticky',
       top: 0,
       height: '100vh',
-      boxShadow: '1px 0 8px rgba(0,0,0,0.04)',
+      boxShadow: clienteActivo ? '1px 0 8px rgba(29,78,216,0.08)' : '1px 0 8px rgba(0,0,0,0.04)',
     }}>
 
       {/* Logo */}
-      <div style={{padding:'16px 12px',borderBottom:'0.5px solid #f3f4f6',display:'flex',alignItems:'center',justifyContent:collapsed?'center':'space-between',gap:10,minHeight:60}}>
+      <div style={{padding:'16px 12px',borderBottom:`0.5px solid ${clienteActivo?'#dbeafe':'#f3f4f6'}`,display:'flex',alignItems:'center',justifyContent:collapsed?'center':'space-between',gap:10,minHeight:60}}>
         {!collapsed && (
           <div style={{display:'flex',alignItems:'center',gap:10,overflow:'hidden'}}>
-            <div style={{width:30,height:30,minWidth:30,borderRadius:8,background:avatarColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,color:'white',fontWeight:700}}>
+            <div style={{width:30,height:30,minWidth:30,borderRadius:8,background:accentColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,color:'white',fontWeight:700,transition:'background 0.3s'}}>
               {appNombre.charAt(0)}
             </div>
             <span style={{fontSize:15,fontWeight:600,color:'#1f2937',whiteSpace:'nowrap'}}>{appNombre}</span>
@@ -280,8 +316,8 @@ function Sidebar({ user, collapsed, setCollapsed }) {
       </div>
 
       {/* Perfil */}
-      <div style={{padding:collapsed?'12px 8px':'12px 14px',borderBottom:'0.5px solid #f3f4f6',display:'flex',alignItems:'center',gap:10,overflow:'hidden',justifyContent:collapsed?'center':'flex-start'}}>
-        <div style={{width:34,height:34,minWidth:34,borderRadius:'50%',background:avatarColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:600,color:'white',flexShrink:0}}>
+      <div style={{padding:collapsed?'12px 8px':'12px 14px',borderBottom:`0.5px solid ${clienteActivo?'#dbeafe':'#f3f4f6'}`,display:'flex',alignItems:'center',gap:10,overflow:'hidden',justifyContent:collapsed?'center':'flex-start'}}>
+        <div style={{width:34,height:34,minWidth:34,borderRadius:'50%',background:accentColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:600,color:'white',flexShrink:0,transition:'background 0.3s'}}>
           {initials}
         </div>
         {!collapsed && (
@@ -292,7 +328,7 @@ function Sidebar({ user, collapsed, setCollapsed }) {
         )}
       </div>
 
-      {/* Selector de cliente */}
+      {/* Selector cliente */}
       <SelectorCliente collapsed={collapsed} />
 
       {/* Nav */}
@@ -310,12 +346,12 @@ function Sidebar({ user, collapsed, setCollapsed }) {
               return (
                 <a key={item.label} href={item.href}
                   title={collapsed ? item.label : ''}
-                  style={{display:'flex',alignItems:'center',gap:10,padding:collapsed?'10px':'9px 10px',borderRadius:8,cursor:'pointer',textDecoration:'none',background:isActive?'#EFF6FF':'transparent',justifyContent:collapsed?'center':'flex-start',marginBottom:1,transition:'background 0.15s'}}
+                  style={{display:'flex',alignItems:'center',gap:10,padding:collapsed?'10px':'9px 10px',borderRadius:8,cursor:'pointer',textDecoration:'none',background:isActive?(clienteActivo?'#dbeafe':'#EFF6FF'):'transparent',justifyContent:collapsed?'center':'flex-start',marginBottom:1,transition:'background 0.15s'}}
                   onMouseEnter={e => { if (!isActive) e.currentTarget.style.background='#f9fafb' }}
                   onMouseLeave={e => { if (!isActive) e.currentTarget.style.background='transparent' }}>
-                  <Icon size={18} color={isActive?avatarColor:'#9ca3af'} strokeWidth={isActive?2:1.75} />
+                  <Icon size={18} color={isActive?accentColor:'#9ca3af'} strokeWidth={isActive?2:1.75} />
                   {!collapsed && (
-                    <span style={{fontSize:13,color:isActive?avatarColor:'#4b5563',fontWeight:isActive?500:400,whiteSpace:'nowrap'}}>
+                    <span style={{fontSize:13,color:isActive?accentColor:'#4b5563',fontWeight:isActive?500:400,whiteSpace:'nowrap'}}>
                       {item.label}
                     </span>
                   )}
@@ -327,14 +363,14 @@ function Sidebar({ user, collapsed, setCollapsed }) {
       </nav>
 
       {/* Bottom */}
-      <div style={{padding:'8px',borderTop:'0.5px solid #f3f4f6',display:'flex',flexDirection:'column',gap:1}}>
+      <div style={{padding:'8px',borderTop:`0.5px solid ${clienteActivo?'#dbeafe':'#f3f4f6'}`,display:'flex',flexDirection:'column',gap:1}}>
         <a href="/configuracion"
           title={collapsed?'Configuracion':''}
-          style={{display:'flex',alignItems:'center',gap:10,padding:collapsed?'10px':'9px 10px',borderRadius:8,cursor:'pointer',textDecoration:'none',justifyContent:collapsed?'center':'flex-start',background:pathname==='/configuracion'?'#EFF6FF':'transparent',transition:'background 0.15s'}}
+          style={{display:'flex',alignItems:'center',gap:10,padding:collapsed?'10px':'9px 10px',borderRadius:8,cursor:'pointer',textDecoration:'none',justifyContent:collapsed?'center':'flex-start',background:pathname==='/configuracion'?(clienteActivo?'#dbeafe':'#EFF6FF'):'transparent',transition:'background 0.15s'}}
           onMouseEnter={e => { if (pathname!=='/configuracion') e.currentTarget.style.background='#f9fafb' }}
-          onMouseLeave={e => { if (pathname!=='/configuracion') e.currentTarget.style.background=pathname==='/configuracion'?'#EFF6FF':'transparent' }}>
-          <Settings size={18} color={pathname==='/configuracion'?avatarColor:'#9ca3af'} strokeWidth={1.75} />
-          {!collapsed && <span style={{fontSize:13,color:pathname==='/configuracion'?avatarColor:'#4b5563',fontWeight:pathname==='/configuracion'?500:400}}>Configuracion</span>}
+          onMouseLeave={e => { if (pathname!=='/configuracion') e.currentTarget.style.background=pathname==='/configuracion'?(clienteActivo?'#dbeafe':'#EFF6FF'):'transparent' }}>
+          <Settings size={18} color={pathname==='/configuracion'?accentColor:'#9ca3af'} strokeWidth={1.75} />
+          {!collapsed && <span style={{fontSize:13,color:pathname==='/configuracion'?accentColor:'#4b5563',fontWeight:pathname==='/configuracion'?500:400}}>Configuracion</span>}
         </a>
         <button onClick={handleLogout}
           title={collapsed?'Cerrar sesion':''}
@@ -351,6 +387,7 @@ function Sidebar({ user, collapsed, setCollapsed }) {
 
 function AppLayout({ children }) {
   const pathname = usePathname()
+  const { clienteActivo } = useCliente()
   const [collapsed, setCollapsed] = useState(false)
   const [user, setUser] = useState(null)
   const isAuthPage = authRoutes.includes(pathname)
@@ -372,6 +409,17 @@ function AppLayout({ children }) {
       <body style={{margin:0,fontFamily:'system-ui,sans-serif',display:'flex',minHeight:'100vh',background:'#f8fafc'}}>
         <Sidebar user={user} collapsed={collapsed} setCollapsed={setCollapsed} />
         <main style={{flex:1,overflowY:'auto',position:'relative',transition:'all 0.25s ease'}}>
+          {/* Banner global cliente activo */}
+          {clienteActivo && (
+            <div style={{background:'#1d4ed8',padding:'8px 20px',display:'flex',alignItems:'center',gap:12,position:'sticky',top:0,zIndex:50}}>
+              <div style={{width:22,height:22,borderRadius:6,background:'rgba(255,255,255,0.2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:'white',flexShrink:0}}>
+                {clienteActivo.nombre.charAt(0)}
+              </div>
+              <span style={{fontSize:12,color:'rgba(255,255,255,0.8)'}}>Consultando cliente:</span>
+              <span style={{fontSize:13,fontWeight:600,color:'white'}}>{clienteActivo.nombre}</span>
+              <span style={{fontSize:11,color:'rgba(255,255,255,0.6)',fontFamily:'monospace'}}>{clienteActivo.rfc}</span>
+            </div>
+          )}
           {children}
           <CalculadoraFlotante />
         </main>
