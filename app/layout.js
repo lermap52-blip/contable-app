@@ -63,9 +63,7 @@ function SelectorCliente({ collapsed }) {
   if (collapsed) {
     return (
       <div style={{padding:'8px',borderBottom:'0.5px solid #f3f4f6',display:'flex',justifyContent:'center'}}>
-        <div
-          title={clienteActivo?.nombre || 'Mi Despacho'}
-          onClick={() => setOpen(!open)}
+        <div title={clienteActivo?.nombre || 'Mi Despacho'} onClick={() => setOpen(!open)}
           style={{width:34,height:34,borderRadius:8,background:clienteActivo?'#185FA5':'#f0fdf4',border:`1px solid ${clienteActivo?'#bfdbfe':'#bbf7d0'}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:clienteActivo?'white':'#16a34a',cursor:'pointer'}}>
           {clienteActivo ? clienteActivo.nombre.charAt(0) : '🏢'}
         </div>
@@ -116,8 +114,6 @@ function SelectorCliente({ collapsed }) {
       {open && (
         <div style={{position:'absolute',top:'calc(100% + 4px)',left:10,right:10,background:'white',border:'0.5px solid #e5e7eb',borderRadius:10,boxShadow:'0 4px 16px rgba(0,0,0,0.08)',zIndex:200,overflow:'hidden'}}>
           <div style={{maxHeight:220,overflowY:'auto'}}>
-
-            {/* Opcion Mi Despacho */}
             <button onClick={() => { seleccionarCliente(null); setOpen(false) }}
               style={{width:'100%',padding:'10px 12px',background:!clienteActivo?'#f0fdf4':'none',border:'none',cursor:'pointer',textAlign:'left',borderBottom:'0.5px solid #f3f4f6',display:'flex',alignItems:'center',gap:8}}
               onMouseEnter={e => { if (clienteActivo) e.currentTarget.style.background='#f9fafb' }}
@@ -132,14 +128,12 @@ function SelectorCliente({ collapsed }) {
               {!clienteActivo && <span style={{marginLeft:'auto',fontSize:10,background:'#dcfce7',color:'#16a34a',padding:'2px 7px',borderRadius:20,fontWeight:500}}>Activo</span>}
             </button>
 
-            {/* Separador */}
             {clientes.length > 0 && (
               <div style={{padding:'6px 12px',fontSize:9,fontWeight:600,color:'#c4c4c4',textTransform:'uppercase',letterSpacing:'0.1em',background:'#fafafa'}}>
                 Clientes
               </div>
             )}
 
-            {/* Lista de clientes */}
             {clientes.map(c => {
               const dias = diasParaVencimiento(c.vencimiento_efirma)
               const alerta = dias !== null && dias <= 30
@@ -166,7 +160,6 @@ function SelectorCliente({ collapsed }) {
               <div style={{padding:'12px',fontSize:12,color:'#94a3b8',textAlign:'center'}}>No hay clientes registrados</div>
             )}
           </div>
-
           <a href="/clientes" onClick={() => setOpen(false)}
             style={{display:'block',padding:'8px 12px',fontSize:11,color:'#185FA5',textDecoration:'none',borderTop:'0.5px solid #f3f4f6',textAlign:'center',background:'#f9fafb'}}
             onMouseEnter={e => e.currentTarget.style.background='#eff6ff'}
@@ -175,6 +168,149 @@ function SelectorCliente({ collapsed }) {
           </a>
         </div>
       )}
+    </div>
+  )
+}
+
+function ChatBot() {
+  const [open, setOpen] = useState(false)
+  const [messages, setMessages] = useState([
+    { role: 'assistant', text: '¡Hola! Soy tu asistente fiscal. Puedo ayudarte con dudas sobre RESICO, IVA, ISR, facturas y más. ¿En qué te puedo ayudar?' }
+  ])
+  const [input, setInput] = useState('')
+  const [loading, setLoading] = useState(false)
+  const bottomRef = useRef()
+
+  useEffect(() => {
+    if (bottomRef.current) bottomRef.current.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
+  const enviar = async () => {
+    if (!input.trim() || loading) return
+    const userMsg = input.trim()
+    setInput('')
+    setMessages(prev => [...prev, { role: 'user', text: userMsg }])
+    setLoading(true)
+
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          system: `Eres un asistente fiscal y contable experto en el sistema tributario mexicano. 
+          Ayudas a contadores y sus clientes con dudas sobre: RESICO, IVA, ISR, CFDI, SAT, declaraciones mensuales, 
+          e.firma, facturación electrónica, deducciones, retenciones y cumplimiento fiscal en México.
+          Responde de forma clara, concisa y amigable. Usa emojis cuando sea apropiado.
+          Si la pregunta no es sobre temas fiscales o contables mexicanos, redirige amablemente al tema.`,
+          messages: [
+            ...messages.filter(m => m.role !== 'assistant' || messages.indexOf(m) > 0).map(m => ({
+              role: m.role,
+              content: m.text
+            })),
+            { role: 'user', content: userMsg }
+          ]
+        })
+      })
+      const data = await response.json()
+      const texto = data.content?.[0]?.text || 'No pude procesar tu pregunta, intenta de nuevo.'
+      setMessages(prev => [...prev, { role: 'assistant', text: texto }])
+    } catch {
+      setMessages(prev => [...prev, { role: 'assistant', text: 'Ocurrio un error. Intenta de nuevo.' }])
+    }
+    setLoading(false)
+  }
+
+  return (
+    <div style={{position:'fixed',bottom:24,right:24,zIndex:999,display:'flex',flexDirection:'column',alignItems:'flex-end',gap:12}}>
+      {open && (
+        <div style={{background:'white',borderRadius:20,boxShadow:'0 8px 32px rgba(0,0,0,0.12)',border:'0.5px solid #e5e7eb',width:340,display:'flex',flexDirection:'column',overflow:'hidden',maxHeight:500}}>
+          {/* Header */}
+          <div style={{background:'linear-gradient(135deg,#185FA5,#0C447C)',padding:'14px 16px',display:'flex',alignItems:'center',gap:10}}>
+            <div style={{width:36,height:36,borderRadius:'50%',background:'rgba(255,255,255,0.2)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2a4 4 0 0 1 4 4v1h1a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v1a4 4 0 0 1-8 0v-1H7a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1V6a4 4 0 0 1 4-4z"/>
+                <circle cx="9" cy="10" r="0.5" fill="white"/>
+                <circle cx="15" cy="10" r="0.5" fill="white"/>
+              </svg>
+            </div>
+            <div>
+              <div style={{fontSize:14,fontWeight:600,color:'white'}}>Asistente Fiscal</div>
+              <div style={{fontSize:11,color:'rgba(255,255,255,0.7)'}}>Powered by Claude · Experto en SAT</div>
+            </div>
+            <button onClick={() => setOpen(false)} style={{marginLeft:'auto',background:'none',border:'none',cursor:'pointer',color:'rgba(255,255,255,0.7)',fontSize:18,lineHeight:1}}>✕</button>
+          </div>
+
+          {/* Mensajes */}
+          <div style={{flex:1,overflowY:'auto',padding:14,display:'flex',flexDirection:'column',gap:10,maxHeight:320}}>
+            {messages.map((m,i) => (
+              <div key={i} style={{display:'flex',justifyContent:m.role==='user'?'flex-end':'flex-start'}}>
+                <div style={{
+                  maxWidth:'85%',
+                  padding:'9px 12px',
+                  borderRadius:m.role==='user'?'16px 16px 4px 16px':'16px 16px 16px 4px',
+                  background:m.role==='user'?'#185FA5':'#f8fafc',
+                  color:m.role==='user'?'white':'#1f2937',
+                  fontSize:13,
+                  lineHeight:1.5,
+                  border:m.role==='assistant'?'0.5px solid #e5e7eb':'none',
+                }}>
+                  {m.text}
+                </div>
+              </div>
+            ))}
+            {loading && (
+              <div style={{display:'flex',justifyContent:'flex-start'}}>
+                <div style={{padding:'9px 14px',borderRadius:'16px 16px 16px 4px',background:'#f8fafc',border:'0.5px solid #e5e7eb',display:'flex',gap:4,alignItems:'center'}}>
+                  {[0,1,2].map(i => (
+                    <div key={i} style={{width:6,height:6,borderRadius:'50%',background:'#9ca3af',animation:`bounce 1s ${i*0.2}s infinite`}}></div>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div ref={bottomRef} />
+          </div>
+
+          {/* Input */}
+          <div style={{padding:'10px 12px',borderTop:'0.5px solid #e5e7eb',display:'flex',gap:8,alignItems:'center'}}>
+            <input
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => e.key==='Enter' && enviar()}
+              placeholder="Escribe tu pregunta fiscal..."
+              style={{flex:1,padding:'9px 12px',border:'0.5px solid #e5e7eb',borderRadius:20,fontSize:13,color:'#1f2937',outline:'none',background:'#f9fafb'}}
+            />
+            <button onClick={enviar} disabled={loading || !input.trim()}
+              style={{width:36,height:36,borderRadius:'50%',background:input.trim()?'#185FA5':'#f3f4f6',border:'none',cursor:input.trim()?'pointer':'default',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,transition:'background 0.15s'}}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={input.trim()?'white':'#9ca3af'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Burbujas flotantes */}
+      <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:10}}>
+        {/* Bot */}
+        <button onClick={() => setOpen(!open)}
+          title="Asistente fiscal"
+          style={{width:52,height:52,borderRadius:'50%',background:'white',border:'2px solid #1f2937',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 12px rgba(0,0,0,0.12)',transition:'transform 0.2s,box-shadow 0.2s'}}
+          onMouseEnter={e => { e.currentTarget.style.transform='scale(1.08)'; e.currentTarget.style.boxShadow='0 6px 16px rgba(0,0,0,0.16)' }}
+          onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.boxShadow='0 4px 12px rgba(0,0,0,0.12)' }}>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1f2937" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2a4 4 0 0 1 4 4v1h1a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v1a4 4 0 0 1-8 0v-1H7a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1V6a4 4 0 0 1 4-4z"/>
+            <circle cx="9" cy="10" r="0.8" fill="#1f2937"/>
+            <circle cx="15" cy="10" r="0.8" fill="#1f2937"/>
+            <path d="M9 14s1 1.5 3 1.5 3-1.5 3-1.5"/>
+          </svg>
+        </button>
+
+        {/* Calculadora */}
+        <CalculadoraFlotante />
+      </div>
     </div>
   )
 }
@@ -196,7 +332,7 @@ function CalculadoraFlotante() {
   const total = iva + isr
 
   return (
-    <div style={{position:'fixed',bottom:24,right:24,zIndex:1000}}>
+    <div style={{position:'relative'}}>
       {open && (
         <div style={{position:'absolute',bottom:64,right:0,width:300,background:'white',border:'0.5px solid #e5e7eb',borderRadius:16,boxShadow:'0 4px 24px rgba(0,0,0,0.10)',overflow:'hidden'}}>
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'14px 16px',borderBottom:'0.5px solid #e5e7eb'}}>
@@ -247,8 +383,20 @@ function CalculadoraFlotante() {
         </div>
       )}
       <button onClick={() => setOpen(!open)}
-        style={{width:52,height:52,borderRadius:'50%',background:'#185FA5',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 8px rgba(0,0,0,0.15)',fontSize:22}}>
-        🧮
+        title="Calculadora de impuestos"
+        style={{width:52,height:52,borderRadius:'50%',background:'white',border:'2px solid #1f2937',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 12px rgba(0,0,0,0.12)',transition:'transform 0.2s,box-shadow 0.2s'}}
+        onMouseEnter={e => { e.currentTarget.style.transform='scale(1.08)'; e.currentTarget.style.boxShadow='0 6px 16px rgba(0,0,0,0.16)' }}
+        onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.boxShadow='0 4px 12px rgba(0,0,0,0.12)' }}>
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1f2937" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="4" y="2" width="16" height="20" rx="2"/>
+          <rect x="7" y="5" width="10" height="4" rx="1"/>
+          <circle cx="8" cy="13" r="0.8" fill="#1f2937"/>
+          <circle cx="12" cy="13" r="0.8" fill="#1f2937"/>
+          <circle cx="16" cy="13" r="0.8" fill="#1f2937"/>
+          <circle cx="8" cy="17" r="0.8" fill="#1f2937"/>
+          <circle cx="12" cy="17" r="0.8" fill="#1f2937"/>
+          <rect x="14" y="16" width="3" height="2" rx="0.5" fill="#1f2937"/>
+        </svg>
       </button>
     </div>
   )
@@ -276,28 +424,12 @@ function Sidebar({ user, collapsed, setCollapsed }) {
   const avatarColor = config.avatarColor || '#185FA5'
   const appNombre = config.appNombre || 'ContableApp'
   const initials = nombre.charAt(0).toUpperCase()
-
-  // Color de acento cambia cuando hay cliente activo
   const accentColor = clienteActivo ? '#1d4ed8' : avatarColor
   const sidebarBg = clienteActivo ? '#f8faff' : 'white'
 
   return (
-    <aside style={{
-      width: collapsed ? 64 : 240,
-      minWidth: collapsed ? 64 : 240,
-      background: sidebarBg,
-      borderRight: `0.5px solid ${clienteActivo?'#bfdbfe':'#e5e7eb'}`,
-      display: 'flex',
-      flexDirection: 'column',
-      transition: 'width 0.25s ease, min-width 0.25s ease, background 0.3s ease',
-      overflow: 'hidden',
-      position: 'sticky',
-      top: 0,
-      height: '100vh',
-      boxShadow: clienteActivo ? '1px 0 8px rgba(29,78,216,0.08)' : '1px 0 8px rgba(0,0,0,0.04)',
-    }}>
+    <aside style={{width:collapsed?64:240,minWidth:collapsed?64:240,background:sidebarBg,borderRight:`0.5px solid ${clienteActivo?'#bfdbfe':'#e5e7eb'}`,display:'flex',flexDirection:'column',transition:'width 0.25s ease,min-width 0.25s ease,background 0.3s ease',overflow:'hidden',position:'sticky',top:0,height:'100vh',boxShadow:clienteActivo?'1px 0 8px rgba(29,78,216,0.08)':'1px 0 8px rgba(0,0,0,0.04)'}}>
 
-      {/* Logo */}
       <div style={{padding:'16px 12px',borderBottom:`0.5px solid ${clienteActivo?'#dbeafe':'#f3f4f6'}`,display:'flex',alignItems:'center',justifyContent:collapsed?'center':'space-between',gap:10,minHeight:60}}>
         {!collapsed && (
           <div style={{display:'flex',alignItems:'center',gap:10,overflow:'hidden'}}>
@@ -315,7 +447,6 @@ function Sidebar({ user, collapsed, setCollapsed }) {
         </button>
       </div>
 
-      {/* Perfil */}
       <div style={{padding:collapsed?'12px 8px':'12px 14px',borderBottom:`0.5px solid ${clienteActivo?'#dbeafe':'#f3f4f6'}`,display:'flex',alignItems:'center',gap:10,overflow:'hidden',justifyContent:collapsed?'center':'flex-start'}}>
         <div style={{width:34,height:34,minWidth:34,borderRadius:'50%',background:accentColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:600,color:'white',flexShrink:0,transition:'background 0.3s'}}>
           {initials}
@@ -323,15 +454,13 @@ function Sidebar({ user, collapsed, setCollapsed }) {
         {!collapsed && (
           <div style={{overflow:'hidden'}}>
             <div style={{fontSize:13,fontWeight:500,color:'#1f2937',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{nombre}</div>
-            <div style={{fontSize:11,color:'#9ca3af',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{user?.email || ''}</div>
+            <div style={{fontSize:11,color:'#9ca3af',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{user?.email||''}</div>
           </div>
         )}
       </div>
 
-      {/* Selector cliente */}
       <SelectorCliente collapsed={collapsed} />
 
-      {/* Nav */}
       <nav style={{flex:1,padding:'8px',overflowY:'auto',display:'flex',flexDirection:'column',gap:1}}>
         {menuItems.map(group => (
           <div key={group.section} style={{marginBottom:4}}>
@@ -344,17 +473,12 @@ function Sidebar({ user, collapsed, setCollapsed }) {
               const Icon = item.icon
               const isActive = pathname === item.href
               return (
-                <a key={item.label} href={item.href}
-                  title={collapsed ? item.label : ''}
+                <a key={item.label} href={item.href} title={collapsed?item.label:''}
                   style={{display:'flex',alignItems:'center',gap:10,padding:collapsed?'10px':'9px 10px',borderRadius:8,cursor:'pointer',textDecoration:'none',background:isActive?(clienteActivo?'#dbeafe':'#EFF6FF'):'transparent',justifyContent:collapsed?'center':'flex-start',marginBottom:1,transition:'background 0.15s'}}
                   onMouseEnter={e => { if (!isActive) e.currentTarget.style.background='#f9fafb' }}
                   onMouseLeave={e => { if (!isActive) e.currentTarget.style.background='transparent' }}>
                   <Icon size={18} color={isActive?accentColor:'#9ca3af'} strokeWidth={isActive?2:1.75} />
-                  {!collapsed && (
-                    <span style={{fontSize:13,color:isActive?accentColor:'#4b5563',fontWeight:isActive?500:400,whiteSpace:'nowrap'}}>
-                      {item.label}
-                    </span>
-                  )}
+                  {!collapsed && <span style={{fontSize:13,color:isActive?accentColor:'#4b5563',fontWeight:isActive?500:400,whiteSpace:'nowrap'}}>{item.label}</span>}
                 </a>
               )
             })}
@@ -362,18 +486,15 @@ function Sidebar({ user, collapsed, setCollapsed }) {
         ))}
       </nav>
 
-      {/* Bottom */}
       <div style={{padding:'8px',borderTop:`0.5px solid ${clienteActivo?'#dbeafe':'#f3f4f6'}`,display:'flex',flexDirection:'column',gap:1}}>
-        <a href="/configuracion"
-          title={collapsed?'Configuracion':''}
+        <a href="/configuracion" title={collapsed?'Configuracion':''}
           style={{display:'flex',alignItems:'center',gap:10,padding:collapsed?'10px':'9px 10px',borderRadius:8,cursor:'pointer',textDecoration:'none',justifyContent:collapsed?'center':'flex-start',background:pathname==='/configuracion'?(clienteActivo?'#dbeafe':'#EFF6FF'):'transparent',transition:'background 0.15s'}}
           onMouseEnter={e => { if (pathname!=='/configuracion') e.currentTarget.style.background='#f9fafb' }}
           onMouseLeave={e => { if (pathname!=='/configuracion') e.currentTarget.style.background=pathname==='/configuracion'?(clienteActivo?'#dbeafe':'#EFF6FF'):'transparent' }}>
           <Settings size={18} color={pathname==='/configuracion'?accentColor:'#9ca3af'} strokeWidth={1.75} />
           {!collapsed && <span style={{fontSize:13,color:pathname==='/configuracion'?accentColor:'#4b5563',fontWeight:pathname==='/configuracion'?500:400}}>Configuracion</span>}
         </a>
-        <button onClick={handleLogout}
-          title={collapsed?'Cerrar sesion':''}
+        <button onClick={handleLogout} title={collapsed?'Cerrar sesion':''}
           style={{display:'flex',alignItems:'center',gap:10,padding:collapsed?'10px':'9px 10px',borderRadius:8,cursor:'pointer',background:'none',border:'none',justifyContent:collapsed?'center':'flex-start',width:'100%',transition:'background 0.15s'}}
           onMouseEnter={e => e.currentTarget.style.background='#fef2f2'}
           onMouseLeave={e => e.currentTarget.style.background='none'}>
@@ -409,7 +530,6 @@ function AppLayout({ children }) {
       <body style={{margin:0,fontFamily:'system-ui,sans-serif',display:'flex',minHeight:'100vh',background:'#f8fafc'}}>
         <Sidebar user={user} collapsed={collapsed} setCollapsed={setCollapsed} />
         <main style={{flex:1,overflowY:'auto',position:'relative',transition:'all 0.25s ease'}}>
-          {/* Banner global cliente activo */}
           {clienteActivo && (
             <div style={{background:'#1d4ed8',padding:'8px 20px',display:'flex',alignItems:'center',gap:12,position:'sticky',top:0,zIndex:50}}>
               <div style={{width:22,height:22,borderRadius:6,background:'rgba(255,255,255,0.2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:'white',flexShrink:0}}>
@@ -421,7 +541,7 @@ function AppLayout({ children }) {
             </div>
           )}
           {children}
-          <CalculadoraFlotante />
+          <ChatBot />
         </main>
       </body>
     </html>
