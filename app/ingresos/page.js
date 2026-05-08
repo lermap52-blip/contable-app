@@ -2,13 +2,14 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabase'
 import { useRouter } from 'next/navigation'
+import { useCliente } from '../ClienteContext'
 
 const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
-
 function fmt(n) { return '$'+Number(n).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2}) }
 
 export default function Ingresos() {
   const router = useRouter()
+  const { clienteActivo, empresaId, esModoMaestro } = useCliente()
   const [search, setSearch] = useState('')
   const [mesSelected, setMesSelected] = useState(null)
   const [anio, setAnio] = useState(2026)
@@ -19,19 +20,23 @@ export default function Ingresos() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    cargarIngresos()
-  }, [])
+    if (empresaId) cargarIngresos()
+  }, [empresaId, clienteActivo])
 
   const cargarIngresos = async () => {
     setLoading(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-    const { data: movs } = await supabase
+    let query = supabase
       .from('movimientos')
       .select('*')
-      .eq('empresa_id', user.id)
+      .eq('empresa_id', empresaId)
       .eq('tipo', 'ingreso')
       .order('fecha_operacion', { ascending: false })
+
+    if (clienteActivo) {
+      query = query.eq('cliente_id', clienteActivo.id)
+    }
+
+    const { data: movs } = await query
     setData(movs || [])
     setLoading(false)
   }
@@ -69,8 +74,23 @@ export default function Ingresos() {
 
   return (
     <div style={{padding:28,fontFamily:'system-ui,sans-serif',background:'#f3f4f6',minHeight:'100vh'}}>
+
+      {/* Banner cliente */}
+      {!esModoMaestro && clienteActivo && (
+        <div style={{marginBottom:16,padding:'10px 16px',background:'#eff6ff',border:'0.5px solid #bfdbfe',borderRadius:10,display:'flex',alignItems:'center',gap:10}}>
+          <div style={{width:26,height:26,borderRadius:7,background:'#185FA5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:'white'}}>
+            {clienteActivo.nombre.charAt(0)}
+          </div>
+          <span style={{fontSize:12,color:'#1e40af',fontWeight:500}}>Gestionando a: </span>
+          <span style={{fontSize:13,color:'#1e3a8a',fontWeight:700}}>{clienteActivo.nombre}</span>
+          <span style={{fontSize:11,color:'#93c5fd',fontFamily:'monospace',marginLeft:4}}>{clienteActivo.rfc}</span>
+        </div>
+      )}
+
       <div style={{fontSize:18,fontWeight:600,color:'#1f2937',marginBottom:2}}>Ingresos</div>
-      <div style={{fontSize:13,color:'#6b7280',marginBottom:18}}>Registro de ventas y cobros</div>
+      <div style={{fontSize:13,color:'#6b7280',marginBottom:18}}>
+        {esModoMaestro ? 'Todos los ingresos' : `Ingresos de ${clienteActivo?.nombre}`}
+      </div>
 
       {/* Tarjetas */}
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',gap:12,marginBottom:18}}>
@@ -149,18 +169,18 @@ export default function Ingresos() {
         </button>
       </div>
 
-      {/* Tabla ingresos facturados */}
+      {/* Tabla facturados */}
       {facturados.length > 0 && (
         <div style={{background:'white',borderRadius:10,border:'0.5px solid #e5e7eb',overflow:'hidden',marginBottom:16}}>
           <div style={{padding:'12px 16px',borderBottom:'0.5px solid #e5e7eb',display:'flex',alignItems:'center',gap:8}}>
             <span style={{fontSize:11,fontWeight:500,color:'#185FA5',background:'#E6F1FB',padding:'3px 10px',borderRadius:20}}>Facturados (CFDI)</span>
             <span style={{fontSize:12,color:'#9ca3af'}}>{facturados.length} registros</span>
           </div>
-          <Tabla rows={facturados} />
+          <TablaIngresos rows={facturados} />
         </div>
       )}
 
-      {/* Tabla ingresos no facturados */}
+      {/* Tabla no facturados */}
       <div style={{background:'white',borderRadius:10,border:'0.5px solid #e5e7eb',overflow:'hidden'}}>
         <div style={{padding:'12px 16px',borderBottom:'0.5px solid #e5e7eb',display:'flex',alignItems:'center',gap:8}}>
           <span style={{fontSize:11,fontWeight:500,color:'#854F0B',background:'#FAEEDA',padding:'3px 10px',borderRadius:20}}>No facturados</span>
@@ -169,16 +189,18 @@ export default function Ingresos() {
         {loading ? (
           <div style={{padding:24,textAlign:'center',color:'#9ca3af',fontSize:13}}>Cargando...</div>
         ) : noFacturados.length === 0 ? (
-          <div style={{padding:24,textAlign:'center',color:'#9ca3af',fontSize:13}}>No hay ingresos registrados</div>
+          <div style={{padding:24,textAlign:'center',color:'#9ca3af',fontSize:13}}>
+            {clienteActivo ? `No hay ingresos para ${clienteActivo.nombre}` : 'No hay ingresos registrados'}
+          </div>
         ) : (
-          <Tabla rows={noFacturados} />
+          <TablaIngresos rows={noFacturados} />
         )}
       </div>
     </div>
   )
 }
 
-function Tabla({ rows }) {
+function TablaIngresos({ rows }) {
   return (
     <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
       <thead>

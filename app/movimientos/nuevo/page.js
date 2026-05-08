@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { supabase } from '../../supabase'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { useCliente } from '../../ClienteContext'
 import { Suspense } from 'react'
 
 const tasasIVA = [
@@ -15,6 +16,7 @@ const tasasIVA = [
 function NuevoMovimientoForm() {
   const searchParams = useSearchParams()
   const router = useRouter()
+  const { clienteActivo, empresaId } = useCliente()
   const tipoInicial = searchParams.get('tipo') || 'ingreso'
 
   const [tipo, setTipo] = useState(tipoInicial)
@@ -44,12 +46,14 @@ function NuevoMovimientoForm() {
     if (!fecha) { setError('Selecciona una fecha'); return }
     if (!formaPago) { setError('Selecciona una forma de pago'); return }
     setLoading(true)
+
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setError('No hay sesion activa'); setLoading(false); return }
+
     const montoNum = Number(monto)
-    const ivaCalc = tasaIVA === -1 ? 0 : montoNum * tasaIVA
     const { error: err } = await supabase.from('movimientos').insert({
       empresa_id: user.id,
+      cliente_id: clienteActivo?.id || null,
       tipo,
       monto: montoNum,
       monto_base: montoNum,
@@ -63,6 +67,7 @@ function NuevoMovimientoForm() {
       es_facturado: false,
       estado: 'confirmado',
     })
+
     if (err) { setError('Error al guardar: ' + err.message); setLoading(false); return }
     setExito(true)
     setLoading(false)
@@ -84,6 +89,9 @@ function NuevoMovimientoForm() {
       <div style={{background:'white',borderRadius:16,border:'0.5px solid #e5e7eb',padding:32,maxWidth:480,textAlign:'center'}}>
         <div style={{fontSize:48,marginBottom:16}}>{tipo==='ingreso'?'💰':'🧾'}</div>
         <h2 style={{fontSize:20,fontWeight:600,color:'#1f2937',marginBottom:8}}>{tipo==='ingreso'?'Ingreso':'Egreso'} registrado</h2>
+        {clienteActivo && (
+          <p style={{fontSize:13,color:'#6b7280',marginBottom:8}}>Cliente: <strong>{clienteActivo.nombre}</strong></p>
+        )}
         <p style={{fontSize:14,color:'#6b7280',marginBottom:24}}>El movimiento se guardo correctamente</p>
         <div style={{display:'flex',gap:10,justifyContent:'center'}}>
           <button onClick={resetForm}
@@ -103,11 +111,25 @@ function NuevoMovimientoForm() {
     <div style={{padding:28,fontFamily:'system-ui,sans-serif'}}>
       <div style={{marginBottom:24}}>
         <h1 style={{fontSize:18,fontWeight:600,color:'#1f2937',marginBottom:4}}>Nuevo movimiento</h1>
-        <p style={{fontSize:13,color:'#6b7280'}}>Registra un ingreso o egreso de tu negocio</p>
+        <p style={{fontSize:13,color:'#6b7280'}}>
+          {clienteActivo ? `Cliente: ${clienteActivo.nombre} · ${clienteActivo.rfc}` : 'Sin cliente asignado — movimiento general'}
+        </p>
       </div>
+
+      {clienteActivo && (
+        <div style={{background:'#eff6ff',border:'0.5px solid #bfdbfe',borderRadius:10,padding:'10px 14px',marginBottom:16,display:'flex',alignItems:'center',gap:8}}>
+          <div style={{width:28,height:28,borderRadius:8,background:'#185FA5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:'white'}}>
+            {clienteActivo.nombre.charAt(0)}
+          </div>
+          <div>
+            <div style={{fontSize:12,fontWeight:500,color:'#1e40af'}}>{clienteActivo.nombre}</div>
+            <div style={{fontSize:11,color:'#93c5fd',fontFamily:'monospace'}}>{clienteActivo.rfc}</div>
+          </div>
+        </div>
+      )}
+
       <div style={{background:'white',borderRadius:16,border:'0.5px solid #e5e7eb',padding:28,maxWidth:560}}>
 
-        {/* Tipo */}
         <div style={{marginBottom:20}}>
           <label style={{display:'block',fontSize:12,fontWeight:500,color:'#6b7280',marginBottom:8,textTransform:'uppercase',letterSpacing:'0.06em'}}>Tipo de movimiento</label>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
@@ -122,7 +144,6 @@ function NuevoMovimientoForm() {
 
         {error && <div style={{background:'#fef2f2',border:'0.5px solid #fecaca',color:'#dc2626',fontSize:13,borderRadius:10,padding:'10px 14px',marginBottom:16}}>{error}</div>}
 
-        {/* Monto */}
         <div style={{marginBottom:16}}>
           <label style={{display:'block',fontSize:13,fontWeight:500,color:'#374151',marginBottom:6}}>Monto</label>
           <div style={{position:'relative'}}>
@@ -132,21 +153,18 @@ function NuevoMovimientoForm() {
           </div>
         </div>
 
-        {/* Descripcion */}
         <div style={{marginBottom:16}}>
           <label style={{display:'block',fontSize:13,fontWeight:500,color:'#374151',marginBottom:6}}>Descripcion</label>
           <input type="text" value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Ej: Pago de honorarios mayo"
             style={{width:'100%',padding:'10px 12px',border:'0.5px solid #e5e7eb',borderRadius:10,fontSize:13,color:'#1f2937',outline:'none',boxSizing:'border-box'}} />
         </div>
 
-        {/* Fecha */}
         <div style={{marginBottom:16}}>
           <label style={{display:'block',fontSize:13,fontWeight:500,color:'#374151',marginBottom:6}}>Fecha</label>
           <input type="date" value={fecha} onChange={e => setFecha(e.target.value)}
             style={{width:'100%',padding:'10px 12px',border:'0.5px solid #e5e7eb',borderRadius:10,fontSize:13,color:'#1f2937',outline:'none',boxSizing:'border-box'}} />
         </div>
 
-        {/* Tasa IVA — solo para ingresos */}
         {tipo === 'ingreso' && (
           <div style={{marginBottom:16}}>
             <label style={{display:'block',fontSize:13,fontWeight:500,color:'#374151',marginBottom:6}}>Tasa de IVA</label>
@@ -168,7 +186,6 @@ function NuevoMovimientoForm() {
           </div>
         )}
 
-        {/* Forma de pago */}
         <div style={{marginBottom:16}}>
           <label style={{display:'block',fontSize:13,fontWeight:500,color:'#374151',marginBottom:6}}>Forma de pago</label>
           <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:6}}>
@@ -181,7 +198,6 @@ function NuevoMovimientoForm() {
           </div>
         </div>
 
-        {/* Categoria */}
         <div style={{marginBottom:16}}>
           <label style={{display:'block',fontSize:13,fontWeight:500,color:'#374151',marginBottom:6}}>Categoria</label>
           <select value={categoria} onChange={e => setCategoria(e.target.value)}
@@ -191,14 +207,12 @@ function NuevoMovimientoForm() {
           </select>
         </div>
 
-        {/* Referencia */}
         <div style={{marginBottom:16}}>
           <label style={{display:'block',fontSize:13,fontWeight:500,color:'#374151',marginBottom:6}}>Referencia <span style={{color:'#9ca3af',fontWeight:400}}>(opcional)</span></label>
           <input type="text" value={referencia} onChange={e => setReferencia(e.target.value)} placeholder="Folio, numero de factura, etc"
             style={{width:'100%',padding:'10px 12px',border:'0.5px solid #e5e7eb',borderRadius:10,fontSize:13,color:'#1f2937',outline:'none',boxSizing:'border-box'}} />
         </div>
 
-        {/* Notas */}
         <div style={{marginBottom:24}}>
           <label style={{display:'block',fontSize:13,fontWeight:500,color:'#374151',marginBottom:6}}>Notas <span style={{color:'#9ca3af',fontWeight:400}}>(opcional)</span></label>
           <textarea value={notas} onChange={e => setNotas(e.target.value)} placeholder="Cualquier detalle adicional..." rows={3}
