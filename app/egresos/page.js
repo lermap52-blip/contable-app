@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../supabase'
+import { useCliente } from '../ClienteContext'
 
 const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
 function fmt(n) { return '$'+Number(n).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2}) }
@@ -41,6 +42,7 @@ function parsearXML(xmlStr) {
 }
 
 export default function Egresos() {
+  const { clienteActivo, empresaId, esModoMaestro } = useCliente()
   const [egresos, setEgresos] = useState([])
   const [chips, setChips] = useState([])
   const [search, setSearch] = useState('')
@@ -49,18 +51,24 @@ export default function Egresos() {
   const [loading, setLoading] = useState(false)
   const fileRef = useRef()
 
-  useEffect(() => { cargarEgresos() }, [])
+  useEffect(() => {
+    if (empresaId) cargarEgresos()
+  }, [empresaId, clienteActivo])
 
   const cargarEgresos = async () => {
     setLoading(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-    const { data: movs } = await supabase
+    let query = supabase
       .from('movimientos')
       .select('*')
-      .eq('empresa_id', user.id)
+      .eq('empresa_id', empresaId)
       .eq('tipo', 'egreso')
       .order('fecha_operacion', { ascending: false })
+
+    if (clienteActivo) {
+      query = query.eq('cliente_id', clienteActivo.id)
+    }
+
+    const { data: movs } = await query
     const mapped = (movs || []).map(m => ({
       id: m.id,
       fecha: m.fecha_operacion,
@@ -104,6 +112,7 @@ export default function Egresos() {
     if (!user) return
     await supabase.from('movimientos').insert({
       empresa_id: user.id,
+      cliente_id: clienteActivo?.id || null,
       tipo: 'egreso',
       monto: datos.subtotal,
       monto_base: datos.subtotal,
@@ -133,10 +142,23 @@ export default function Egresos() {
 
   return (
     <div style={{padding:28,fontFamily:'system-ui,sans-serif',background:'#f3f4f6',minHeight:'100vh'}}>
-      <div style={{fontSize:18,fontWeight:600,color:'#1f2937',marginBottom:2}}>Egresos</div>
-      <div style={{fontSize:13,color:'#6b7280',marginBottom:18}}>Gastos y comprobantes fiscales recibidos</div>
 
-      {/* Tarjetas */}
+      {!esModoMaestro && clienteActivo && (
+        <div style={{marginBottom:16,padding:'10px 16px',background:'#eff6ff',border:'0.5px solid #bfdbfe',borderRadius:10,display:'flex',alignItems:'center',gap:10}}>
+          <div style={{width:26,height:26,borderRadius:7,background:'#185FA5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:'white'}}>
+            {clienteActivo.nombre.charAt(0)}
+          </div>
+          <span style={{fontSize:12,color:'#1e40af',fontWeight:500}}>Gestionando a: </span>
+          <span style={{fontSize:13,color:'#1e3a8a',fontWeight:700}}>{clienteActivo.nombre}</span>
+          <span style={{fontSize:11,color:'#93c5fd',fontFamily:'monospace',marginLeft:4}}>{clienteActivo.rfc}</span>
+        </div>
+      )}
+
+      <div style={{fontSize:18,fontWeight:600,color:'#1f2937',marginBottom:2}}>Egresos</div>
+      <div style={{fontSize:13,color:'#6b7280',marginBottom:18}}>
+        {esModoMaestro ? 'Gastos y comprobantes fiscales recibidos' : `Egresos de ${clienteActivo?.nombre}`}
+      </div>
+
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',gap:12,marginBottom:18}}>
         {[
           {label:'Total gastado',val:fmt(totalGastado),color:'#A32D2D',sub:filtered.length+' comprobantes'},
@@ -152,24 +174,18 @@ export default function Egresos() {
         ))}
       </div>
 
-      {/* Drop zone */}
       <div
         onDragOver={e => { e.preventDefault(); setDragover(true) }}
         onDragLeave={() => setDragover(false)}
         onDrop={e => { e.preventDefault(); setDragover(false); handleFiles(e.dataTransfer.files) }}
         onClick={() => fileRef.current.click()}
-        style={{border:`2px dashed ${dragover?'#185FA5':'#e5e7eb'}`,borderRadius:12,padding:32,textAlign:'center',background:dragover?'#E6F1FB':'white',marginBottom:16,cursor:'pointer',transition:'all 0.2s'}}>
-        <div style={{fontSize:36,marginBottom:12}}>📂</div>
-        <div style={{fontSize:15,fontWeight:500,color:'#1f2937',marginBottom:4}}>Arrastra tus archivos XML aqui</div>
-        <div style={{fontSize:12,color:'#9ca3af',marginBottom:16}}>O da clic para seleccionarlos · Acepta multiples archivos XML del SAT</div>
-        <button onClick={e => { e.stopPropagation(); fileRef.current.click() }}
-          style={{padding:'8px 20px',background:'#185FA5',color:'white',border:'none',borderRadius:8,fontSize:13,fontWeight:500,cursor:'pointer'}}>
-          Seleccionar XML
-        </button>
+        style={{border:`2px dashed ${dragover?'#185FA5':'#e5e7eb'}`,borderRadius:12,padding:24,textAlign:'center',background:dragover?'#E6F1FB':'white',marginBottom:14,cursor:'pointer',transition:'all 0.2s'}}>
+        <div style={{fontSize:28,marginBottom:8}}>📂</div>
+        <div style={{fontSize:14,fontWeight:500,color:'#1f2937',marginBottom:4}}>Arrastra tus archivos XML aqui</div>
+        <div style={{fontSize:12,color:'#9ca3af'}}>O da clic para seleccionarlos · Acepta multiples archivos XML del SAT</div>
         <input ref={fileRef} type="file" accept=".xml" multiple style={{display:'none'}} onChange={e => handleFiles(e.target.files)} />
       </div>
 
-      {/* Chips */}
       {chips.length > 0 && (
         <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:16}}>
           {chips.map((c,i) => (
@@ -180,7 +196,6 @@ export default function Egresos() {
         </div>
       )}
 
-      {/* Header bar */}
       <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}>
         <div style={{display:'flex',alignItems:'center',gap:8,flex:1,background:'white',border:'0.5px solid #e5e7eb',borderRadius:999,padding:'10px 18px'}}>
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -195,7 +210,6 @@ export default function Egresos() {
         </select>
       </div>
 
-      {/* Tabla */}
       <div style={{background:'white',borderRadius:10,border:'0.5px solid #e5e7eb',overflow:'hidden'}}>
         <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
           <thead>
@@ -209,7 +223,9 @@ export default function Egresos() {
             {loading ? (
               <tr><td colSpan="9" style={{textAlign:'center',padding:32,color:'#9ca3af'}}>Cargando...</td></tr>
             ) : filtered.length === 0 ? (
-              <tr><td colSpan="9" style={{textAlign:'center',padding:32,color:'#9ca3af'}}>Carga un archivo XML del SAT para ver los egresos aqui</td></tr>
+              <tr><td colSpan="9" style={{textAlign:'center',padding:32,color:'#9ca3af'}}>
+                {clienteActivo ? `No hay egresos para ${clienteActivo.nombre}` : 'Carga un archivo XML del SAT para ver los egresos aqui'}
+              </td></tr>
             ) : filtered.map((r,i) => (
               <tr key={i} style={{background:i%2===1?'#f9fafb':'white'}}>
                 <td style={{padding:'10px 12px'}}>{r.fecha}</td>
@@ -228,8 +244,7 @@ export default function Egresos() {
                 </td>
                 <td style={{padding:'10px 12px',textAlign:'right'}}>{fmt(r.subtotal)}</td>
                 <td style={{padding:'10px 12px',textAlign:'right'}}>
-                  {fmt(r.iva)}
-                  <span style={{fontSize:10,color:'#6b7280',background:'#f3f4f6',padding:'2px 6px',borderRadius:4,marginLeft:4}}>{r.tasaIva}%</span>
+                  {fmt(r.iva)}<span style={{fontSize:10,color:'#6b7280',background:'#f3f4f6',padding:'2px 6px',borderRadius:4,marginLeft:4}}>{r.tasaIva}%</span>
                 </td>
                 <td style={{padding:'10px 12px',textAlign:'right'}}>{fmt(r.retencion)}</td>
                 <td style={{padding:'10px 12px',textAlign:'right',fontWeight:600,color:'#A32D2D'}}>{fmt(r.total)}</td>
