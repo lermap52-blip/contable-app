@@ -1,24 +1,30 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import { supabase } from './supabase'
+import { ClienteProvider, useCliente } from './ClienteContext'
 import "./globals.css"
+import {
+  LayoutDashboard, TrendingUp, TrendingDown, FileText,
+  Users, Calculator, FolderOpen, Settings, LogOut,
+  ChevronLeft, ChevronRight, ChevronDown, AlertTriangle
+} from 'lucide-react'
 
 const menuItems = [
   { section: 'Principal', items: [
-    { label: 'Dashboard', href: '/' },
+    { label: 'Dashboard', href: '/', icon: LayoutDashboard },
   ]},
   { section: 'Finanzas', items: [
-    { label: 'Ingresos', href: '/ingresos' },
-    { label: 'Egresos', href: '/egresos' },
-    { label: 'Facturas', href: '/facturas' },
+    { label: 'Ingresos', href: '/ingresos', icon: TrendingUp },
+    { label: 'Egresos', href: '/egresos', icon: TrendingDown },
+    { label: 'Facturas', href: '/facturas', icon: FileText },
   ]},
   { section: 'Directorio', items: [
-    { label: 'Clientes', href: '/clientes' },
-    { label: 'Impuestos', href: '/impuestos' },
+    { label: 'Clientes', href: '/clientes', icon: Users },
+    { label: 'Impuestos', href: '/impuestos', icon: Calculator },
   ]},
   { section: 'Archivos', items: [
-    { label: 'Documentos fiscales', href: '/documentos-fiscales' },
+    { label: 'Documentos fiscales', href: '/documentos-fiscales', icon: FolderOpen },
   ]},
 ]
 
@@ -38,6 +44,109 @@ function getTramo(m) {
 }
 
 function fmtN(n) { return '$'+n.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2}) }
+
+function SelectorCliente({ collapsed }) {
+  const { clientes, clienteActivo, seleccionarCliente, diasParaVencimiento } = useCliente()
+  const [open, setOpen] = useState(false)
+  const ref = useRef()
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const diasVenc = clienteActivo ? diasParaVencimiento(clienteActivo.vencimiento_efirma) : null
+  const alertaEfirma = diasVenc !== null && diasVenc <= 30
+
+  if (collapsed) {
+    return (
+      <div style={{padding:'8px',borderBottom:'0.5px solid #f3f4f6',display:'flex',justifyContent:'center'}}>
+        <div style={{width:34,height:34,borderRadius:8,background:clienteActivo?'#185FA5':'#f3f4f6',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:clienteActivo?'white':'#9ca3af',cursor:'pointer'}}
+          title={clienteActivo?.nombre || 'Seleccionar cliente'}
+          onClick={() => setOpen(!open)}>
+          {clienteActivo ? clienteActivo.nombre.charAt(0) : '?'}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div ref={ref} style={{padding:'8px 10px',borderBottom:'0.5px solid #f3f4f6',position:'relative'}}>
+      <div style={{fontSize:9,fontWeight:600,color:'#c4c4c4',textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:5}}>Cliente activo</div>
+      <button onClick={() => setOpen(!open)}
+        style={{width:'100%',padding:'8px 10px',background:clienteActivo?'#EFF6FF':'#f9fafb',border:`0.5px solid ${clienteActivo?'#bfdbfe':'#e5e7eb'}`,borderRadius:8,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
+        <div style={{display:'flex',alignItems:'center',gap:8,overflow:'hidden',flex:1}}>
+          {clienteActivo ? (
+            <>
+              <div style={{width:24,height:24,minWidth:24,borderRadius:6,background:'#185FA5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:'white'}}>
+                {clienteActivo.nombre.charAt(0)}
+              </div>
+              <div style={{overflow:'hidden'}}>
+                <div style={{fontSize:12,fontWeight:500,color:'#0f172a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{clienteActivo.nombre.split(' ').slice(0,2).join(' ')}</div>
+                <div style={{fontSize:10,color:'#94a3b8',fontFamily:'monospace'}}>{clienteActivo.rfc}</div>
+              </div>
+            </>
+          ) : (
+            <span style={{fontSize:12,color:'#94a3b8'}}>Seleccionar cliente...</span>
+          )}
+        </div>
+        <ChevronDown size={14} color="#94a3b8" style={{flexShrink:0,transform:open?'rotate(180deg)':'rotate(0deg)',transition:'transform 0.15s'}} />
+      </button>
+
+      {alertaEfirma && clienteActivo && (
+        <div style={{marginTop:6,padding:'5px 8px',background:'#fffbeb',border:'0.5px solid #fde68a',borderRadius:6,display:'flex',alignItems:'center',gap:6}}>
+          <AlertTriangle size={12} color="#d97706" />
+          <span style={{fontSize:10,color:'#d97706',fontWeight:500}}>
+            {diasVenc <= 0 ? 'e.firma vencida' : `e.firma vence en ${diasVenc} dias`}
+          </span>
+        </div>
+      )}
+
+      {open && (
+        <div style={{position:'absolute',top:'calc(100% + 4px)',left:10,right:10,background:'white',border:'0.5px solid #e5e7eb',borderRadius:10,boxShadow:'0 4px 16px rgba(0,0,0,0.08)',zIndex:200,overflow:'hidden'}}>
+          <div style={{maxHeight:200,overflowY:'auto'}}>
+            <button onClick={() => { seleccionarCliente(null); setOpen(false) }}
+              style={{width:'100%',padding:'9px 12px',background:'none',border:'none',cursor:'pointer',textAlign:'left',fontSize:12,color:'#6b7280',borderBottom:'0.5px solid #f3f4f6',display:'flex',alignItems:'center',gap:8}}
+              onMouseEnter={e => e.currentTarget.style.background='#f9fafb'}
+              onMouseLeave={e => e.currentTarget.style.background='none'}>
+              <div style={{width:22,height:22,borderRadius:6,background:'#f3f4f6',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,color:'#9ca3af'}}>—</div>
+              Ver todos los clientes
+            </button>
+            {clientes.map(c => {
+              const dias = diasParaVencimiento(c.vencimiento_efirma)
+              const alerta = dias !== null && dias <= 30
+              return (
+                <button key={c.id} onClick={() => { seleccionarCliente(c); setOpen(false) }}
+                  style={{width:'100%',padding:'9px 12px',background:clienteActivo?.id===c.id?'#EFF6FF':'none',border:'none',cursor:'pointer',textAlign:'left',borderBottom:'0.5px solid #f3f4f6',display:'flex',alignItems:'center',gap:8}}
+                  onMouseEnter={e => e.currentTarget.style.background='#f9fafb'}
+                  onMouseLeave={e => e.currentTarget.style.background=clienteActivo?.id===c.id?'#EFF6FF':'none'}>
+                  <div style={{width:22,height:22,minWidth:22,borderRadius:6,background:'#185FA5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:'white'}}>
+                    {c.nombre.charAt(0)}
+                  </div>
+                  <div style={{flex:1,overflow:'hidden'}}>
+                    <div style={{fontSize:12,fontWeight:500,color:'#0f172a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{c.nombre.split(' ').slice(0,3).join(' ')}</div>
+                    <div style={{fontSize:10,color:'#94a3b8',fontFamily:'monospace'}}>{c.rfc}</div>
+                  </div>
+                  {alerta && <AlertTriangle size={12} color="#d97706" />}
+                </button>
+              )
+            })}
+            {clientes.length === 0 && (
+              <div style={{padding:'12px',fontSize:12,color:'#94a3b8',textAlign:'center'}}>No hay clientes registrados</div>
+            )}
+          </div>
+          <a href="/clientes" onClick={() => setOpen(false)}
+            style={{display:'block',padding:'8px 12px',fontSize:11,color:'#185FA5',textDecoration:'none',borderTop:'0.5px solid #f3f4f6',textAlign:'center',background:'#f9fafb'}}
+            onMouseEnter={e => e.currentTarget.style.background='#eff6ff'}
+            onMouseLeave={e => e.currentTarget.style.background='#f9fafb'}>
+            + Agregar nuevo cliente
+          </a>
+        </div>
+      )}
+    </div>
+  )
+}
 
 function CalculadoraFlotante() {
   const [open, setOpen] = useState(false)
@@ -61,7 +170,9 @@ function CalculadoraFlotante() {
         <div style={{position:'absolute',bottom:64,right:0,width:300,background:'white',border:'0.5px solid #e5e7eb',borderRadius:16,boxShadow:'0 4px 24px rgba(0,0,0,0.10)',overflow:'hidden'}}>
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'14px 16px',borderBottom:'0.5px solid #e5e7eb'}}>
             <span style={{fontSize:14,fontWeight:500,color:'#1f2937'}}>Calculadora de impuestos</span>
-            <button onClick={() => setOpen(false)} style={{background:'none',border:'none',cursor:'pointer',fontSize:18,color:'#9ca3af',lineHeight:1}}>x</button>
+            <button onClick={() => setOpen(false)} style={{background:'none',border:'none',cursor:'pointer',color:'#9ca3af',lineHeight:1,display:'flex',alignItems:'center'}}>
+              <ChevronRight size={18} />
+            </button>
           </div>
           <div style={{padding:16,maxHeight:420,overflowY:'auto'}}>
             <div style={{fontSize:10,fontWeight:500,color:'#9ca3af',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:8}}>Ingresos</div>
@@ -135,71 +246,110 @@ function Sidebar({ user, collapsed, setCollapsed }) {
   const initials = nombre.charAt(0).toUpperCase()
 
   return (
-    <aside style={{width:collapsed?56:240,minWidth:collapsed?56:240,background:'white',borderRight:'0.5px solid #e5e7eb',display:'flex',flexDirection:'column',transition:'width 0.25s,min-width 0.25s',overflow:'hidden',position:'sticky',top:0,height:'100vh'}}>
+    <aside style={{
+      width: collapsed ? 64 : 240,
+      minWidth: collapsed ? 64 : 240,
+      background: 'white',
+      borderRight: '0.5px solid #e5e7eb',
+      display: 'flex',
+      flexDirection: 'column',
+      transition: 'width 0.25s ease, min-width 0.25s ease',
+      overflow: 'hidden',
+      position: 'sticky',
+      top: 0,
+      height: '100vh',
+      boxShadow: '1px 0 8px rgba(0,0,0,0.04)',
+    }}>
 
       {/* Logo */}
-      <div style={{padding:'16px 12px',borderBottom:'0.5px solid #e5e7eb',display:'flex',alignItems:'center',gap:10}}>
-        <div style={{width:32,height:32,minWidth:32,borderRadius:8,background:avatarColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,color:'white',fontWeight:700}}>
-          {appNombre.charAt(0)}
-        </div>
-        {!collapsed && <span style={{fontSize:15,fontWeight:600,color:'#1f2937',whiteSpace:'nowrap'}}>{appNombre}</span>}
+      <div style={{padding:'16px 12px',borderBottom:'0.5px solid #f3f4f6',display:'flex',alignItems:'center',justifyContent:collapsed?'center':'space-between',gap:10,minHeight:60}}>
+        {!collapsed && (
+          <div style={{display:'flex',alignItems:'center',gap:10,overflow:'hidden'}}>
+            <div style={{width:30,height:30,minWidth:30,borderRadius:8,background:avatarColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,color:'white',fontWeight:700}}>
+              {appNombre.charAt(0)}
+            </div>
+            <span style={{fontSize:15,fontWeight:600,color:'#1f2937',whiteSpace:'nowrap'}}>{appNombre}</span>
+          </div>
+        )}
+        <button onClick={() => setCollapsed(!collapsed)}
+          style={{background:'#f9fafb',border:'0.5px solid #e5e7eb',borderRadius:8,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:6,color:'#6b7280',flexShrink:0,transition:'background 0.15s'}}
+          onMouseEnter={e => e.currentTarget.style.background='#f3f4f6'}
+          onMouseLeave={e => e.currentTarget.style.background='#f9fafb'}>
+          {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+        </button>
       </div>
 
       {/* Perfil */}
-      <div style={{padding:'12px',borderBottom:'0.5px solid #e5e7eb'}}>
-        <div style={{display:'flex',alignItems:'center',gap:10,overflow:'hidden'}}>
-          <div style={{width:36,height:36,minWidth:36,borderRadius:'50%',background:avatarColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:500,color:'white'}}>
-            {initials}
-          </div>
-          {!collapsed && (
-            <div style={{overflow:'hidden'}}>
-              <div style={{fontSize:13,fontWeight:500,color:'#1f2937',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{nombre}</div>
-              <div style={{fontSize:11,color:'#6b7280',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{user?.email || ''}</div>
-            </div>
-          )}
+      <div style={{padding:collapsed?'12px 8px':'12px 14px',borderBottom:'0.5px solid #f3f4f6',display:'flex',alignItems:'center',gap:10,overflow:'hidden',justifyContent:collapsed?'center':'flex-start'}}>
+        <div style={{width:34,height:34,minWidth:34,borderRadius:'50%',background:avatarColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:600,color:'white',flexShrink:0}}>
+          {initials}
         </div>
+        {!collapsed && (
+          <div style={{overflow:'hidden'}}>
+            <div style={{fontSize:13,fontWeight:500,color:'#1f2937',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{nombre}</div>
+            <div style={{fontSize:11,color:'#9ca3af',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{user?.email || ''}</div>
+          </div>
+        )}
       </div>
 
+      {/* Selector de cliente */}
+      <SelectorCliente collapsed={collapsed} />
+
       {/* Nav */}
-      <nav style={{flex:1,padding:'10px 8px',overflowY:'auto',display:'flex',flexDirection:'column',gap:2}}>
+      <nav style={{flex:1,padding:'8px',overflowY:'auto',display:'flex',flexDirection:'column',gap:1}}>
         {menuItems.map(group => (
-          <div key={group.section}>
-            {!collapsed && <div style={{fontSize:10,fontWeight:500,color:'#9ca3af',textTransform:'uppercase',letterSpacing:'0.08em',padding:'8px 8px 4px'}}>{group.section}</div>}
-            {group.items.map(item => (
-              <a key={item.label} href={item.href}
-                style={{display:'flex',alignItems:'center',gap:10,padding:collapsed?'8px':'8px 10px',borderRadius:8,cursor:'pointer',textDecoration:'none',background:pathname===item.href?'#E6F1FB':'transparent',justifyContent:collapsed?'center':'flex-start',marginBottom:2}}>
-                <div style={{width:20,height:20,minWidth:20,borderRadius:6,background:pathname===item.href?avatarColor:'#f3f4f6',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,color:pathname===item.href?'white':'#6b7280',fontWeight:700}}>
-                  {item.label.charAt(0)}
-                </div>
-                {!collapsed && <span style={{fontSize:13,color:pathname===item.href?avatarColor:'#6b7280',fontWeight:pathname===item.href?500:400,whiteSpace:'nowrap'}}>{item.label}</span>}
-              </a>
-            ))}
+          <div key={group.section} style={{marginBottom:4}}>
+            {!collapsed && (
+              <div style={{fontSize:10,fontWeight:600,color:'#c4c4c4',textTransform:'uppercase',letterSpacing:'0.1em',padding:'8px 8px 4px',whiteSpace:'nowrap'}}>
+                {group.section}
+              </div>
+            )}
+            {group.items.map(item => {
+              const Icon = item.icon
+              const isActive = pathname === item.href
+              return (
+                <a key={item.label} href={item.href}
+                  title={collapsed ? item.label : ''}
+                  style={{display:'flex',alignItems:'center',gap:10,padding:collapsed?'10px':'9px 10px',borderRadius:8,cursor:'pointer',textDecoration:'none',background:isActive?'#EFF6FF':'transparent',justifyContent:collapsed?'center':'flex-start',marginBottom:1,transition:'background 0.15s'}}
+                  onMouseEnter={e => { if (!isActive) e.currentTarget.style.background='#f9fafb' }}
+                  onMouseLeave={e => { if (!isActive) e.currentTarget.style.background='transparent' }}>
+                  <Icon size={18} color={isActive?avatarColor:'#9ca3af'} strokeWidth={isActive?2:1.75} />
+                  {!collapsed && (
+                    <span style={{fontSize:13,color:isActive?avatarColor:'#4b5563',fontWeight:isActive?500:400,whiteSpace:'nowrap'}}>
+                      {item.label}
+                    </span>
+                  )}
+                </a>
+              )
+            })}
           </div>
         ))}
       </nav>
 
       {/* Bottom */}
-      <div style={{padding:'10px 8px',borderTop:'0.5px solid #e5e7eb',display:'flex',flexDirection:'column',gap:2}}>
-        <a href="/configuracion" style={{display:'flex',alignItems:'center',gap:10,padding:collapsed?'8px':'8px 10px',borderRadius:8,cursor:'pointer',textDecoration:'none',justifyContent:collapsed?'center':'flex-start',background:pathname==='/configuracion'?'#E6F1FB':'transparent'}}>
-          <div style={{width:20,height:20,minWidth:20,borderRadius:6,background:pathname==='/configuracion'?avatarColor:'#f3f4f6',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,color:pathname==='/configuracion'?'white':'#6b7280',fontWeight:700}}>C</div>
-          {!collapsed && <span style={{fontSize:13,color:pathname==='/configuracion'?avatarColor:'#6b7280',fontWeight:pathname==='/configuracion'?500:400}}>Configuracion</span>}
+      <div style={{padding:'8px',borderTop:'0.5px solid #f3f4f6',display:'flex',flexDirection:'column',gap:1}}>
+        <a href="/configuracion"
+          title={collapsed?'Configuracion':''}
+          style={{display:'flex',alignItems:'center',gap:10,padding:collapsed?'10px':'9px 10px',borderRadius:8,cursor:'pointer',textDecoration:'none',justifyContent:collapsed?'center':'flex-start',background:pathname==='/configuracion'?'#EFF6FF':'transparent',transition:'background 0.15s'}}
+          onMouseEnter={e => { if (pathname!=='/configuracion') e.currentTarget.style.background='#f9fafb' }}
+          onMouseLeave={e => { if (pathname!=='/configuracion') e.currentTarget.style.background=pathname==='/configuracion'?'#EFF6FF':'transparent' }}>
+          <Settings size={18} color={pathname==='/configuracion'?avatarColor:'#9ca3af'} strokeWidth={1.75} />
+          {!collapsed && <span style={{fontSize:13,color:pathname==='/configuracion'?avatarColor:'#4b5563',fontWeight:pathname==='/configuracion'?500:400}}>Configuracion</span>}
         </a>
-        <button onClick={handleLogout} style={{display:'flex',alignItems:'center',gap:10,padding:collapsed?'8px':'8px 10px',borderRadius:8,cursor:'pointer',background:'none',border:'none',justifyContent:collapsed?'center':'flex-start',width:'100%'}}>
-          <div style={{width:20,height:20,minWidth:20,borderRadius:6,background:'#FCEBEB',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,color:'#A32D2D',fontWeight:700}}>X</div>
-          {!collapsed && <span style={{fontSize:13,color:'#A32D2D'}}>Cerrar sesion</span>}
+        <button onClick={handleLogout}
+          title={collapsed?'Cerrar sesion':''}
+          style={{display:'flex',alignItems:'center',gap:10,padding:collapsed?'10px':'9px 10px',borderRadius:8,cursor:'pointer',background:'none',border:'none',justifyContent:collapsed?'center':'flex-start',width:'100%',transition:'background 0.15s'}}
+          onMouseEnter={e => e.currentTarget.style.background='#fef2f2'}
+          onMouseLeave={e => e.currentTarget.style.background='none'}>
+          <LogOut size={18} color="#ef4444" strokeWidth={1.75} />
+          {!collapsed && <span style={{fontSize:13,color:'#ef4444'}}>Cerrar sesion</span>}
         </button>
       </div>
-
-      {/* Toggle */}
-      <button onClick={() => setCollapsed(!collapsed)}
-        style={{position:'absolute',top:20,right:-12,width:24,height:24,borderRadius:'50%',background:'white',border:'0.5px solid #e5e7eb',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',fontSize:12,color:'#6b7280',zIndex:10}}>
-        {collapsed ? '>' : '<'}
-      </button>
     </aside>
   )
 }
 
-export default function RootLayout({ children }) {
+function AppLayout({ children }) {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
   const [user, setUser] = useState(null)
@@ -219,13 +369,21 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="es">
-      <body style={{margin:0,fontFamily:'system-ui,sans-serif',display:'flex',minHeight:'100vh',background:'#f3f4f6'}}>
+      <body style={{margin:0,fontFamily:'system-ui,sans-serif',display:'flex',minHeight:'100vh',background:'#f8fafc'}}>
         <Sidebar user={user} collapsed={collapsed} setCollapsed={setCollapsed} />
-        <main style={{flex:1,overflowY:'auto',position:'relative'}}>
+        <main style={{flex:1,overflowY:'auto',position:'relative',transition:'all 0.25s ease'}}>
           {children}
           <CalculadoraFlotante />
         </main>
       </body>
     </html>
+  )
+}
+
+export default function RootLayout({ children }) {
+  return (
+    <ClienteProvider>
+      <AppLayout>{children}</AppLayout>
+    </ClienteProvider>
   )
 }
