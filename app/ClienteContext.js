@@ -10,10 +10,9 @@ export function ClienteProvider({ children }) {
   const [perfilMaestro, setPerfilMaestro] = useState(null)
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState(null)
+  const [moduloActivo, setModuloActivo] = useState('fiscal')
 
-  useEffect(() => {
-    inicializar()
-  }, [])
+  useEffect(() => { inicializar() }, [])
 
   const inicializar = async () => {
     setLoading(true)
@@ -28,15 +27,14 @@ export function ClienteProvider({ children }) {
       .single()
 
     if (empresa) {
-      const maestro = {
+      setPerfilMaestro({
         id: user.id,
         nombre: empresa.razon_social || user.email?.split('@')[0] || 'Mi Despacho',
         rfc: empresa.rfc || '',
         regimen_fiscal: empresa.regimen_fiscal || 'RESICO',
         esMaestro: true,
         empresa_id: user.id,
-      }
-      setPerfilMaestro(maestro)
+      })
     }
 
     const { data: contactos } = await supabase
@@ -48,17 +46,15 @@ export function ClienteProvider({ children }) {
 
     setClientes(contactos || [])
 
-    const savedId = localStorage.getItem('cliente_activo_id')
-    if (savedId && savedId !== 'maestro' && contactos) {
-      const encontrado = contactos.find(c => c.id === savedId)
-      if (encontrado) {
-        setClienteActivo(encontrado)
-        setLoading(false)
-        return
-      }
+    const savedClienteId = localStorage.getItem('cliente_activo_id')
+    if (savedClienteId && contactos) {
+      const encontrado = contactos.find(c => c.id === savedClienteId)
+      if (encontrado) setClienteActivo(encontrado)
     }
 
-    setClienteActivo(null)
+    const savedModulo = localStorage.getItem('modulo_activo')
+    if (savedModulo) setModuloActivo(savedModulo)
+
     setLoading(false)
   }
 
@@ -69,6 +65,11 @@ export function ClienteProvider({ children }) {
     } else {
       localStorage.removeItem('cliente_activo_id')
     }
+  }
+
+  const cambiarModulo = (id) => {
+    setModuloActivo(id)
+    localStorage.setItem('modulo_activo', id)
   }
 
   const esModoMaestro = !clienteActivo
@@ -94,6 +95,8 @@ export function ClienteProvider({ children }) {
       user,
       empresaId,
       rfcActivo,
+      moduloActivo,
+      cambiarModulo,
       cargarClientes: inicializar,
       diasParaVencimiento,
     }}>
