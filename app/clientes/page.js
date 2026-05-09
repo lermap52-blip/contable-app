@@ -2,6 +2,167 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../supabase'
 
+// Regímenes disponibles
+const REGIMENES_PF = [
+  { id: 'sueldos', label: 'Sueldos y Salarios', codigo: '605' },
+  { id: 'arrendamiento', label: 'Arrendamiento', codigo: '606' },
+  { id: 'actividad', label: 'Act. Empresarial / Honorarios', codigo: '612' },
+  { id: 'intereses', label: 'Intereses', codigo: '614' },
+  { id: 'dividendos', label: 'Dividendos', codigo: '611' },
+  { id: 'plataformas', label: 'Plataformas Tecnológicas', codigo: '625' },
+  { id: 'resico', label: 'RESICO PF', codigo: '626' },
+]
+
+const REGIMENES_PM = [
+  { id: 'general_pm', label: 'General de Ley PM', codigo: '601' },
+  { id: 'resico_pm', label: 'RESICO PM', codigo: '626' },
+  { id: 'fines_no_lucrativos', label: 'Fines No Lucrativos', codigo: '603' },
+  { id: 'agapes', label: 'Sector Primario (AGAPES)', codigo: '622' },
+]
+
+// Matriz de compatibilidad PF
+const COMPATIBILIDAD_PF = {
+  sueldos:      { arrendamiento:true, intereses:true, dividendos:true, actividad:true, plataformas:true, resico:true },
+  arrendamiento:{ sueldos:true, intereses:true, dividendos:true, actividad:true, plataformas:true, resico:true },
+  actividad:    { sueldos:true, arrendamiento:true, intereses:true, dividendos:true, plataformas:true, resico:false },
+  plataformas:  { sueldos:true, arrendamiento:true, intereses:true, dividendos:true, actividad:true, resico:false },
+  resico:       { sueldos:true, arrendamiento:true, intereses:true, dividendos:false, actividad:false, plataformas:false },
+  intereses:    { sueldos:true, arrendamiento:true, actividad:true, dividendos:true, plataformas:true, resico:true },
+  dividendos:   { sueldos:true, arrendamiento:true, actividad:true, intereses:true, plataformas:true, resico:false },
+}
+
+// Mensajes de incompatibilidad
+const MENSAJES_INCOMPATIBILIDAD = {
+  'resico-actividad': 'RESICO PF es incompatible con Actividad Empresarial / Honorarios. En RESICO no puedes deducir gastos como en Actividad Empresarial.',
+  'resico-plataformas': 'RESICO PF es incompatible con Plataformas Tecnológicas (Uber, Mercado Libre, etc.). Debes elegir uno u otro.',
+  'resico-dividendos': 'RESICO PF es incompatible con Dividendos. Si eres socio de una Persona Moral no puedes estar en RESICO.',
+  'actividad-resico': 'Actividad Empresarial / Honorarios es incompatible con RESICO PF.',
+  'plataformas-resico': 'Plataformas Tecnológicas es incompatible con RESICO PF.',
+  'dividendos-resico': 'Dividendos es incompatible con RESICO PF.',
+}
+
+// Notas especiales RESICO
+const NOTAS_RESICO = [
+  'RESICO PF solo es compatible con Sueldos, Arrendamiento e Intereses',
+  'El total de ingresos no debe exceder $3.5 millones anuales',
+  'Si recibes dividendos como socio de una PM, no puedes estar en RESICO',
+  'Plataformas Tecnológicas es totalmente incompatible con RESICO',
+]
+
+function validarCompatibilidad(regimenes) {
+  const advertencias = []
+  const errores = []
+
+  for (let i = 0; i < regimenes.length; i++) {
+    for (let j = i + 1; j < regimenes.length; j++) {
+      const a = regimenes[i]
+      const b = regimenes[j]
+      const compatible = COMPATIBILIDAD_PF[a]?.[b]
+      if (compatible === false) {
+        const key1 = `${a}-${b}`
+        const key2 = `${b}-${a}`
+        const mensaje = MENSAJES_INCOMPATIBILIDAD[key1] || MENSAJES_INCOMPATIBILIDAD[key2] || `${a} es incompatible con ${b}`
+        errores.push(mensaje)
+      }
+    }
+  }
+
+  if (regimenes.includes('resico')) {
+    if (regimenes.length > 1) {
+      const soloPermitidos = ['sueldos', 'arrendamiento', 'intereses']
+      const noPermitidos = regimenes.filter(r => r !== 'resico' && !soloPermitidos.includes(r))
+      if (noPermitidos.length === 0 && regimenes.length <= 3) {
+        advertencias.push('RESICO PF compatible con los regímenes seleccionados. Recuerda que el total de ingresos no debe exceder $3.5M anuales.')
+      }
+    }
+  }
+
+  return { errores, advertencias }
+}
+
+function RegimenSelector({ esPersonaMoral, regimenesSeleccionados, onChange }) {
+  const lista = esPersonaMoral ? REGIMENES_PM : REGIMENES_PF
+  const { errores, advertencias } = validarCompatibilidad(regimenesSeleccionados)
+
+  const toggle = (id) => {
+    if (regimenesSeleccionados.includes(id)) {
+      onChange(regimenesSeleccionados.filter(r => r !== id))
+    } else {
+      onChange([...regimenesSeleccionados, id])
+    }
+  }
+
+  // Verificar si un régimen es incompatible con los ya seleccionados
+  const esIncompatible = (id) => {
+    for (const sel of regimenesSeleccionados) {
+      if (sel === id) continue
+      if (COMPATIBILIDAD_PF[sel]?.[id] === false) return true
+      if (COMPATIBILIDAD_PF[id]?.[sel] === false) return true
+    }
+    return false
+  }
+
+  return (
+    <div>
+      <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:8}}>
+        {lista.map(r => {
+          const seleccionado = regimenesSeleccionados.includes(r.id)
+          const incompatible = !esPersonaMoral ? esIncompatible(r.id) && !seleccionado : false
+          return (
+            <button key={r.id} onClick={() => toggle(r.id)}
+              disabled={incompatible}
+              style={{
+                padding:'6px 10px',
+                border:`1px solid ${seleccionado?'#185FA5':incompatible?'#fecaca':'#e5e7eb'}`,
+                borderRadius:20,
+                fontSize:11,
+                fontWeight:seleccionado?500:400,
+                cursor:incompatible?'not-allowed':'pointer',
+                background:seleccionado?'#185FA5':incompatible?'#fef2f2':'white',
+                color:seleccionado?'white':incompatible?'#9ca3af':'#374151',
+                opacity:incompatible?0.6:1,
+                transition:'all 0.15s',
+              }}>
+              {r.label}
+              <span style={{fontSize:9,marginLeft:4,opacity:0.7}}>({r.codigo})</span>
+            </button>
+          )
+        })}
+      </div>
+
+      {errores.map((e,i) => (
+        <div key={i} style={{background:'#fef2f2',border:'0.5px solid #fecaca',borderRadius:8,padding:'8px 12px',marginBottom:6,display:'flex',gap:8,alignItems:'flex-start'}}>
+          <span style={{fontSize:14,flexShrink:0}}>⚠️</span>
+          <span style={{fontSize:11,color:'#dc2626'}}>{e}</span>
+        </div>
+      ))}
+
+      {advertencias.map((a,i) => (
+        <div key={i} style={{background:'#fffbeb',border:'0.5px solid #fde68a',borderRadius:8,padding:'8px 12px',marginBottom:6,display:'flex',gap:8,alignItems:'flex-start'}}>
+          <span style={{fontSize:14,flexShrink:0}}>💡</span>
+          <span style={{fontSize:11,color:'#92400e'}}>{a}</span>
+        </div>
+      ))}
+
+      {regimenesSeleccionados.includes('resico') && (
+        <div style={{background:'#eff6ff',border:'0.5px solid #bfdbfe',borderRadius:8,padding:'8px 12px',marginBottom:6}}>
+          <div style={{fontSize:10,fontWeight:600,color:'#185FA5',marginBottom:4}}>Notas RESICO PF</div>
+          {NOTAS_RESICO.map((n,i) => (
+            <div key={i} style={{fontSize:10,color:'#1e40af',marginBottom:2}}>· {n}</div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function FileIcon({ nombre }) {
+  const ext = nombre.split('.').pop().toLowerCase()
+  if (ext === 'pdf') return <div style={{width:32,height:32,borderRadius:6,background:'#FCEBEB',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:'#A32D2D',flexShrink:0}}>PDF</div>
+  if (ext === 'doc' || ext === 'docx') return <div style={{width:32,height:32,borderRadius:6,background:'#E6F1FB',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:'#185FA5',flexShrink:0}}>DOC</div>
+  return <div style={{width:32,height:32,borderRadius:6,background:'#f3f4f6',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:'#6b7280',flexShrink:0}}>{ext.toUpperCase().slice(0,3)}</div>
+}
+
 export default function Clientes() {
   const [clientes, setClientes] = useState([])
   const [seleccionado, setSeleccionado] = useState(null)
@@ -10,16 +171,22 @@ export default function Clientes() {
   const [nuevo, setNuevo] = useState(false)
   const [opinionResult, setOpinionResult] = useState(false)
   const [satLoading, setSatLoading] = useState('')
-  const [form, setForm] = useState({ nombre:'', rfc:'', cp:'', regimen:'RESICO' })
+  const [guardando, setGuardando] = useState(false)
   const [cerUploaded, setCerUploaded] = useState(false)
   const [keyUploaded, setKeyUploaded] = useState(false)
-  const [password, setPassword] = useState('')
   const [cerDrag, setCerDrag] = useState(false)
   const [keyDrag, setKeyDrag] = useState(false)
   const [vencimiento, setVencimiento] = useState('')
-  const [guardando, setGuardando] = useState(false)
+  const [password, setPassword] = useState('')
   const cerRef = useRef()
   const keyRef = useRef()
+
+  const [form, setForm] = useState({
+    nombre: '',
+    rfc: '',
+    esPersonaMoral: false,
+    regimenes: [],
+  })
 
   useEffect(() => { cargarClientes() }, [])
 
@@ -50,24 +217,6 @@ export default function Clientes() {
             if (/^[A-Z]{3}\d{6}[A-Z0-9]{3}$/.test(chunk)) { rfc = chunk; break }
           }
         }
-        let nombre = ''
-        let cadena = ''
-        for (let i = 0; i < bytes.length; i++) {
-          const c = bytes[i]
-          if ((c >= 65 && c <= 90) || (c >= 97 && c <= 122) || c === 32 || c === 209 || c === 241 || c === 193 || c === 201 || c === 205 || c === 211 || c === 218) {
-            cadena += String.fromCharCode(c)
-          } else {
-            if (cadena.trim().length > 15 && cadena.includes(' ') &&
-              !cadena.toLowerCase().includes('mexico') &&
-              !cadena.toLowerCase().includes('servicio') &&
-              !cadena.toLowerCase().includes('administracion') &&
-              !cadena.toLowerCase().includes('tributaria') &&
-              !cadena.toLowerCase().includes('internet')) {
-              nombre = cadena.trim()
-            }
-            cadena = ''
-          }
-        }
         const fechas = []
         for (let i = 0; i < bytes.length - 13; i++) {
           if (bytes[i] === 0x18 && bytes[i+1] === 0x0F) {
@@ -90,7 +239,14 @@ export default function Clientes() {
           const raw = fechas[1]
           vence = `${raw.slice(0,4)}-${raw.slice(4,6)}-${raw.slice(6,8)}`
         }
-        setForm(prev => ({ ...prev, rfc: rfc || prev.rfc, nombre: nombre || prev.nombre }))
+        // Detectar si es PM por longitud RFC
+        const espm = rfc.length === 12
+        setForm(prev => ({
+          ...prev,
+          rfc: rfc || prev.rfc,
+          esPersonaMoral: espm,
+          regimenes: [],
+        }))
         setVencimiento(vence)
         setCerUploaded(true)
       } catch { setCerUploaded(true) }
@@ -108,23 +264,35 @@ export default function Clientes() {
     if (file) setKeyUploaded(true)
   }
 
+  const { errores: erroresCompatibilidad } = validarCompatibilidad(form.regimenes)
+  const puedeGuardar = form.nombre && form.rfc && form.regimenes.length > 0 && erroresCompatibilidad.length === 0
+
   const guardarCliente = async () => {
-    if (!form.nombre || !form.rfc) return
+    if (!puedeGuardar) return
     setGuardando(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
+
+    // Determinar régimen_fiscal principal para compatibilidad
+    const regimenPrincipal = form.regimenes[0] || ''
+    const listaRegimenes = form.esPersonaMoral ? REGIMENES_PM : REGIMENES_PF
+    const regimenObj = listaRegimenes.find(r => r.id === regimenPrincipal)
+
     await supabase.from('contactos').insert({
       empresa_id: user.id,
       nombre: form.nombre,
       rfc: form.rfc,
-      regimen_fiscal: form.regimen,
+      regimen_fiscal: regimenObj?.label || regimenPrincipal,
+      regimenes: form.regimenes,
+      es_persona_moral: form.esPersonaMoral,
       tipo: 'cliente',
       email: '',
       telefono: '',
       tiene_efirma: cerUploaded && keyUploaded,
       vencimiento_efirma: vencimiento || null,
     })
-    setForm({ nombre:'', rfc:'', cp:'', regimen:'RESICO' })
+
+    setForm({ nombre:'', rfc:'', esPersonaMoral:false, regimenes:[] })
     setCerUploaded(false)
     setKeyUploaded(false)
     setPassword('')
@@ -135,8 +303,7 @@ export default function Clientes() {
   }
 
   const eliminarCliente = async (id, nombre) => {
-    const confirmar = window.confirm(`Seguro que quieres eliminar a ${nombre}? Esta accion no se puede deshacer.`)
-    if (!confirmar) return
+    if (!window.confirm(`¿Seguro que quieres eliminar a ${nombre}? Esta acción no se puede deshacer.`)) return
     await supabase.from('contactos').delete().eq('id', id)
     if (seleccionado === id) setSeleccionado(null)
     cargarClientes()
@@ -176,13 +343,13 @@ export default function Clientes() {
     setKeyUploaded(false)
     setPassword('')
     setVencimiento('')
-    setForm({ nombre:'', rfc:'', cp:'', regimen:'RESICO' })
+    setForm({ nombre:'', rfc:'', esPersonaMoral:false, regimenes:[] })
   }
 
   return (
     <div style={{padding:28,fontFamily:'system-ui,sans-serif',background:'#f3f4f6',minHeight:'100vh'}}>
       <div style={{fontSize:18,fontWeight:600,color:'#1f2937',marginBottom:2}}>Clientes</div>
-      <div style={{fontSize:13,color:'#6b7280',marginBottom:18}}>Directorio y gestion de expedientes fiscales</div>
+      <div style={{fontSize:13,color:'#6b7280',marginBottom:18}}>Directorio y gestión de expedientes fiscales</div>
 
       <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:18}}>
         <div style={{display:'flex',alignItems:'center',gap:8,flex:1,background:'white',border:'0.5px solid #e5e7eb',borderRadius:999,padding:'10px 18px'}}>
@@ -194,22 +361,23 @@ export default function Clientes() {
         </button>
       </div>
 
-      <div style={{display:'grid',gridTemplateColumns:'1fr 390px',gap:16}}>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 400px',gap:16}}>
 
+        {/* Tabla */}
         <div style={{background:'white',borderRadius:10,border:'0.5px solid #e5e7eb',overflow:'hidden'}}>
           <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
             <thead>
               <tr>
-                {['e.firma','Cliente / RFC','Regimen','Vencimiento','Acciones'].map(h => (
+                {['e.firma','Cliente / RFC','Tipo','Regímenes','Vencimiento','Acciones'].map(h => (
                   <th key={h} style={{padding:'10px 14px',textAlign:'left',fontSize:10,fontWeight:500,color:'#9ca3af',textTransform:'uppercase',letterSpacing:'0.06em',borderBottom:'0.5px solid #e5e7eb',background:'#f9fafb'}}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan="5" style={{textAlign:'center',padding:32,color:'#9ca3af'}}>Cargando...</td></tr>
+                <tr><td colSpan="6" style={{textAlign:'center',padding:32,color:'#9ca3af'}}>Cargando...</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan="5" style={{textAlign:'center',padding:32,color:'#9ca3af'}}>No hay clientes — da clic en Nuevo cliente</td></tr>
+                <tr><td colSpan="6" style={{textAlign:'center',padding:32,color:'#9ca3af'}}>No hay clientes — da clic en Nuevo cliente</td></tr>
               ) : filtered.map((c,i) => (
                 <tr key={c.id} onClick={() => { setSeleccionado(c.id); setNuevo(false); setOpinionResult(false) }}
                   style={{background:seleccionado===c.id?'#E6F1FB':i%2===1?'#f9fafb':'white',cursor:'pointer',borderLeft:seleccionado===c.id?'3px solid #185FA5':'3px solid transparent'}}>
@@ -221,31 +389,49 @@ export default function Clientes() {
                     <div style={{fontSize:10,color:'#9ca3af',fontFamily:'monospace',marginTop:1}}>{c.rfc}</div>
                   </td>
                   <td style={{padding:'10px 14px'}}>
-                    <span style={{fontSize:10,background:'#E6F1FB',color:'#185FA5',padding:'2px 8px',borderRadius:20}}>{c.regimen_fiscal || 'RESICO'}</span>
+                    <span style={{fontSize:10,padding:'2px 7px',borderRadius:20,background:c.es_persona_moral?'#f3f0ff':'#f0fdf4',color:c.es_persona_moral?'#7c3aed':'#15803d',fontWeight:500}}>
+                      {c.es_persona_moral?'PM':'PF'}
+                    </span>
                   </td>
-                  <td style={{padding:'10px 14px',fontSize:11,color: c.vencimiento_efirma && new Date(c.vencimiento_efirma) < new Date() ? '#A32D2D' : '#6b7280'}}>
-                    {c.vencimiento_efirma || '—'}
+                  <td style={{padding:'10px 14px'}}>
+                    <div style={{display:'flex',flexWrap:'wrap',gap:3}}>
+                      {(c.regimenes||[]).slice(0,2).map(r => {
+                        const lista = c.es_persona_moral ? REGIMENES_PM : REGIMENES_PF
+                        const obj = lista.find(x => x.id === r)
+                        return (
+                          <span key={r} style={{fontSize:9,padding:'2px 6px',borderRadius:20,background:'#E6F1FB',color:'#185FA5',fontWeight:500,whiteSpace:'nowrap'}}>
+                            {obj?.codigo || r}
+                          </span>
+                        )
+                      })}
+                      {(c.regimenes||[]).length > 2 && <span style={{fontSize:9,color:'#9ca3af'}}>+{c.regimenes.length-2}</span>}
+                      {(!c.regimenes || c.regimenes.length === 0) && (
+                        <span style={{fontSize:9,color:'#9ca3af'}}>{c.regimen_fiscal||'—'}</span>
+                      )}
+                    </div>
+                  </td>
+                  <td style={{padding:'10px 14px',fontSize:11,color:c.vencimiento_efirma && new Date(c.vencimiento_efirma) < new Date()?'#A32D2D':'#6b7280'}}>
+                    {c.vencimiento_efirma||'—'}
                   </td>
                   <td style={{padding:'10px 14px'}}>
                     <div style={{display:'flex',alignItems:'center',gap:6}}>
                       <button onClick={e => { e.stopPropagation(); setSeleccionado(c.id); setNuevo(false) }}
                         style={{fontSize:11,padding:'4px 10px',background:'#f3f4f6',border:'none',borderRadius:6,cursor:'pointer',color:'#374151'}}>
-                        Ver expediente
+                        Ver
                       </button>
                       <button onClick={e => { e.stopPropagation(); eliminarCliente(c.id, c.nombre) }}
-  title="Eliminar cliente"
-  style={{padding:'6px',background:'none',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',borderRadius:6}}
-  onMouseEnter={e => e.currentTarget.querySelector('.tapa').setAttribute('transform','rotate(-35 12 4)')}
-  onMouseLeave={e => e.currentTarget.querySelector('.tapa').setAttribute('transform','rotate(0 12 4)')}>
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1f2937" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path className="tapa" style={{transition:'transform 0.2s',transformOrigin:'12px 4px'}} d="M3 6h18" />
-    <path d="M8 6V4h8v2" />
-    <rect x="5" y="6" width="14" height="15" rx="2" />
-    <line x1="9" y1="11" x2="9" y2="17" />
-    <line x1="12" y1="11" x2="12" y2="17" />
-    <line x1="15" y1="11" x2="15" y2="17" />
-  </svg>
-</button>
+                        style={{padding:'4px 6px',background:'none',border:'none',cursor:'pointer'}}
+                        onMouseEnter={e => e.currentTarget.querySelector('svg').setAttribute('stroke','#A32D2D')}
+                        onMouseLeave={e => e.currentTarget.querySelector('svg').setAttribute('stroke','#1f2937')}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1f2937" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"
+                          style={{transition:'transform 0.2s',transformOrigin:'12px 4px'}}
+                          onMouseEnter={e => e.currentTarget.querySelector('.tapa')?.setAttribute('transform','rotate(-35 12 4)')}
+                          onMouseLeave={e => e.currentTarget.querySelector('.tapa')?.setAttribute('transform','rotate(0 12 4)')}>
+                          <path className="tapa" style={{transition:'transform 0.2s',transformOrigin:'12px 4px'}} d="M3 6h18"/>
+                          <path d="M8 6V4h8v2"/><rect x="5" y="6" width="14" height="15" rx="2"/>
+                          <line x1="9" y1="11" x2="9" y2="17"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="15" y1="11" x2="15" y2="17"/>
+                        </svg>
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -254,15 +440,16 @@ export default function Clientes() {
           </table>
         </div>
 
+        {/* Panel expediente */}
         <div style={{background:'white',borderRadius:10,border:'0.5px solid #e5e7eb',overflow:'hidden'}}>
           <div style={{padding:16,borderBottom:'0.5px solid #e5e7eb',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
             <span style={{fontSize:14,fontWeight:600,color:'#1f2937'}}>
-              {nuevo ? 'Nuevo cliente' : clienteActivo ? clienteActivo.nombre.split(' ').slice(0,3).join(' ') : 'Expediente'}
+              {nuevo?'Nuevo cliente':clienteActivo?clienteActivo.nombre.split(' ').slice(0,3).join(' '):'Expediente'}
             </span>
             {clienteActivo && !nuevo && <span style={{fontSize:11,color:'#9ca3af',fontFamily:'monospace'}}>{clienteActivo.rfc}</span>}
           </div>
 
-          <div style={{padding:16,overflowY:'auto',maxHeight:640}}>
+          <div style={{padding:16,overflowY:'auto',maxHeight:680}}>
             {!seleccionado && !nuevo ? (
               <div style={{padding:'40px 20px',textAlign:'center',color:'#9ca3af'}}>
                 <div style={{fontSize:32,marginBottom:10}}>📋</div>
@@ -270,45 +457,83 @@ export default function Clientes() {
               </div>
             ) : (
               <>
-                <div style={{fontSize:10,fontWeight:500,color:'#9ca3af',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:10}}>Informacion general</div>
+                {/* Tipo de persona */}
+                {nuevo && (
+                  <div style={{marginBottom:14}}>
+                    <label style={{display:'block',fontSize:12,color:'#6b7280',marginBottom:6}}>Tipo de persona</label>
+                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6}}>
+                      {[{v:false,l:'Persona Física'},{v:true,l:'Persona Moral'}].map(opt => (
+                        <button key={String(opt.v)} onClick={() => setForm(p=>({...p,esPersonaMoral:opt.v,regimenes:[]}))}
+                          style={{padding:'8px',border:`0.5px solid ${form.esPersonaMoral===opt.v?'#185FA5':'#e5e7eb'}`,borderRadius:8,background:form.esPersonaMoral===opt.v?'#E6F1FB':'white',cursor:'pointer',fontSize:12,fontWeight:form.esPersonaMoral===opt.v?500:400,color:form.esPersonaMoral===opt.v?'#185FA5':'#6b7280'}}>
+                          {opt.l}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Info general */}
+                <div style={{fontSize:10,fontWeight:500,color:'#9ca3af',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:10}}>Información general</div>
 
                 <div style={{marginBottom:10}}>
-                  <label style={{display:'block',fontSize:12,color:'#6b7280',marginBottom:4}}>Nombre / Razon Social</label>
-                  <input value={nuevo ? form.nombre : clienteActivo?.nombre || ''}
+                  <label style={{display:'block',fontSize:12,color:'#6b7280',marginBottom:4}}>Nombre / Razón Social</label>
+                  <input value={nuevo?form.nombre:clienteActivo?.nombre||''}
                     onChange={e => nuevo && setForm({...form,nombre:e.target.value})}
                     readOnly={!nuevo} placeholder="Se autocompleta con el .cer"
                     style={{width:'100%',padding:'8px 10px',border:'0.5px solid #e5e7eb',borderRadius:8,fontSize:13,color:'#1f2937',outline:'none',background:nuevo?'#f9fafb':'#f3f4f6',boxSizing:'border-box'}} />
                 </div>
 
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:10}}>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:14}}>
                   <div>
                     <label style={{display:'block',fontSize:12,color:'#6b7280',marginBottom:4}}>RFC</label>
-                    <input value={nuevo ? form.rfc : clienteActivo?.rfc || ''}
+                    <input value={nuevo?form.rfc:clienteActivo?.rfc||''}
                       onChange={e => nuevo && setForm({...form,rfc:e.target.value})}
                       readOnly={!nuevo} placeholder="Autocompleta"
                       style={{width:'100%',padding:'8px 10px',border:'0.5px solid #e5e7eb',borderRadius:8,fontSize:12,color:'#1f2937',outline:'none',background:nuevo?'#f9fafb':'#f3f4f6',fontFamily:'monospace',boxSizing:'border-box'}} />
                   </div>
                   <div>
                     <label style={{display:'block',fontSize:12,color:'#6b7280',marginBottom:4}}>Vencimiento e.firma</label>
-                    <input value={nuevo ? vencimiento : clienteActivo?.vencimiento_efirma || '—'} readOnly
+                    <input value={nuevo?vencimiento:clienteActivo?.vencimiento_efirma||'—'} readOnly
                       style={{width:'100%',padding:'8px 10px',border:'0.5px solid #e5e7eb',borderRadius:8,fontSize:12,color:vencimiento?'#3B6D11':'#9ca3af',outline:'none',background:'#f3f4f6',boxSizing:'border-box'}} />
                   </div>
                 </div>
 
-                <div style={{marginBottom:16}}>
-                  <label style={{display:'block',fontSize:12,color:'#6b7280',marginBottom:4}}>Regimen Fiscal</label>
-                  <select value={nuevo ? form.regimen : clienteActivo?.regimen_fiscal || 'RESICO'}
-                    onChange={e => nuevo && setForm({...form,regimen:e.target.value})}
-                    disabled={!nuevo}
-                    style={{width:'100%',padding:'8px 10px',border:'0.5px solid #e5e7eb',borderRadius:8,fontSize:13,color:'#1f2937',outline:'none',background:nuevo?'#f9fafb':'#f3f4f6'}}>
-                    <option>RESICO</option>
-                    <option>General de Ley</option>
-                    <option>Actividad Empresarial</option>
-                    <option>Arrendamiento</option>
-                    <option>Honorarios</option>
-                  </select>
+                {/* Regímenes */}
+                <div style={{fontSize:10,fontWeight:500,color:'#9ca3af',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:8}}>
+                  Regímenes fiscales
+                  {!nuevo && clienteActivo?.es_persona_moral !== undefined && (
+                    <span style={{marginLeft:8,fontSize:9,padding:'2px 6px',borderRadius:20,background:clienteActivo.es_persona_moral?'#f3f0ff':'#f0fdf4',color:clienteActivo.es_persona_moral?'#7c3aed':'#15803d'}}>
+                      {clienteActivo.es_persona_moral?'Persona Moral':'Persona Física'}
+                    </span>
+                  )}
                 </div>
 
+                {nuevo ? (
+                  <div style={{marginBottom:14}}>
+                    <RegimenSelector
+                      esPersonaMoral={form.esPersonaMoral}
+                      regimenesSeleccionados={form.regimenes}
+                      onChange={r => setForm(p=>({...p,regimenes:r}))}
+                    />
+                  </div>
+                ) : (
+                  <div style={{marginBottom:14,display:'flex',flexWrap:'wrap',gap:4}}>
+                    {(clienteActivo?.regimenes||[]).map(r => {
+                      const lista = clienteActivo?.es_persona_moral ? REGIMENES_PM : REGIMENES_PF
+                      const obj = lista.find(x => x.id === r)
+                      return (
+                        <span key={r} style={{fontSize:11,padding:'4px 10px',borderRadius:20,background:'#E6F1FB',color:'#185FA5',fontWeight:500}}>
+                          {obj?.label||r} <span style={{fontSize:9,opacity:0.7}}>({obj?.codigo})</span>
+                        </span>
+                      )
+                    })}
+                    {(!clienteActivo?.regimenes || clienteActivo.regimenes.length === 0) && (
+                      <span style={{fontSize:12,color:'#9ca3af'}}>{clienteActivo?.regimen_fiscal||'Sin régimen registrado'}</span>
+                    )}
+                  </div>
+                )}
+
+                {/* e.firma */}
                 <div style={{fontSize:10,fontWeight:500,color:'#9ca3af',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:10}}>e.firma</div>
 
                 {clienteActivo && !nuevo && (
@@ -328,10 +553,10 @@ export default function Clientes() {
                   onDragOver={e => { e.preventDefault(); setCerDrag(true) }}
                   onDragLeave={() => setCerDrag(false)}
                   onDrop={e => { e.preventDefault(); setCerDrag(false); handleCer(e.dataTransfer.files) }}
-                  style={{border:`1.5px ${cerUploaded?'solid':'dashed'} ${cerDrag?'#185FA5':cerUploaded?'#3B6D11':'#e5e7eb'}`,borderRadius:8,padding:12,textAlign:'center',cursor:'pointer',background:cerUploaded?'#EAF3DE':cerDrag?'#E6F1FB':'white',marginBottom:8,transition:'all 0.15s'}}>
-                  <div style={{fontSize:18,marginBottom:3}}>{cerUploaded?'✅':'📄'}</div>
-                  <div style={{fontSize:12,fontWeight:500,color:cerUploaded?'#3B6D11':'#374151'}}>{cerUploaded?'Certificado .cer cargado':'Archivo .cer — Certificado'}</div>
-                  <div style={{fontSize:10,color:'#9ca3af',marginTop:1}}>{cerUploaded?'Datos extraidos · Da clic para reemplazar':'Da clic o arrastra el archivo .cer aqui'}</div>
+                  style={{border:`1.5px ${cerUploaded?'solid':'dashed'} ${cerDrag?'#185FA5':cerUploaded?'#3B6D11':'#e5e7eb'}`,borderRadius:8,padding:10,textAlign:'center',cursor:'pointer',background:cerUploaded?'#EAF3DE':cerDrag?'#E6F1FB':'white',marginBottom:6,transition:'all 0.15s'}}>
+                  <div style={{fontSize:16,marginBottom:2}}>{cerUploaded?'✅':'📄'}</div>
+                  <div style={{fontSize:11,fontWeight:500,color:cerUploaded?'#3B6D11':'#374151'}}>{cerUploaded?'.cer cargado':'Archivo .cer'}</div>
+                  <div style={{fontSize:10,color:'#9ca3af'}}>{cerUploaded?'Da clic para reemplazar':'Da clic o arrastra'}</div>
                 </div>
 
                 <input ref={keyRef} type="file" accept=".key" style={{display:'none'}} onChange={e => handleKey(e.target.files)} />
@@ -339,14 +564,14 @@ export default function Clientes() {
                   onDragOver={e => { e.preventDefault(); setKeyDrag(true) }}
                   onDragLeave={() => setKeyDrag(false)}
                   onDrop={e => { e.preventDefault(); setKeyDrag(false); handleKey(e.dataTransfer.files) }}
-                  style={{border:`1.5px ${keyUploaded?'solid':'dashed'} ${keyDrag?'#185FA5':keyUploaded?'#3B6D11':'#e5e7eb'}`,borderRadius:8,padding:12,textAlign:'center',cursor:'pointer',background:keyUploaded?'#EAF3DE':keyDrag?'#E6F1FB':'white',marginBottom:10,transition:'all 0.15s'}}>
-                  <div style={{fontSize:18,marginBottom:3}}>{keyUploaded?'✅':'🔑'}</div>
-                  <div style={{fontSize:12,fontWeight:500,color:keyUploaded?'#3B6D11':'#374151'}}>{keyUploaded?'Clave .key cargada':'Archivo .key — Clave privada'}</div>
-                  <div style={{fontSize:10,color:'#9ca3af',marginTop:1}}>{keyUploaded?'Da clic para reemplazar':'Da clic o arrastra el archivo .key aqui'}</div>
+                  style={{border:`1.5px ${keyUploaded?'solid':'dashed'} ${keyDrag?'#185FA5':keyUploaded?'#3B6D11':'#e5e7eb'}`,borderRadius:8,padding:10,textAlign:'center',cursor:'pointer',background:keyUploaded?'#EAF3DE':keyDrag?'#E6F1FB':'white',marginBottom:10,transition:'all 0.15s'}}>
+                  <div style={{fontSize:16,marginBottom:2}}>{keyUploaded?'✅':'🔑'}</div>
+                  <div style={{fontSize:11,fontWeight:500,color:keyUploaded?'#3B6D11':'#374151'}}>{keyUploaded?'.key cargada':'Archivo .key'}</div>
+                  <div style={{fontSize:10,color:'#9ca3af'}}>{keyUploaded?'Da clic para reemplazar':'Da clic o arrastra'}</div>
                 </div>
 
                 <div style={{marginBottom:16}}>
-                  <label style={{display:'block',fontSize:12,color:'#6b7280',marginBottom:4}}>Contrasena de la e.firma</label>
+                  <label style={{display:'block',fontSize:12,color:'#6b7280',marginBottom:4}}>Contraseña de la e.firma</label>
                   <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••••••"
                     style={{width:'100%',padding:'8px 10px',border:'0.5px solid #e5e7eb',borderRadius:8,fontSize:13,color:'#1f2937',outline:'none',background:'#f9fafb',boxSizing:'border-box'}} />
                 </div>
@@ -356,16 +581,16 @@ export default function Clientes() {
                     <div style={{fontSize:10,fontWeight:500,color:'#9ca3af',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:10}}>Consultas SAT</div>
                     <div style={{display:'flex',flexDirection:'column',gap:8}}>
                       {[
-                        {tipo:'sincronizar',icon:'🔄',label:'Sincronizar con SAT',sub:'Descarga CFDIs de ingresos y egresos',bg:'linear-gradient(135deg,#185FA5,#0C447C)'},
-                        {tipo:'rfc',icon:'🪪',label:'Obtener RFC actualizado',sub:'Verifica datos fiscales vigentes en el SAT',bg:'linear-gradient(135deg,#854F0B,#6b3f09)'},
-                        {tipo:'opinion',icon:'📋',label:'Opinion de cumplimiento',sub:'Consulta el estatus fiscal actual',bg:'linear-gradient(135deg,#3B6D11,#2d5a0e)'},
+                        {tipo:'sincronizar',icon:'🔄',label:'Sincronizar con SAT',sub:'Descarga CFDIs',bg:'linear-gradient(135deg,#185FA5,#0C447C)'},
+                        {tipo:'rfc',icon:'🪪',label:'Obtener RFC actualizado',sub:'Verifica datos fiscales',bg:'linear-gradient(135deg,#854F0B,#6b3f09)'},
+                        {tipo:'opinion',icon:'📋',label:'Opinión de cumplimiento',sub:'Estatus fiscal actual',bg:'linear-gradient(135deg,#3B6D11,#2d5a0e)'},
                       ].map(b => (
                         <button key={b.tipo} onClick={() => simularSAT(b.tipo)}
-                          style={{width:'100%',padding:'11px 14px',border:'none',borderRadius:10,fontSize:13,fontWeight:500,cursor:'pointer',display:'flex',alignItems:'center',gap:10,background:b.bg,color:'white',textAlign:'left',opacity:satLoading===b.tipo?0.7:1}}>
-                          <span style={{fontSize:20,minWidth:24,textAlign:'center'}}>{satLoading===b.tipo?'⏳':b.icon}</span>
+                          style={{width:'100%',padding:'10px 14px',border:'none',borderRadius:10,fontSize:12,fontWeight:500,cursor:'pointer',display:'flex',alignItems:'center',gap:10,background:b.bg,color:'white',textAlign:'left',opacity:satLoading===b.tipo?0.7:1}}>
+                          <span style={{fontSize:18}}>{satLoading===b.tipo?'⏳':b.icon}</span>
                           <span style={{flex:1}}>
                             {satLoading===b.tipo?'Conectando con SAT...':b.label}
-                            <span style={{display:'block',fontSize:10,opacity:0.8,fontWeight:400,marginTop:1}}>{b.sub}</span>
+                            <span style={{display:'block',fontSize:10,opacity:0.8,fontWeight:400}}>{b.sub}</span>
                           </span>
                         </button>
                       ))}
@@ -376,7 +601,7 @@ export default function Clientes() {
                           {lbl:'Estatus',val:'Positivo',green:true},
                           {lbl:'RFC',val:clienteActivo?.rfc||'—'},
                           {lbl:'Declaraciones',val:'Al corriente',green:true},
-                          {lbl:'Creditos fiscales',val:'Sin adeudos',green:true},
+                          {lbl:'Créditos fiscales',val:'Sin adeudos',green:true},
                           {lbl:'Fecha consulta',val:new Date().toLocaleDateString('es-MX')},
                         ].map(r => (
                           <div key={r.lbl} style={{display:'flex',justifyContent:'space-between',fontSize:11,padding:'3px 0',borderBottom:'0.5px solid rgba(59,109,17,0.15)'}}>
@@ -390,14 +615,26 @@ export default function Clientes() {
                 )}
 
                 {nuevo && (
-                  <button onClick={guardarCliente} disabled={guardando}
-                    style={{width:'100%',padding:10,background:'#185FA5',color:'white',border:'none',borderRadius:8,fontSize:13,fontWeight:500,cursor:'pointer',marginTop:4}}>
-                    {guardando ? 'Guardando...' : 'Guardar cliente'}
-                  </button>
+                  <>
+                    {erroresCompatibilidad.length > 0 && (
+                      <div style={{background:'#fef2f2',border:'0.5px solid #fecaca',borderRadius:8,padding:'8px 12px',marginBottom:10}}>
+                        <div style={{fontSize:11,color:'#dc2626',fontWeight:500}}>⚠️ Corrige los errores de compatibilidad antes de guardar</div>
+                      </div>
+                    )}
+                    {form.regimenes.length === 0 && (
+                      <div style={{background:'#fffbeb',border:'0.5px solid #fde68a',borderRadius:8,padding:'8px 12px',marginBottom:10}}>
+                        <div style={{fontSize:11,color:'#92400e'}}>💡 Selecciona al menos un régimen fiscal</div>
+                      </div>
+                    )}
+                    <button onClick={guardarCliente} disabled={guardando || !puedeGuardar}
+                      style={{width:'100%',padding:10,background:puedeGuardar?'#185FA5':'#e5e7eb',color:puedeGuardar?'white':'#9ca3af',border:'none',borderRadius:8,fontSize:13,fontWeight:500,cursor:puedeGuardar?'pointer':'not-allowed',marginTop:4}}>
+                      {guardando?'Guardando...':'Guardar cliente'}
+                    </button>
+                  </>
                 )}
 
                 <div style={{fontSize:10,color:'#9ca3af',textAlign:'center',marginTop:12,lineHeight:1.5,display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
-                  <span>🔒</span> Los archivos de e.firma se almacenan cifrados. La contrasena nunca se guarda en texto plano.
+                  🔒 Los archivos de e.firma se almacenan cifrados.
                 </div>
               </>
             )}
