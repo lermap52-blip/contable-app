@@ -143,48 +143,6 @@ const resico = [
 function getTramo(m) { for (let t of resico) { if (m <= t.hasta) return t } return resico[resico.length-1] }
 function fmtN(n) { return '$'+n.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2}) }
 
-function DockButton({ modulo, activo, onClick }) {
-  const [hover, setHover] = useState(false)
-  return (
-    <div style={{position:'relative',display:'flex',flexDirection:'column',alignItems:'center'}}>
-      <button
-        onClick={onClick}
-        onMouseEnter={() => setHover(true)}
-        onMouseLeave={() => setHover(false)}
-        style={{
-          width:36,height:36,borderRadius:'50%',
-          display:'flex',alignItems:'center',justifyContent:'center',
-          cursor:'pointer',border:'none',
-          background:activo?'#f1f5f9':'transparent',
-          outline:activo?'1.5px solid #e2e8f0':'1.5px solid transparent',
-          fontSize:17,
-          transform:hover?'scale(1.28)':'scale(1)',
-          transition:'transform 0.2s cubic-bezier(.34,1.56,.64,1), background 0.15s',
-          flexShrink:0,
-        }}>
-        <span style={{lineHeight:1}}>{modulo.icon}</span>
-      </button>
-      {activo && (
-        <div style={{width:4,height:4,borderRadius:'50%',background:'#185FA5',position:'absolute',bottom:-7}}></div>
-      )}
-      {hover && (
-        <div style={{
-          position:'absolute',top:'calc(100% + 12px)',left:'50%',
-          transform:'translateX(-50%)',
-          background:'rgba(15,23,42,0.88)',color:'white',
-          fontSize:11,fontWeight:500,padding:'5px 10px',borderRadius:7,
-          whiteSpace:'nowrap',pointerEvents:'none',
-          zIndex:300,
-          boxShadow:'0 4px 12px rgba(0,0,0,0.15)',
-        }}>
-          {modulo.tag}
-          <div style={{position:'absolute',top:-4,left:'50%',transform:'translateX(-50%)',width:8,height:8,background:'rgba(15,23,42,0.88)',clipPath:'polygon(50% 0%, 0% 100%, 100% 100%)'}}></div>
-        </div>
-      )}
-    </div>
-  )
-}
-
 function SelectorCliente({ collapsed }) {
   const { clientes, clienteActivo, seleccionarCliente, diasParaVencimiento } = useCliente()
   const [open, setOpen] = useState(false)
@@ -202,88 +160,91 @@ function SelectorCliente({ collapsed }) {
   if (collapsed) return (
     <div style={{padding:'8px',borderBottom:'0.5px solid #f3f4f6',display:'flex',justifyContent:'center'}}>
       <div title={clienteActivo?.nombre||'Mi Despacho'} onClick={() => setOpen(!open)}
-        style={{width:32,height:32,borderRadius:8,background:clienteActivo?'#185FA5':'#f0fdf4',border:`1px solid ${clienteActivo?'#bfdbfe':'#bbf7d0'}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:clienteActivo?'white':'#16a34a',cursor:'pointer'}}>
+        style={{width:32,height:32,borderRadius:8,background:clienteActivo?'#eff6ff':'#f0fdf4',border:`1px solid ${clienteActivo?'#bfdbfe':'#bbf7d0'}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:clienteActivo?'#185FA5':'#16a34a',cursor:'pointer'}}>
         {clienteActivo?clienteActivo.nombre.charAt(0):'🏢'}
       </div>
     </div>
   )
 
   return (
-    <div ref={ref} style={{padding:'8px 10px',borderBottom:'0.5px solid #f3f4f6',position:'relative'}}>
-      <div style={{fontSize:9,fontWeight:600,color:'#c4c4c4',textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:5}}>Contexto activo</div>
+    <div ref={ref} style={{padding:'10px 12px',borderBottom:'0.5px solid #f3f4f6',position:'relative'}}>
       <button onClick={() => setOpen(!open)}
-        style={{width:'100%',padding:'8px 10px',background:clienteActivo?'#eff6ff':'#f0fdf4',border:`0.5px solid ${clienteActivo?'#bfdbfe':'#bbf7d0'}`,borderRadius:8,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
-        <div style={{display:'flex',alignItems:'center',gap:8,overflow:'hidden',flex:1}}>
+        style={{width:'100%',padding:'9px 11px',background:clienteActivo?'#eff6ff':'#f8fafc',border:`0.5px solid ${clienteActivo?'#bfdbfe':'#e5e7eb'}`,borderRadius:9,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,transition:'border 0.15s'}}>
+        <div style={{display:'flex',alignItems:'center',gap:9,overflow:'hidden',flex:1}}>
           {clienteActivo ? (
             <>
-              <div style={{width:22,height:22,minWidth:22,borderRadius:6,background:'#185FA5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:'white'}}>{clienteActivo.nombre.charAt(0)}</div>
+              <div style={{width:26,height:26,minWidth:26,borderRadius:7,background:'#185FA5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:'white'}}>{clienteActivo.nombre.charAt(0)}</div>
               <div style={{overflow:'hidden'}}>
-                <div style={{fontSize:12,fontWeight:500,color:'#1e3a8a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{clienteActivo.nombre.split(' ').slice(0,2).join(' ')}</div>
-                <div style={{fontSize:10,color:'#93c5fd',fontFamily:'monospace'}}>{clienteActivo.rfc}</div>
+                <div style={{fontSize:12,fontWeight:600,color:'#1e3a8a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{clienteActivo.nombre.split(' ').slice(0,2).join(' ')}</div>
+                <div style={{fontSize:10,color:'#60a5fa',fontWeight:400}}>Gestionando cliente</div>
               </div>
             </>
           ) : (
-            <div style={{display:'flex',alignItems:'center',gap:8}}>
-              <div style={{width:22,height:22,minWidth:22,borderRadius:6,background:'#16a34a',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                <Building2 size={12} color="white" />
+            <div style={{display:'flex',alignItems:'center',gap:9}}>
+              <div style={{width:26,height:26,minWidth:26,borderRadius:7,background:'#f0fdf4',border:'0.5px solid #bbf7d0',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <Building2 size={13} color="#16a34a" />
               </div>
               <div>
-                <div style={{fontSize:12,fontWeight:600,color:'#15803d'}}>Mi Despacho</div>
-                <div style={{fontSize:10,color:'#4ade80'}}>Vista personal</div>
+                <div style={{fontSize:12,fontWeight:600,color:'#1f2937'}}>Mi Despacho</div>
+                <div style={{fontSize:10,color:'#9ca3af',fontWeight:400}}>Vista personal</div>
               </div>
             </div>
           )}
         </div>
-        <ChevronDown size={13} color="#94a3b8" style={{flexShrink:0,transform:open?'rotate(180deg)':'rotate(0deg)',transition:'transform 0.15s'}} />
+        <ChevronDown size={13} color="#9ca3af" style={{flexShrink:0,transform:open?'rotate(180deg)':'rotate(0deg)',transition:'transform 0.15s'}} />
       </button>
 
       {alertaEfirma && clienteActivo && (
-        <div style={{marginTop:6,padding:'5px 8px',background:'#fffbeb',border:'0.5px solid #fde68a',borderRadius:6,display:'flex',alignItems:'center',gap:6}}>
+        <div style={{marginTop:6,padding:'5px 9px',background:'#fffbeb',border:'0.5px solid #fde68a',borderRadius:7,display:'flex',alignItems:'center',gap:6}}>
           <AlertTriangle size={11} color="#d97706" />
           <span style={{fontSize:10,color:'#d97706',fontWeight:500}}>{diasVenc<=0?'e.firma vencida':`e.firma vence en ${diasVenc} dias`}</span>
         </div>
       )}
 
       {open && (
-        <div style={{position:'absolute',top:'calc(100% + 4px)',left:10,right:10,background:'white',border:'0.5px solid #e5e7eb',borderRadius:10,boxShadow:'0 4px 16px rgba(0,0,0,0.08)',zIndex:200,overflow:'hidden'}}>
+        <div style={{position:'absolute',top:'calc(100% + 4px)',left:12,right:12,background:'white',border:'0.5px solid #e5e7eb',borderRadius:10,boxShadow:'0 4px 20px rgba(0,0,0,0.08)',zIndex:200,overflow:'hidden'}}>
           <div style={{maxHeight:220,overflowY:'auto'}}>
             <button onClick={() => { seleccionarCliente(null); setOpen(false) }}
-              style={{width:'100%',padding:'10px 12px',background:!clienteActivo?'#f0fdf4':'none',border:'none',cursor:'pointer',textAlign:'left',borderBottom:'0.5px solid #f3f4f6',display:'flex',alignItems:'center',gap:8}}
+              style={{width:'100%',padding:'10px 12px',background:!clienteActivo?'#f0fdf4':'none',border:'none',cursor:'pointer',textAlign:'left',borderBottom:'0.5px solid #f3f4f6',display:'flex',alignItems:'center',gap:9}}
               onMouseEnter={e => { if(clienteActivo) e.currentTarget.style.background='#f9fafb' }}
               onMouseLeave={e => { if(clienteActivo) e.currentTarget.style.background='none' }}>
-              <div style={{width:24,height:24,borderRadius:6,background:'#16a34a',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                <Building2 size={13} color="white" />
+              <div style={{width:24,height:24,borderRadius:6,background:'#f0fdf4',border:'0.5px solid #bbf7d0',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <Building2 size={13} color="#16a34a" />
               </div>
-              <div>
-                <div style={{fontSize:12,fontWeight:600,color:'#15803d'}}>Mi Despacho</div>
-                <div style={{fontSize:10,color:'#94a3b8'}}>Ver mi informacion personal</div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:12,fontWeight:600,color:'#1f2937'}}>Mi Despacho</div>
+                <div style={{fontSize:10,color:'#9ca3af'}}>Vista personal</div>
               </div>
-              {!clienteActivo && <span style={{marginLeft:'auto',fontSize:10,background:'#dcfce7',color:'#16a34a',padding:'2px 7px',borderRadius:20,fontWeight:500}}>Activo</span>}
+              {!clienteActivo && <span style={{fontSize:10,background:'#dcfce7',color:'#16a34a',padding:'2px 7px',borderRadius:20,fontWeight:500}}>Activo</span>}
             </button>
-            {clientes.length > 0 && <div style={{padding:'6px 12px',fontSize:9,fontWeight:600,color:'#c4c4c4',textTransform:'uppercase',letterSpacing:'0.1em',background:'#fafafa'}}>Clientes</div>}
+            {clientes.length > 0 && (
+              <div style={{padding:'5px 12px',fontSize:9,fontWeight:600,color:'#c4c4c4',textTransform:'uppercase',letterSpacing:'0.1em',background:'#fafafa'}}>
+                Clientes
+              </div>
+            )}
             {clientes.map(c => {
               const dias = diasParaVencimiento(c.vencimiento_efirma)
               const alerta = dias !== null && dias <= 30
               const isActive = clienteActivo?.id === c.id
               return (
                 <button key={c.id} onClick={() => { seleccionarCliente(c); setOpen(false) }}
-                  style={{width:'100%',padding:'9px 12px',background:isActive?'#eff6ff':'none',border:'none',cursor:'pointer',textAlign:'left',borderBottom:'0.5px solid #f3f4f6',display:'flex',alignItems:'center',gap:8}}
+                  style={{width:'100%',padding:'9px 12px',background:isActive?'#eff6ff':'none',border:'none',cursor:'pointer',textAlign:'left',borderBottom:'0.5px solid #f3f4f6',display:'flex',alignItems:'center',gap:9}}
                   onMouseEnter={e => { if(!isActive) e.currentTarget.style.background='#f9fafb' }}
                   onMouseLeave={e => { if(!isActive) e.currentTarget.style.background=isActive?'#eff6ff':'none' }}>
                   <div style={{width:24,height:24,minWidth:24,borderRadius:6,background:'#185FA5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:'white'}}>{c.nombre.charAt(0)}</div>
                   <div style={{flex:1,overflow:'hidden'}}>
                     <div style={{fontSize:12,fontWeight:500,color:'#0f172a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{c.nombre.split(' ').slice(0,3).join(' ')}</div>
-                    <div style={{fontSize:10,color:'#94a3b8',fontFamily:'monospace'}}>{c.rfc}</div>
+                    <div style={{fontSize:10,color:'#9ca3af',fontFamily:'monospace'}}>{c.rfc}</div>
                   </div>
                   {alerta && <AlertTriangle size={11} color="#d97706" style={{flexShrink:0}} />}
-                  {isActive && <span style={{marginLeft:4,fontSize:10,background:'#dbeafe',color:'#1d4ed8',padding:'2px 7px',borderRadius:20,fontWeight:500,flexShrink:0}}>Activo</span>}
+                  {isActive && <span style={{fontSize:10,background:'#dbeafe',color:'#1d4ed8',padding:'2px 7px',borderRadius:20,fontWeight:500,flexShrink:0}}>Activo</span>}
                 </button>
               )
             })}
-            {clientes.length === 0 && <div style={{padding:'12px',fontSize:12,color:'#94a3b8',textAlign:'center'}}>No hay clientes registrados</div>}
+            {clientes.length === 0 && <div style={{padding:'14px',fontSize:12,color:'#94a3b8',textAlign:'center'}}>No hay clientes registrados</div>}
           </div>
           <a href="/clientes" onClick={() => setOpen(false)}
-            style={{display:'block',padding:'8px 12px',fontSize:11,color:'#185FA5',textDecoration:'none',borderTop:'0.5px solid #f3f4f6',textAlign:'center',background:'#f9fafb'}}
+            style={{display:'block',padding:'9px 12px',fontSize:11,color:'#185FA5',textDecoration:'none',borderTop:'0.5px solid #f3f4f6',textAlign:'center',background:'#f9fafb'}}
             onMouseEnter={e => e.currentTarget.style.background='#eff6ff'}
             onMouseLeave={e => e.currentTarget.style.background='#f9fafb'}>
             + Agregar nuevo cliente
@@ -457,10 +418,47 @@ function CalculadoraFlotante() {
   )
 }
 
-function Sidebar({ user, moduloActivo, collapsed, setCollapsed }) {
+function ModuloButton({ modulo, activo, onClick, collapsed }) {
+  const [hover, setHover] = useState(false)
+  return (
+    <div style={{position:'relative'}}>
+      <button
+        onClick={onClick}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        title={modulo.tag}
+        style={{
+          width:'100%',
+          padding:collapsed?'9px':'8px 10px',
+          borderRadius:8,
+          display:'flex',alignItems:'center',gap:9,
+          cursor:'pointer',border:'none',
+          background:activo?'#EFF6FF':'transparent',
+          outline:'none',
+          transition:'background 0.15s',
+          justifyContent:collapsed?'center':'flex-start',
+          marginBottom:2,
+        }}
+        onMouseEnter2={e => { if(!activo) e.currentTarget.style.background='#f9fafb' }}
+        onMouseLeave2={e => { if(!activo) e.currentTarget.style.background='transparent' }}>
+        <span style={{fontSize:16,lineHeight:1,flexShrink:0}}>{modulo.icon}</span>
+        {!collapsed && <span style={{fontSize:12,color:activo?'#185FA5':'#4b5563',fontWeight:activo?500:400,whiteSpace:'nowrap'}}>{modulo.tag}</span>}
+        {activo && !collapsed && <div style={{marginLeft:'auto',width:5,height:5,borderRadius:'50%',background:'#185FA5',flexShrink:0}}></div>}
+      </button>
+      {hover && collapsed && (
+        <div style={{position:'absolute',left:'calc(100% + 8px)',top:'50%',transform:'translateY(-50%)',background:'rgba(15,23,42,0.88)',color:'white',fontSize:11,fontWeight:500,padding:'5px 10px',borderRadius:7,whiteSpace:'nowrap',pointerEvents:'none',zIndex:300,boxShadow:'0 4px 12px rgba(0,0,0,0.15)'}}>
+          {modulo.tag}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed }) {
   const pathname = usePathname()
   const { clienteActivo } = useCliente()
   const [config, setConfig] = useState({})
+  const [moduloOpen, setModuloOpen] = useState(false)
 
   useEffect(() => {
     const saved = localStorage.getItem('config_app')
@@ -477,91 +475,108 @@ function Sidebar({ user, moduloActivo, collapsed, setCollapsed }) {
 
   const nombre = config.nombre || user?.email?.split('@')[0] || 'Usuario'
   const avatarColor = config.avatarColor || '#185FA5'
-  const appNombre = config.appNombre || 'ContableApp'
-  const initials = nombre.charAt(0).toUpperCase()
   const accentColor = clienteActivo ? '#1d4ed8' : avatarColor
   const sidebarBg = clienteActivo ? '#f8faff' : 'white'
   const modulo = MODULOS.find(m => m.id === moduloActivo) || MODULOS[0]
 
   return (
-    <aside style={{width:collapsed?64:240,minWidth:collapsed?64:240,background:sidebarBg,borderRight:`0.5px solid ${clienteActivo?'#bfdbfe':'#e5e7eb'}`,display:'flex',flexDirection:'column',transition:'width 0.25s ease,min-width 0.25s ease',overflow:'hidden',height:'100%',boxShadow:clienteActivo?'1px 0 8px rgba(29,78,216,0.06)':'1px 0 6px rgba(0,0,0,0.03)'}}>
+    <aside style={{width:collapsed?64:240,minWidth:collapsed?64:240,background:sidebarBg,borderRight:`0.5px solid ${clienteActivo?'#bfdbfe':'#e5e7eb'}`,display:'flex',flexDirection:'column',transition:'width 0.25s ease,min-width 0.25s ease',overflow:'hidden',height:'100%',boxShadow:'1px 0 6px rgba(0,0,0,0.03)'}}>
 
-      <div style={{padding:'10px 12px',borderBottom:`0.5px solid ${clienteActivo?'#dbeafe':'#f3f4f6'}`,display:'flex',alignItems:'center',justifyContent:collapsed?'center':'space-between',gap:8,minHeight:50}}>
+      {/* Perfil */}
+      <div style={{padding:collapsed?'14px 8px':'14px 14px 10px',borderBottom:'0.5px solid #f3f4f6',display:'flex',alignItems:'center',gap:10,justifyContent:collapsed?'center':'flex-start',position:'relative'}}>
+        <div style={{width:36,height:36,minWidth:36,borderRadius:'50%',background:accentColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:600,color:'white',flexShrink:0,cursor:'pointer'}}
+          title={nombre}>
+          {nombre.charAt(0).toUpperCase()}
+        </div>
         {!collapsed && (
-          <div style={{display:'flex',alignItems:'center',gap:8,overflow:'hidden'}}>
-            <div style={{width:26,height:26,minWidth:26,borderRadius:7,background:accentColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,color:'white',fontWeight:700}}>{appNombre.charAt(0)}</div>
-            <span style={{fontSize:13,fontWeight:600,color:'#1f2937',whiteSpace:'nowrap'}}>{appNombre}</span>
+          <div style={{overflow:'hidden',flex:1}}>
+            <div style={{fontSize:13,fontWeight:500,color:'#1f2937',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{nombre}</div>
+            <div style={{fontSize:11,color:'#9ca3af',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{user?.email||''}</div>
           </div>
         )}
         <button onClick={() => setCollapsed(!collapsed)}
-          style={{background:'#f9fafb',border:'0.5px solid #e5e7eb',borderRadius:7,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:5,color:'#6b7280',flexShrink:0}}
+          style={{position:collapsed?'relative':'absolute',right:collapsed?'auto':10,top:collapsed?'auto':'50%',transform:collapsed?'none':'translateY(-50%)',background:'#f9fafb',border:'0.5px solid #e5e7eb',borderRadius:6,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:4,color:'#9ca3af',flexShrink:0,transition:'background 0.15s'}}
           onMouseEnter={e => e.currentTarget.style.background='#f3f4f6'}
           onMouseLeave={e => e.currentTarget.style.background='#f9fafb'}>
-          {collapsed?<ChevronRight size={14}/>:<ChevronLeft size={14}/>}
+          {collapsed?<ChevronRight size={13}/>:<ChevronLeft size={13}/>}
         </button>
       </div>
 
-      <div style={{padding:collapsed?'8px':'10px 12px',borderBottom:`0.5px solid ${clienteActivo?'#dbeafe':'#f3f4f6'}`,display:'flex',alignItems:'center',gap:8,justifyContent:collapsed?'center':'flex-start'}}>
-        <div style={{width:30,height:30,minWidth:30,borderRadius:'50%',background:accentColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:600,color:'white',flexShrink:0}}>{initials}</div>
-        {!collapsed && (
-          <div style={{overflow:'hidden'}}>
-            <div style={{fontSize:12,fontWeight:500,color:'#1f2937',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{nombre}</div>
-            <div style={{fontSize:10,color:'#9ca3af',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{user?.email||''}</div>
-          </div>
-        )}
-      </div>
-
+      {/* Selector cliente */}
       <SelectorCliente collapsed={collapsed} />
 
+      {/* Selector módulo */}
       {!collapsed && (
-        <div style={{padding:'6px 14px 4px',borderBottom:'0.5px solid #f3f4f6'}}>
-          <div style={{fontSize:9,fontWeight:600,color:'#c4c4c4',textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:2}}>Módulo activo</div>
-          <div style={{fontSize:12,fontWeight:500,color:accentColor,display:'flex',alignItems:'center',gap:5}}>
-            <span style={{fontSize:13}}>{modulo.icon}</span>
-            {modulo.tag}
-          </div>
+        <div style={{padding:'8px 10px',borderBottom:'0.5px solid #f3f4f6'}}>
+          <button onClick={() => setModuloOpen(!moduloOpen)}
+            style={{width:'100%',padding:'7px 10px',background:'#f8fafc',border:'0.5px solid #e5e7eb',borderRadius:8,cursor:'pointer',display:'flex',alignItems:'center',gap:8,justifyContent:'space-between'}}>
+            <div style={{display:'flex',alignItems:'center',gap:7}}>
+              <span style={{fontSize:14}}>{modulo.icon}</span>
+              <span style={{fontSize:12,fontWeight:500,color:'#374151'}}>{modulo.tag}</span>
+            </div>
+            <ChevronDown size={12} color="#9ca3af" style={{transform:moduloOpen?'rotate(180deg)':'rotate(0)',transition:'transform 0.15s'}} />
+          </button>
+          {moduloOpen && (
+            <div style={{marginTop:4,background:'white',border:'0.5px solid #e5e7eb',borderRadius:9,overflow:'hidden',boxShadow:'0 4px 12px rgba(0,0,0,0.06)'}}>
+              {MODULOS.map(m => (
+                <button key={m.id} onClick={() => { setModuloActivo(m.id); localStorage.setItem('modulo_activo',m.id); setModuloOpen(false) }}
+                  style={{width:'100%',padding:'8px 12px',border:'none',background:moduloActivo===m.id?'#EFF6FF':'none',cursor:'pointer',display:'flex',alignItems:'center',gap:8,borderBottom:'0.5px solid #f3f4f6'}}
+                  onMouseEnter={e => { if(moduloActivo!==m.id) e.currentTarget.style.background='#f9fafb' }}
+                  onMouseLeave={e => { if(moduloActivo!==m.id) e.currentTarget.style.background='none' }}>
+                  <span style={{fontSize:14}}>{m.icon}</span>
+                  <span style={{fontSize:12,color:moduloActivo===m.id?'#185FA5':'#374151',fontWeight:moduloActivo===m.id?500:400}}>{m.tag}</span>
+                  {moduloActivo===m.id && <div style={{marginLeft:'auto',width:5,height:5,borderRadius:'50%',background:'#185FA5'}}></div>}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
+      {/* Nav dinámico */}
       <nav style={{flex:1,padding:'6px 8px',overflowY:'auto',display:'flex',flexDirection:'column',gap:1}}>
-        {modulo.nav.map(group => (
-          <div key={group.section} style={{marginBottom:2}}>
-            {!collapsed && <div style={{fontSize:9,fontWeight:600,color:'#c4c4c4',textTransform:'uppercase',letterSpacing:'0.1em',padding:'6px 8px 3px',whiteSpace:'nowrap'}}>{group.section}</div>}
-            {group.items.map(item => {
-              const Icon = item.icon
-              const isActive = pathname === item.href
-              return (
-                <a key={item.label} href={item.href} title={collapsed?item.label:''}
-                  style={{display:'flex',alignItems:'center',gap:8,padding:collapsed?'9px':'7px 10px',borderRadius:7,cursor:'pointer',textDecoration:'none',background:isActive?(clienteActivo?'#dbeafe':'#EFF6FF'):'transparent',justifyContent:collapsed?'center':'flex-start',marginBottom:1,transition:'background 0.15s'}}
-                  onMouseEnter={e => { if(!isActive) e.currentTarget.style.background='#f9fafb' }}
-                  onMouseLeave={e => { if(!isActive) e.currentTarget.style.background='transparent' }}>
-                  <Icon size={15} color={isActive?accentColor:'#9ca3af'} strokeWidth={isActive?2:1.75} />
-                  {!collapsed && (
-                    <>
-                      <span style={{fontSize:12,color:isActive?accentColor:'#4b5563',fontWeight:isActive?500:400,whiteSpace:'nowrap',flex:1}}>{item.label}</span>
-                      {item.chip && <span style={{fontSize:9,padding:'2px 6px',borderRadius:10,background:'#E6F1FB',color:'#185FA5',fontWeight:500,whiteSpace:'nowrap'}}>{item.chip}</span>}
-                    </>
-                  )}
-                </a>
-              )
-            })}
-          </div>
-        ))}
+        {collapsed ? (
+          MODULOS.map(m => (
+            <ModuloButton key={m.id} modulo={m} activo={moduloActivo===m.id} collapsed={true}
+              onClick={() => { setModuloActivo(m.id); localStorage.setItem('modulo_activo',m.id) }} />
+          ))
+        ) : (
+          modulo.nav.map(group => (
+            <div key={group.section} style={{marginBottom:2}}>
+              <div style={{fontSize:9,fontWeight:600,color:'#c4c4c4',textTransform:'uppercase',letterSpacing:'0.1em',padding:'6px 8px 3px',whiteSpace:'nowrap'}}>{group.section}</div>
+              {group.items.map(item => {
+                const Icon = item.icon
+                const isActive = pathname === item.href
+                return (
+                  <a key={item.label} href={item.href}
+                    style={{display:'flex',alignItems:'center',gap:8,padding:'7px 10px',borderRadius:7,cursor:'pointer',textDecoration:'none',background:isActive?(clienteActivo?'#dbeafe':'#EFF6FF'):'transparent',marginBottom:1,transition:'background 0.15s'}}
+                    onMouseEnter={e => { if(!isActive) e.currentTarget.style.background='#f9fafb' }}
+                    onMouseLeave={e => { if(!isActive) e.currentTarget.style.background='transparent' }}>
+                    <Icon size={14} color={isActive?accentColor:'#9ca3af'} strokeWidth={isActive?2:1.75} />
+                    <span style={{fontSize:12,color:isActive?accentColor:'#4b5563',fontWeight:isActive?500:400,whiteSpace:'nowrap',flex:1}}>{item.label}</span>
+                    {item.chip && <span style={{fontSize:9,padding:'2px 6px',borderRadius:10,background:'#E6F1FB',color:'#185FA5',fontWeight:500,whiteSpace:'nowrap'}}>{item.chip}</span>}
+                  </a>
+                )
+              })}
+            </div>
+          ))
+        )}
       </nav>
 
-      <div style={{padding:'6px 8px',borderTop:`0.5px solid ${clienteActivo?'#dbeafe':'#f3f4f6'}`,display:'flex',flexDirection:'column',gap:1}}>
+      {/* Bottom */}
+      <div style={{padding:'6px 8px',borderTop:'0.5px solid #f3f4f6',display:'flex',flexDirection:'column',gap:1}}>
         <a href="/configuracion" title={collapsed?'Configuracion':''}
-          style={{display:'flex',alignItems:'center',gap:8,padding:collapsed?'9px':'7px 10px',borderRadius:7,cursor:'pointer',textDecoration:'none',justifyContent:collapsed?'center':'flex-start',background:pathname==='/configuracion'?(clienteActivo?'#dbeafe':'#EFF6FF'):'transparent',transition:'background 0.15s'}}
+          style={{display:'flex',alignItems:'center',gap:8,padding:collapsed?'9px':'7px 10px',borderRadius:7,cursor:'pointer',textDecoration:'none',justifyContent:collapsed?'center':'flex-start',background:pathname==='/configuracion'?'#EFF6FF':'transparent',transition:'background 0.15s'}}
           onMouseEnter={e => { if(pathname!=='/configuracion') e.currentTarget.style.background='#f9fafb' }}
-          onMouseLeave={e => { if(pathname!=='/configuracion') e.currentTarget.style.background=pathname==='/configuracion'?(clienteActivo?'#dbeafe':'#EFF6FF'):'transparent' }}>
-          <Settings size={15} color={pathname==='/configuracion'?accentColor:'#9ca3af'} strokeWidth={1.75}/>
+          onMouseLeave={e => { if(pathname!=='/configuracion') e.currentTarget.style.background=pathname==='/configuracion'?'#EFF6FF':'transparent' }}>
+          <Settings size={14} color={pathname==='/configuracion'?accentColor:'#9ca3af'} strokeWidth={1.75}/>
           {!collapsed && <span style={{fontSize:12,color:pathname==='/configuracion'?accentColor:'#4b5563',fontWeight:pathname==='/configuracion'?500:400}}>Configuracion</span>}
         </a>
         <button onClick={handleLogout} title={collapsed?'Cerrar sesion':''}
           style={{display:'flex',alignItems:'center',gap:8,padding:collapsed?'9px':'7px 10px',borderRadius:7,cursor:'pointer',background:'none',border:'none',justifyContent:collapsed?'center':'flex-start',width:'100%',transition:'background 0.15s'}}
           onMouseEnter={e => e.currentTarget.style.background='#fef2f2'}
           onMouseLeave={e => e.currentTarget.style.background='none'}>
-          <LogOut size={15} color="#ef4444" strokeWidth={1.75}/>
+          <LogOut size={14} color="#ef4444" strokeWidth={1.75}/>
           {!collapsed && <span style={{fontSize:12,color:'#ef4444'}}>Cerrar sesion</span>}
         </button>
       </div>
@@ -575,28 +590,13 @@ function AppLayout({ children }) {
   const [collapsed, setCollapsed] = useState(false)
   const [user, setUser] = useState(null)
   const [moduloActivo, setModuloActivo] = useState('fiscal')
-  const [config, setConfig] = useState({})
   const isAuthPage = authRoutes.includes(pathname)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user))
     const saved = localStorage.getItem('modulo_activo')
     if (saved) setModuloActivo(saved)
-    const savedConfig = localStorage.getItem('config_app')
-    if (savedConfig) setConfig(JSON.parse(savedConfig))
-    const handler = (e) => setConfig(e.detail)
-    window.addEventListener('config_actualizada', handler)
-    return () => window.removeEventListener('config_actualizada', handler)
   }, [])
-
-  const cambiarModulo = (id) => {
-    setModuloActivo(id)
-    localStorage.setItem('modulo_activo', id)
-  }
-
-  const avatarColor = config.avatarColor || '#185FA5'
-  const appNombre = config.appNombre || 'ContableApp'
-  const nombre = config.nombre || user?.email?.split('@')[0] || 'U'
 
   if (isAuthPage) {
     return (
@@ -608,54 +608,20 @@ function AppLayout({ children }) {
 
   return (
     <html lang="es">
-      <body style={{margin:0,fontFamily:'system-ui,sans-serif',display:'flex',flexDirection:'column',minHeight:'100vh',background:'#f8fafc'}}>
-
-        {/* Topbar blanca minimalista */}
-        <div style={{background:'white',padding:'4px 20px',display:'flex',alignItems:'center',gap:6,flexShrink:0,position:'sticky',top:0,zIndex:100,borderBottom:'0.5px solid #e5e7eb',boxShadow:'0 1px 6px rgba(0,0,0,0.04)'}}>
-          <div style={{width:26,height:26,borderRadius:7,background:avatarColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:'white',flexShrink:0,marginRight:4}}>
-            {appNombre.charAt(0)}
-          </div>
-          <div style={{width:0.5,height:20,background:'#e5e7eb',margin:'0 8px',flexShrink:0}}></div>
-
-          <div style={{display:'flex',alignItems:'center',gap:4}}>
-            {MODULOS.map(m => (
-              <DockButton key={m.id} modulo={m} activo={moduloActivo===m.id} onClick={() => cambiarModulo(m.id)} />
-            ))}
-          </div>
-
-          <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
-            <div style={{width:0.5,height:20,background:'#e5e7eb',margin:'0 4px'}}></div>
-            <button title="Configuracion" onClick={() => { window.location.href='/configuracion' }}
-              style={{width:30,height:30,borderRadius:'50%',background:'transparent',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'transform 0.2s'}}
-              onMouseEnter={e => e.currentTarget.style.transform='scale(1.2)'}
-              onMouseLeave={e => e.currentTarget.style.transform='scale(1)'}>
-              <Settings size={14} color="#9ca3af" strokeWidth={1.5}/>
-            </button>
-            <div style={{width:28,height:28,borderRadius:'50%',background:avatarColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:600,color:'white',cursor:'pointer'}}
-              title={nombre}>
-              {nombre.charAt(0).toUpperCase()}
+      <body style={{margin:0,fontFamily:'system-ui,sans-serif',display:'flex',minHeight:'100vh',background:'#f8fafc'}}>
+        <Sidebar user={user} moduloActivo={moduloActivo} setModuloActivo={setModuloActivo} collapsed={collapsed} setCollapsed={setCollapsed} />
+        <main style={{flex:1,overflowY:'auto',position:'relative'}}>
+          {clienteActivo && (
+            <div style={{background:'#1d4ed8',padding:'6px 20px',display:'flex',alignItems:'center',gap:10,position:'sticky',top:0,zIndex:50}}>
+              <div style={{width:18,height:18,borderRadius:5,background:'rgba(255,255,255,0.2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:700,color:'white',flexShrink:0}}>{clienteActivo.nombre.charAt(0)}</div>
+              <span style={{fontSize:11,color:'rgba(255,255,255,0.75)'}}>Consultando cliente:</span>
+              <span style={{fontSize:12,fontWeight:600,color:'white'}}>{clienteActivo.nombre}</span>
+              <span style={{fontSize:10,color:'rgba(255,255,255,0.55)',fontFamily:'monospace'}}>{clienteActivo.rfc}</span>
             </div>
-          </div>
-        </div>
-
-        {/* Banner cliente activo */}
-        {clienteActivo && (
-          <div style={{background:'#1d4ed8',padding:'6px 20px',display:'flex',alignItems:'center',gap:10,zIndex:50,flexShrink:0}}>
-            <div style={{width:18,height:18,borderRadius:5,background:'rgba(255,255,255,0.2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:700,color:'white',flexShrink:0}}>{clienteActivo.nombre.charAt(0)}</div>
-            <span style={{fontSize:11,color:'rgba(255,255,255,0.75)'}}>Consultando cliente:</span>
-            <span style={{fontSize:12,fontWeight:600,color:'white'}}>{clienteActivo.nombre}</span>
-            <span style={{fontSize:10,color:'rgba(255,255,255,0.55)',fontFamily:'monospace'}}>{clienteActivo.rfc}</span>
-          </div>
-        )}
-
-        {/* Body */}
-        <div style={{display:'flex',flex:1,overflow:'hidden'}}>
-          <Sidebar user={user} moduloActivo={moduloActivo} collapsed={collapsed} setCollapsed={setCollapsed} />
-          <main style={{flex:1,overflowY:'auto',position:'relative'}}>
-            {children}
-            <ChatBot />
-          </main>
-        </div>
+          )}
+          {children}
+          <ChatBot />
+        </main>
       </body>
     </html>
   )
