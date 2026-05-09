@@ -17,7 +17,7 @@ const authRoutes = ['/auth/login', '/auth/registro', '/auth/recuperar', '/auth/n
 
 const MODULOS = [
   {
-    id: 'fiscal', label: 'Fiscal', icon: '📊', tag: 'Fiscal / Contable',
+    id: 'fiscal', label: 'Fiscal', icon: 'ti-scale', color: '#e03131', tag: 'Fiscal / Contable',
     tabs: [
       {
         id: 'pf', label: 'P. Física',
@@ -79,7 +79,7 @@ const MODULOS = [
     ]
   },
   {
-    id: 'ventas', label: 'Ventas', icon: '🧾', tag: 'Ventas y Facturación',
+    id: 'ventas', label: 'Ventas', icon: 'ti-receipt-2', color: '#e8590c', tag: 'Ventas y Facturación',
     nav: [
       { section: 'Facturación', items: [
         { label: 'Facturas CFDI', href: '/facturas', icon: FileText },
@@ -94,7 +94,7 @@ const MODULOS = [
     ]
   },
   {
-    id: 'compras', label: 'Compras', icon: '🛒', tag: 'Compras y Gastos',
+    id: 'compras', label: 'Compras', icon: 'ti-truck-delivery', color: '#f08c00', tag: 'Compras y Gastos',
     nav: [
       { section: 'Compras', items: [
         { label: 'Órdenes de compra', href: '/compras/ordenes', icon: ShoppingCart },
@@ -105,7 +105,7 @@ const MODULOS = [
     ]
   },
   {
-    id: 'nomina', label: 'Nómina', icon: '👥', tag: 'Nómina y RRHH',
+    id: 'nomina', label: 'Nómina', icon: 'ti-address-book', color: '#2f9e44', tag: 'Nómina y RRHH',
     nav: [
       { section: 'Empleados', items: [
         { label: 'Expedientes digitales', href: '/nomina/empleados', icon: Users },
@@ -121,7 +121,7 @@ const MODULOS = [
     ]
   },
   {
-    id: 'inventarios', label: 'Inventario', icon: '📦', tag: 'Inventarios',
+    id: 'inventarios', label: 'Inventario', icon: 'ti-box', color: '#1098ad', tag: 'Inventarios',
     nav: [
       { section: 'Productos', items: [
         { label: 'Catálogo SKU', href: '/inventarios/productos', icon: Package },
@@ -135,7 +135,7 @@ const MODULOS = [
     ]
   },
   {
-    id: 'tesoreria', label: 'Tesorería', icon: '🏦', tag: 'Tesorería y Bancos',
+    id: 'tesoreria', label: 'Tesorería', icon: 'ti-coin', color: '#1971c2', tag: 'Tesorería y Bancos',
     nav: [
       { section: 'Cuentas', items: [
         { label: 'Cuentas bancarias', href: '/tesoreria/cuentas', icon: Landmark },
@@ -149,7 +149,7 @@ const MODULOS = [
     ]
   },
   {
-    id: 'crm', label: 'CRM', icon: '🤝', tag: 'CRM Clientes',
+    id: 'crm', label: 'CRM', icon: 'ti-phone-call', color: '#3b5bdb', tag: 'CRM Clientes',
     nav: [
       { section: 'CRM', items: [
         { label: 'Prospectos', href: '/crm/prospectos', icon: UserSearch },
@@ -159,7 +159,7 @@ const MODULOS = [
     ]
   },
   {
-    id: 'bi', label: 'Business', icon: '📈', tag: 'Business Intelligence',
+    id: 'bi', label: 'Business', icon: 'ti-presentation-analytics', color: '#6741d9', tag: 'Business Intelligence',
     nav: [
       { section: 'Dashboard', items: [
         { label: 'Resumen ejecutivo', href: '/bi/resumen', icon: BarChart3 },
@@ -185,16 +185,25 @@ function fmtN(n) { return '$'+n.toLocaleString('es-MX',{minimumFractionDigits:2,
 function DockBubble({ modulo, activo, onClick }) {
   const [hover, setHover] = useState(false)
   return (
-    <div style={{position:'relative',display:'flex',flexDirection:'column',alignItems:'center'}}>
+    <div style={{position:'relative',display:'flex',flexDirection:'column',alignItems:'center',gap:3}}>
       <button onClick={onClick}
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
-        style={{width:34,height:34,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',border:'none',background:activo?'#f1f5f9':'transparent',outline:activo?'1.5px solid #e2e8f0':'1.5px solid transparent',fontSize:16,transform:hover?'scale(1.25)':'scale(1)',transition:'transform 0.2s cubic-bezier(.34,1.56,.64,1),background 0.15s',flexShrink:0}}>
-        <span style={{lineHeight:1}}>{modulo.icon}</span>
+        style={{
+          width:44,height:44,borderRadius:'50%',
+          display:'flex',alignItems:'center',justifyContent:'center',
+          cursor:'pointer',border:'none',
+          background:activo?'#f8fafc':'transparent',
+          outline:activo?`1.5px solid ${modulo.color}22`:'1.5px solid transparent',
+          transform:hover?'scale(1.25)':'scale(1)',
+          transition:'transform 0.2s cubic-bezier(.34,1.56,.64,1),background 0.15s',
+          flexShrink:0,
+        }}>
+        <i className={`ti ${modulo.icon}`} style={{fontSize:22,color:activo?modulo.color:hover?modulo.color:'#9ca3af',transition:'color 0.15s'}} aria-hidden="true"></i>
       </button>
-      {activo && <div style={{width:4,height:4,borderRadius:'50%',background:'#185FA5',position:'absolute',bottom:-5}}></div>}
+      <div style={{width:4,height:4,borderRadius:'50%',background:activo?modulo.color:'transparent',transition:'background 0.2s'}}></div>
       {hover && (
-        <div style={{position:'absolute',top:'calc(100% + 10px)',left:'50%',transform:'translateX(-50%)',background:'rgba(15,23,42,0.88)',color:'white',fontSize:11,fontWeight:500,padding:'4px 10px',borderRadius:7,whiteSpace:'nowrap',pointerEvents:'none',zIndex:300,boxShadow:'0 4px 12px rgba(0,0,0,0.15)'}}>
+        <div style={{position:'absolute',top:'calc(100% + 8px)',left:'50%',transform:'translateX(-50%)',background:'rgba(15,23,42,0.88)',color:'white',fontSize:11,fontWeight:500,padding:'4px 10px',borderRadius:7,whiteSpace:'nowrap',pointerEvents:'none',zIndex:300,boxShadow:'0 4px 12px rgba(0,0,0,0.15)'}}>
           {modulo.tag}
           <div style={{position:'absolute',top:-4,left:'50%',transform:'translateX(-50%)',width:8,height:8,background:'rgba(15,23,42,0.88)',clipPath:'polygon(50% 0%, 0% 100%, 100% 100%)'}}></div>
         </div>
@@ -236,9 +245,7 @@ function SelectorCliente({ collapsed }) {
               <div style={{width:26,height:26,minWidth:26,borderRadius:7,background:'#185FA5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:'white'}}>{clienteActivo.nombre.charAt(0)}</div>
               <div style={{overflow:'hidden'}}>
                 <div style={{fontSize:12,fontWeight:600,color:'#1e3a8a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{clienteActivo.nombre.split(' ').slice(0,2).join(' ')}</div>
-                <div style={{fontSize:10,color:'#60a5fa'}}>
-                  {clienteActivo.es_persona_moral ? 'PM' : 'PF'} · {(clienteActivo.regimenes||[]).length} régimen{(clienteActivo.regimenes||[]).length !== 1 ? 'es' : ''}
-                </div>
+                <div style={{fontSize:10,color:'#60a5fa'}}>{clienteActivo.es_persona_moral?'PM':'PF'} · {(clienteActivo.regimenes||[]).length} régimen{(clienteActivo.regimenes||[]).length!==1?'es':''}</div>
               </div>
             </>
           ) : (
@@ -292,9 +299,7 @@ function SelectorCliente({ collapsed }) {
                   <div style={{width:24,height:24,minWidth:24,borderRadius:6,background:c.es_persona_moral?'#7c3aed':'#185FA5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:'white'}}>{c.nombre.charAt(0)}</div>
                   <div style={{flex:1,overflow:'hidden'}}>
                     <div style={{fontSize:12,fontWeight:500,color:'#0f172a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{c.nombre.split(' ').slice(0,3).join(' ')}</div>
-                    <div style={{fontSize:10,color:'#9ca3af'}}>
-                      {c.es_persona_moral?'PM':'PF'} · {(c.regimenes||[]).length} régimen{(c.regimenes||[]).length!==1?'es':''}
-                    </div>
+                    <div style={{fontSize:10,color:'#9ca3af'}}>{c.es_persona_moral?'PM':'PF'} · {(c.regimenes||[]).length} régimen{(c.regimenes||[]).length!==1?'es':''}</div>
                   </div>
                   {alerta && <AlertTriangle size={11} color="#d97706" style={{flexShrink:0}} />}
                   {isActive && <span style={{fontSize:10,background:'#dbeafe',color:'#1d4ed8',padding:'2px 7px',borderRadius:20,fontWeight:500,flexShrink:0}}>Activo</span>}
@@ -493,7 +498,6 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed 
     return () => window.removeEventListener('config_actualizada', handler)
   }, [])
 
-  // Auto-detectar tab según si el cliente es PM
   useEffect(() => {
     if (esPersonaMoral) setTabFiscal('pm')
     else setTabFiscal('pf')
@@ -510,7 +514,6 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed 
   const sidebarBg = clienteActivo ? '#f8faff' : 'white'
   const modulo = MODULOS.find(m => m.id === moduloActivo) || MODULOS[0]
 
-  // Filtrar nav según regímenes activos
   const filtrarNav = (nav) => {
     if (!nav) return []
     return nav.map(group => ({
@@ -529,7 +532,6 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed 
   return (
     <aside style={{width:collapsed?64:240,minWidth:collapsed?64:240,background:sidebarBg,borderRight:`0.5px solid ${clienteActivo?'#bfdbfe':'#e5e7eb'}`,display:'flex',flexDirection:'column',transition:'width 0.25s ease,min-width 0.25s ease',overflow:'hidden',height:'100%',boxShadow:'1px 0 6px rgba(0,0,0,0.03)'}}>
 
-      {/* Perfil */}
       <div style={{padding:collapsed?'14px 8px':'14px 14px 10px',borderBottom:'0.5px solid #f3f4f6',display:'flex',alignItems:'center',gap:10,justifyContent:collapsed?'center':'flex-start',position:'relative',minHeight:58}}>
         <div style={{width:36,height:36,minWidth:36,borderRadius:'50%',background:accentColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:600,color:'white',flexShrink:0}}>
           {nombre.charAt(0).toUpperCase()}
@@ -548,16 +550,14 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed 
         </button>
       </div>
 
-      {/* Selector cliente */}
       <SelectorCliente collapsed={collapsed} />
 
-      {/* Selector módulo */}
       {!collapsed && (
         <div style={{padding:'8px 10px',borderBottom:'0.5px solid #f3f4f6',position:'relative',zIndex:10}}>
           <button onClick={() => setModuloOpen(!moduloOpen)}
             style={{width:'100%',padding:'7px 10px',background:'#f8fafc',border:'0.5px solid #e5e7eb',borderRadius:8,cursor:'pointer',display:'flex',alignItems:'center',gap:8,justifyContent:'space-between'}}>
             <div style={{display:'flex',alignItems:'center',gap:7}}>
-              <span style={{fontSize:14}}>{modulo.icon}</span>
+              <i className={`ti ${modulo.icon}`} style={{fontSize:16,color:modulo.color}} aria-hidden="true"></i>
               <span style={{fontSize:12,fontWeight:500,color:'#374151'}}>{modulo.tag}</span>
             </div>
             <ChevronDown size={12} color="#9ca3af" style={{transform:moduloOpen?'rotate(180deg)':'rotate(0)',transition:'transform 0.15s'}} />
@@ -566,12 +566,12 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed 
             <div style={{position:'absolute',left:10,right:10,top:'calc(100% - 4px)',background:'white',border:'0.5px solid #e5e7eb',borderRadius:9,overflow:'hidden',boxShadow:'0 4px 16px rgba(0,0,0,0.08)',zIndex:100}}>
               {MODULOS.map(m => (
                 <button key={m.id} onClick={() => { setModuloActivo(m.id); localStorage.setItem('modulo_activo',m.id); setModuloOpen(false) }}
-                  style={{width:'100%',padding:'8px 12px',border:'none',background:moduloActivo===m.id?'#EFF6FF':'none',cursor:'pointer',display:'flex',alignItems:'center',gap:8,borderBottom:'0.5px solid #f3f4f6',textAlign:'left'}}
+                  style={{width:'100%',padding:'8px 12px',border:'none',background:moduloActivo===m.id?'#f8fafc':'none',cursor:'pointer',display:'flex',alignItems:'center',gap:8,borderBottom:'0.5px solid #f3f4f6',textAlign:'left'}}
                   onMouseEnter={e => { if(moduloActivo!==m.id) e.currentTarget.style.background='#f9fafb' }}
                   onMouseLeave={e => { if(moduloActivo!==m.id) e.currentTarget.style.background='none' }}>
-                  <span style={{fontSize:14}}>{m.icon}</span>
-                  <span style={{fontSize:12,color:moduloActivo===m.id?'#185FA5':'#374151',fontWeight:moduloActivo===m.id?500:400}}>{m.tag}</span>
-                  {moduloActivo===m.id && <div style={{marginLeft:'auto',width:5,height:5,borderRadius:'50%',background:'#185FA5'}}></div>}
+                  <i className={`ti ${m.icon}`} style={{fontSize:16,color:m.color}} aria-hidden="true"></i>
+                  <span style={{fontSize:12,color:moduloActivo===m.id?m.color:'#374151',fontWeight:moduloActivo===m.id?500:400}}>{m.tag}</span>
+                  {moduloActivo===m.id && <div style={{marginLeft:'auto',width:5,height:5,borderRadius:'50%',background:m.color}}></div>}
                 </button>
               ))}
             </div>
@@ -579,7 +579,6 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed 
         </div>
       )}
 
-      {/* Tabs P. Física / P. Moral — solo en módulo fiscal y si no hay cliente PM detectado */}
       {!collapsed && moduloActivo === 'fiscal' && !clienteActivo && (
         <div style={{display:'flex',gap:4,padding:'7px 10px',borderBottom:'0.5px solid #f3f4f6'}}>
           {modulo.tabs.map(tab => (
@@ -591,29 +590,25 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed 
         </div>
       )}
 
-      {/* Indicador de régimen cuando hay cliente */}
       {!collapsed && clienteActivo && moduloActivo === 'fiscal' && (
         <div style={{padding:'6px 12px',borderBottom:'0.5px solid #f3f4f6',background:'#f8faff'}}>
           <div style={{fontSize:9,fontWeight:600,color:'#9ca3af',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:3}}>Regímenes del cliente</div>
           <div style={{display:'flex',flexWrap:'wrap',gap:3}}>
             {regimenesActivos.slice(0,3).map(r => (
-              <span key={r} style={{fontSize:9,padding:'2px 6px',borderRadius:20,background:'#dbeafe',color:'#1d4ed8',fontWeight:500}}>
-                {r}
-              </span>
+              <span key={r} style={{fontSize:9,padding:'2px 6px',borderRadius:20,background:'#dbeafe',color:'#1d4ed8',fontWeight:500}}>{r}</span>
             ))}
             {regimenesActivos.length > 3 && <span style={{fontSize:9,color:'#9ca3af'}}>+{regimenesActivos.length-3}</span>}
           </div>
         </div>
       )}
 
-      {/* Nav */}
       <nav style={{flex:1,padding:'6px 8px',overflowY:'auto',display:'flex',flexDirection:'column',gap:1}}>
         {collapsed ? (
           MODULOS.map(m => (
             <button key={m.id} onClick={() => { setModuloActivo(m.id); localStorage.setItem('modulo_activo',m.id) }}
               title={m.tag}
-              style={{width:'100%',padding:'9px',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',border:'none',background:moduloActivo===m.id?'#EFF6FF':'transparent',fontSize:16,marginBottom:2}}>
-              {m.icon}
+              style={{width:'100%',padding:'10px',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',border:'none',background:'transparent',marginBottom:2}}>
+              <i className={`ti ${m.icon}`} style={{fontSize:20,color:moduloActivo===m.id?m.color:'#9ca3af'}} aria-hidden="true"></i>
             </button>
           ))
         ) : (
@@ -639,7 +634,6 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed 
         )}
       </nav>
 
-      {/* Bottom */}
       <div style={{padding:'6px 8px',borderTop:'0.5px solid #f3f4f6',display:'flex',flexDirection:'column',gap:1}}>
         <a href="/configuracion" title={collapsed?'Configuracion':''}
           style={{display:'flex',alignItems:'center',gap:8,padding:collapsed?'9px':'7px 10px',borderRadius:7,cursor:'pointer',textDecoration:'none',justifyContent:collapsed?'center':'flex-start',background:pathname==='/configuracion'?'#EFF6FF':'transparent',transition:'background 0.15s'}}
@@ -694,29 +688,34 @@ function AppLayout({ children }) {
 
   return (
     <html lang="es">
+      <head>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
+      </head>
       <body style={{margin:0,fontFamily:'system-ui,sans-serif',display:'flex',flexDirection:'column',minHeight:'100vh',background:'#f8fafc'}}>
 
-        {/* Topbar */}
-        <div style={{background:'white',padding:'5px 20px',display:'flex',alignItems:'center',gap:4,flexShrink:0,position:'sticky',top:0,zIndex:100,borderBottom:'0.5px solid #f1f5f9',boxShadow:'0 1px 4px rgba(0,0,0,0.04)'}}>
-          <div style={{width:26,height:26,borderRadius:7,background:avatarColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:'white',flexShrink:0,marginRight:4}}>
-            {appNombre.charAt(0)}
-          </div>
-          <div style={{width:0.5,height:18,background:'#e5e7eb',margin:'0 8px',flexShrink:0}}></div>
-          <div style={{display:'flex',alignItems:'center',gap:2}}>
-            {MODULOS.map(m => (
-              <DockBubble key={m.id} modulo={m} activo={moduloActivo===m.id} onClick={() => { setModuloActivo(m.id); localStorage.setItem('modulo_activo',m.id) }} />
-            ))}
-          </div>
-          <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
-            <div style={{width:0.5,height:18,background:'#e5e7eb',margin:'0 4px'}}></div>
-            <button onClick={() => window.location.href='/configuracion'} title="Configuracion"
-              style={{width:28,height:28,borderRadius:'50%',background:'none',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'transform 0.2s'}}
-              onMouseEnter={e => e.currentTarget.style.transform='scale(1.15)'}
-              onMouseLeave={e => e.currentTarget.style.transform='scale(1)'}>
-              <Settings size={14} color="#9ca3af" strokeWidth={1.5}/>
-            </button>
-            <div style={{width:28,height:28,borderRadius:'50%',background:avatarColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:600,color:'white'}}>
-              {nombre.charAt(0).toUpperCase()}
+        {/* Topbar centrada */}
+        <div style={{background:'white',padding:'6px 0',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,position:'sticky',top:0,zIndex:100,borderBottom:'0.5px solid #f1f5f9',boxShadow:'0 1px 4px rgba(0,0,0,0.04)'}}>
+          <div style={{display:'flex',alignItems:'center',width:'100%',maxWidth:820,padding:'0 24px'}}>
+            <div style={{width:30,height:30,borderRadius:8,background:avatarColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:'white',flexShrink:0}}>
+              {appNombre.charAt(0)}
+            </div>
+            <div style={{width:0.5,height:20,background:'#e5e7eb',margin:'0 16px',flexShrink:0}}></div>
+            <div style={{display:'flex',alignItems:'center',gap:8,flex:1,justifyContent:'center'}}>
+              {MODULOS.map(m => (
+                <DockBubble key={m.id} modulo={m} activo={moduloActivo===m.id} onClick={() => { setModuloActivo(m.id); localStorage.setItem('modulo_activo',m.id) }} />
+              ))}
+            </div>
+            <div style={{width:0.5,height:20,background:'#e5e7eb',margin:'0 16px',flexShrink:0}}></div>
+            <div style={{display:'flex',alignItems:'center',gap:8,flexShrink:0}}>
+              <button onClick={() => window.location.href='/configuracion'} title="Configuracion"
+                style={{width:30,height:30,borderRadius:'50%',background:'none',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'transform 0.2s'}}
+                onMouseEnter={e => e.currentTarget.style.transform='scale(1.15)'}
+                onMouseLeave={e => e.currentTarget.style.transform='scale(1)'}>
+                <Settings size={15} color="#9ca3af" strokeWidth={1.5}/>
+              </button>
+              <div style={{width:30,height:30,borderRadius:'50%',background:avatarColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:600,color:'white',cursor:'pointer'}} title={nombre}>
+                {nombre.charAt(0).toUpperCase()}
+              </div>
             </div>
           </div>
         </div>
