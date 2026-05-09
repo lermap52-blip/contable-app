@@ -17,24 +17,21 @@ export async function POST(req) {
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`
 
-    const body = {
-      system_instruction: {
-        parts: [{ text: 'Eres un asistente fiscal y contable experto en el sistema tributario mexicano. Ayudas con dudas sobre RESICO, IVA, ISR, CFDI, SAT, declaraciones, e.firma, facturacion electronica, deducciones y retenciones en Mexico. Responde claro, conciso y amigable. Usa emojis.' }]
-      },
-      contents: historial,
-      generationConfig: { maxOutputTokens: 1000, temperature: 0.7 }
-    }
-
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+      body: JSON.stringify({
+        system_instruction: {
+          parts: [{ text: 'Eres un asistente fiscal y contable experto en el sistema tributario mexicano. Ayudas con dudas sobre RESICO, IVA, ISR, CFDI, SAT, declaraciones, e.firma, facturacion electronica, deducciones y retenciones en Mexico. Responde claro, conciso y amigable. Usa emojis.' }]
+        },
+        contents: historial,
+        generationConfig: { maxOutputTokens: 1000, temperature: 0.7 }
+      })
     })
 
     const data = await response.json()
 
     if (!response.ok) {
-      console.error('Gemini error:', JSON.stringify(data))
       return NextResponse.json({ texto: `Error ${response.status}: ${data?.error?.message || 'Error desconocido'}` })
     }
 
@@ -42,7 +39,6 @@ export async function POST(req) {
     return NextResponse.json({ texto })
 
   } catch (error) {
-    console.error('Error general:', error)
-    return NextResponse.json({ texto: 'Error interno: ' + error.message }, { status: 500 })
+    return NextResponse.json({ texto: 'Error: ' + error.message }, { status: 500 })
   }
 }
