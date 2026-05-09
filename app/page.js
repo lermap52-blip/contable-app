@@ -2,213 +2,257 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabase'
 import { useCliente } from './ClienteContext'
+import { AlertTriangle, Shield, Calendar, TrendingUp, TrendingDown, Wallet, Activity } from 'lucide-react'
 
-function diasParaVencer(fecha) {
-  if (!fecha) return null
+const pagosCalc = () => {
   const hoy = new Date()
-  const vence = new Date(fecha)
-  return Math.ceil((vence - hoy) / (1000 * 60 * 60 * 24))
+  const anio = hoy.getFullYear()
+  const mes = hoy.getMonth()
+  const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+  const dias = (f) => Math.ceil((f - hoy) / (1000 * 60 * 60 * 24))
+  return [
+    { id:'dec', dia:17, mes:meses[mes], nombre:'Declaracion mensual', tipo:`IVA + ISR · ${meses[mes>0?mes-1:11]}`, dias:dias(new Date(anio,mes,17)) },
+    { id:'imss', dia:20, mes:meses[mes], nombre:'IMSS', tipo:`Cuotas patronales · ${meses[mes]}`, dias:dias(new Date(anio,mes,20)) },
+    { id:'dec2', dia:17, mes:meses[(mes+1)%12], nombre:'Declaracion mensual', tipo:`IVA + ISR · ${meses[mes]}`, dias:dias(new Date(anio,mes+1,17)) },
+    { id:'imss2', dia:20, mes:meses[(mes+1)%12], nombre:'IMSS', tipo:`Cuotas patronales · ${meses[(mes+1)%12]}`, dias:dias(new Date(anio,mes+1,20)) },
+  ]
 }
 
+function fmt(n) { return '$'+Number(n).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2}) }
+
+const card = { background:'white', borderRadius:16, padding:24, boxShadow:'0 1px 4px rgba(0,0,0,0.06)', border:'0.5px solid #f1f5f9' }
+
 export default function Dashboard() {
-  const { clienteActivo, empresaId, esModoMaestro } = useCliente()
-  const [ingresos, setIngresos] = useState(0)
-  const [egresos, setEgresos] = useState(0)
-  const [clientes, setClientes] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [hora, setHora] = useState('')
+  const { clienteActivo, esModoMaestro, empresaId, diasParaVencimiento } = useCliente()
+  const [ingresos, setIngresos] = useState([])
+  const [egresos, setEgresos] = useState([])
+  const [pagados, setPagados] = useState({})
+  const pagos = pagosCalc()
 
   useEffect(() => {
-    const h = new Date().getHours()
-    if (h < 12) setHora('Buenos días')
-    else if (h < 19) setHora('Buenas tardes')
-    else setHora('Buenas noches')
-    cargarDatos()
-  }, [clienteActivo, empresaId])
+    if (empresaId) cargarDatos()
+  }, [empresaId, clienteActivo])
 
   const cargarDatos = async () => {
-    setLoading(true)
-    if (!empresaId) { setLoading(false); return }
-
-    const filtro = esModoMaestro
-      ? { empresa_id: empresaId, cliente_id: null }
-      : { empresa_id: empresaId, cliente_id: clienteActivo?.id }
-
-    const mes = new Date()
-    const inicio = new Date(mes.getFullYear(), mes.getMonth(), 1).toISOString()
-    const fin = new Date(mes.getFullYear(), mes.getMonth() + 1, 0).toISOString()
-
-    const [{ data: ingData }, { data: egData }, { data: clientesData }] = await Promise.all([
-      supabase.from('movimientos').select('monto').eq('empresa_id', empresaId).eq('tipo', 'ingreso').gte('fecha_operacion', inicio).lte('fecha_operacion', fin),
-      supabase.from('movimientos').select('monto').eq('empresa_id', empresaId).eq('tipo', 'egreso').gte('fecha_operacion', inicio).lte('fecha_operacion', fin),
-      supabase.from('contactos').select('*').eq('empresa_id', empresaId).eq('tipo', 'cliente').order('nombre', { ascending: true }),
-    ])
-
-    const totalIng = (ingData || []).reduce((s, r) => s + (r.monto || 0), 0)
-    const totalEg = (egData || []).reduce((s, r) => s + (r.monto || 0), 0)
-
-    setIngresos(totalIng)
-    setEgresos(totalEg)
-    setClientes(clientesData || [])
-    setLoading(false)
+    const now = new Date()
+    const primerDia = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
+    const ultimoDia = new Date(now.getFullYear(), now.getMonth()+1, 0).toISOString().split('T')[0]
+    let query = supabase.from('movimientos').select('*').eq('empresa_id', empresaId).gte('fecha_operacion', primerDia).lte('fecha_operacion', ultimoDia)
+    if (clienteActivo) query = query.eq('cliente_id', clienteActivo.id)
+    else query = query.is('cliente_id', null)
+    const { data: movs } = await query
+    setIngresos((movs||[]).filter(m => m.tipo === 'ingreso'))
+    setEgresos((movs||[]).filter(m => m.tipo === 'egreso'))
   }
 
-  const fmt = (n) => '$' + n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  const totalIngresos = ingresos.reduce((a,r)=>a+Number(r.monto),0)
+  const ingresosFacturados = ingresos.filter(r=>r.es_facturado).reduce((a,r)=>a+Number(r.monto),0)
+  const ingresosNoFacturados = ingresos.filter(r=>!r.es_facturado).reduce((a,r)=>a+Number(r.monto),0)
+  const totalEgresos = egresos.reduce((a,r)=>a+Number(r.monto),0)
+  const balance = totalIngresos - totalEgresos
+  const tasaResico = totalIngresos<=25000?0.01:totalIngresos<=50000?0.011:totalIngresos<=83333?0.015:totalIngresos<=208333?0.02:0.025
+  const ivaEstimado = ingresosNoFacturados * 0.16
+  const isrEstimado = totalIngresos * tasaResico
 
-  const iva = ingresos * 0.16
-  const tramos = [
-    { hasta: 25000, tasa: 0.0100 },
-    { hasta: 50000, tasa: 0.0110 },
-    { hasta: 83333.33, tasa: 0.0150 },
-    { hasta: 208333.33, tasa: 0.0200 },
-    { hasta: 3500000, tasa: 0.0250 },
-  ]
-  const tramo = tramos.find(t => ingresos <= t.hasta) || tramos[tramos.length - 1]
-  const isr = ingresos * tramo.tasa
+  const hora = new Date().getHours()
+  const saludo = hora < 12 ? 'Buenos dias' : hora < 19 ? 'Buenas tardes' : 'Buenas noches'
+  const mesActual = new Date().toLocaleString('es-MX', { month: 'long', year: 'numeric' })
 
-  const mes = new Date().toLocaleString('es-MX', { month: 'long', year: 'numeric' })
+  // ← CAMBIO 1: días reales de e.firma
+  const diasEfirma = clienteActivo ? diasParaVencimiento(clienteActivo.vencimiento_efirma) : null
+  const alertaEfirma = diasEfirma !== null && diasEfirma <= 30
 
-  // Clientes con alerta de e.firma
-  const alertasEfirma = clientes.filter(c => {
-    if (!c.vencimiento_efirma) return false
-    const dias = diasParaVencer(c.vencimiento_efirma)
-    return dias !== null && dias <= 30
-  }).sort((a, b) => diasParaVencer(a.vencimiento_efirma) - diasParaVencer(b.vencimiento_efirma))
-
-  const nombre = clienteActivo?.nombre?.split(' ')[0] || 'Contador'
+  const badgePago = (p) => {
+    if (pagados[p.id]) return { bg:'#f0fdf4', color:'#16a34a', texto:'Pagado' }
+    if (p.dias < 0) return { bg:'#fef2f2', color:'#dc2626', texto:'Vencido' }
+    if (p.dias <= 5) return { bg:'#fef2f2', color:'#dc2626', texto:`${p.dias}d` }
+    if (p.dias <= 10) return { bg:'#fffbeb', color:'#d97706', texto:`${p.dias}d` }
+    return { bg:'#f0fdf4', color:'#16a34a', texto:`${p.dias}d` }
+  }
 
   return (
-    <div style={{ padding: 28, fontFamily: 'system-ui,sans-serif', background: '#f8fafc', minHeight: '100vh' }}>
+    <div style={{padding:32,fontFamily:'system-ui,sans-serif',background:'#f8fafc',minHeight:'100vh'}}>
 
       {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 22, fontWeight: 600, color: '#1f2937', marginBottom: 4 }}>
-          {hora}, {nombre} 👋
-        </div>
-        <div style={{ fontSize: 13, color: '#6b7280' }}>
-          Resumen fiscal · {mes.charAt(0).toUpperCase() + mes.slice(1)}
-        </div>
+      <div style={{marginBottom:28}}>
+        <h1 style={{fontSize:24,fontWeight:700,color:'#0f172a',marginBottom:4,letterSpacing:'-0.3px'}}>{saludo}</h1>
+        <p style={{fontSize:14,color:'#94a3b8',margin:0}}>
+          {esModoMaestro ? `Resumen de ${mesActual}` : `${clienteActivo?.nombre} · ${mesActual}`}
+        </p>
       </div>
 
-      {/* Alertas e.firma */}
-      {alertasEfirma.length > 0 && (
-        <div style={{ marginBottom: 20 }}>
-          {alertasEfirma.map(c => {
-            const dias = diasParaVencer(c.vencimiento_efirma)
-            const vencida = dias !== null && dias <= 0
-            return (
-              <div key={c.id} style={{
-                display: 'flex', alignItems: 'center', gap: 12,
-                padding: '10px 16px', borderRadius: 10, marginBottom: 8,
-                background: vencida ? '#FCEBEB' : '#fffbeb',
-                border: `0.5px solid ${vencida ? '#fecaca' : '#fde68a'}`,
-              }}>
-                <span style={{ fontSize: 18 }}>{vencida ? '🔴' : '⚠️'}</span>
-                <div style={{ flex: 1 }}>
-                  <span style={{ fontSize: 13, fontWeight: 500, color: vencida ? '#A32D2D' : '#92400e' }}>
-                    {c.nombre}
-                  </span>
-                  <span style={{ fontSize: 12, color: vencida ? '#A32D2D' : '#92400e', marginLeft: 8 }}>
-                    {vencida
-                      ? `e.firma vencida el ${c.vencimiento_efirma}`
-                      : `e.firma vence en ${dias} día${dias !== 1 ? 's' : ''} · ${c.vencimiento_efirma}`}
-                  </span>
-                </div>
-                <a href="/clientes" style={{ fontSize: 11, color: '#185FA5', textDecoration: 'none', fontWeight: 500 }}>
-                  Ver →
-                </a>
-              </div>
-            )
-          })}
+      {/* ← CAMBIO 2: alerta e.firma cuando faltan menos de 30 días */}
+      {alertaEfirma && clienteActivo && (
+        <div style={{...card,marginBottom:20,background:'#fffbeb',border:'0.5px solid #fde68a',padding:'14px 18px',display:'flex',alignItems:'center',gap:12}}>
+          <AlertTriangle size={20} color="#d97706" />
+          <div>
+            <div style={{fontSize:13,fontWeight:600,color:'#92400e'}}>
+              {diasEfirma <= 0 ? `e.firma de ${clienteActivo.nombre} vencida` : `e.firma de ${clienteActivo.nombre} vence en ${diasEfirma} días`}
+            </div>
+            <div style={{fontSize:11,color:'#b45309',marginTop:1}}>
+              {diasEfirma <= 0 ? 'Renueva la e.firma para poder timbrar CFDIs' : `Vence el ${clienteActivo.vencimiento_efirma} — Renueva antes de que expire`}
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Cards resumen */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 24 }}>
-        {[
-          { label: 'Ingresos del mes', valor: fmt(ingresos), color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0' },
-          { label: 'Egresos del mes', valor: fmt(egresos), color: '#dc2626', bg: '#fef2f2', border: '#fecaca' },
-          { label: 'IVA estimado', valor: fmt(iva), color: '#185FA5', bg: '#eff6ff', border: '#bfdbfe' },
-          { label: `ISR RESICO (${(tramo.tasa * 100).toFixed(2)}%)`, valor: fmt(isr), color: '#d97706', bg: '#fffbeb', border: '#fde68a' },
-        ].map(card => (
-          <div key={card.label} style={{ background: card.bg, border: `0.5px solid ${card.border}`, borderRadius: 12, padding: '16px 18px' }}>
-            <div style={{ fontSize: 11, color: '#6b7280', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{card.label}</div>
-            <div style={{ fontSize: 22, fontWeight: 600, color: card.color }}>{loading ? '...' : card.valor}</div>
+      {/* Tarjetas */}
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:16,marginBottom:24}}>
+        <div style={card}>
+          <div style={{fontSize:11,fontWeight:600,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:12,display:'flex',alignItems:'center',gap:6}}>
+            <TrendingUp size={12} color="#16a34a" /> Ingresos del mes
           </div>
-        ))}
+          <div style={{fontSize:28,fontWeight:700,color:'#16a34a',marginBottom:12,letterSpacing:'-0.5px'}}>{fmt(totalIngresos)}</div>
+          <div style={{borderTop:'1px solid #f1f5f9',paddingTop:10,display:'flex',flexDirection:'column',gap:5}}>
+            <div style={{display:'flex',justifyContent:'space-between'}}>
+              <span style={{fontSize:11,color:'#94a3b8'}}>Facturados</span>
+              <span style={{fontSize:12,color:'#3b82f6',fontWeight:600}}>{fmt(ingresosFacturados)}</span>
+            </div>
+            <div style={{display:'flex',justifyContent:'space-between'}}>
+              <span style={{fontSize:11,color:'#94a3b8'}}>No facturados</span>
+              <span style={{fontSize:12,color:'#f59e0b',fontWeight:600}}>{fmt(ingresosNoFacturados)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div style={card}>
+          <div style={{fontSize:11,fontWeight:600,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:12,display:'flex',alignItems:'center',gap:6}}>
+            <TrendingDown size={12} color="#dc2626" /> Egresos del mes
+          </div>
+          <div style={{fontSize:28,fontWeight:700,color:'#dc2626',marginBottom:12,letterSpacing:'-0.5px'}}>{fmt(totalEgresos)}</div>
+          <div style={{fontSize:11,color:'#94a3b8'}}>{egresos.length} movimientos</div>
+        </div>
+
+        <div style={{...card,background:balance>=0?'#f0fdf4':'#fef2f2',border:`0.5px solid ${balance>=0?'#bbf7d0':'#fecaca'}`}}>
+          <div style={{fontSize:11,fontWeight:600,color:balance>=0?'#16a34a':'#dc2626',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:12,display:'flex',alignItems:'center',gap:6}}>
+            <Wallet size={12} /> Balance
+          </div>
+          <div style={{fontSize:28,fontWeight:700,color:balance>=0?'#15803d':'#b91c1c',marginBottom:12,letterSpacing:'-0.5px'}}>{fmt(balance)}</div>
+          <div style={{fontSize:11,color:balance>=0?'#4ade80':'#f87171'}}>{balance>=0?'Positivo este mes':'Negativo este mes'}</div>
+        </div>
+
+        <div style={card}>
+          <div style={{fontSize:11,fontWeight:600,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:12,display:'flex',alignItems:'center',gap:6}}>
+            <Activity size={12} /> Movimientos
+          </div>
+          <div style={{fontSize:28,fontWeight:700,color:'#0f172a',marginBottom:12,letterSpacing:'-0.5px'}}>{ingresos.length+egresos.length}</div>
+          <div style={{fontSize:11,color:'#94a3b8'}}>Este mes</div>
+        </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-
-        {/* Próximos pagos */}
-        <div style={{ background: 'white', borderRadius: 12, border: '0.5px solid #e5e7eb', padding: 20 }}>
-          <div style={{ fontSize: 14, fontWeight: 500, color: '#1f2937', marginBottom: 4 }}>Próximos pagos SAT</div>
-          <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 16 }}>Obligaciones del mes</div>
+      {/* Fila 2 */}
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:24}}>
+        <div style={card}>
+          <div style={{fontSize:11,fontWeight:600,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:16,display:'flex',alignItems:'center',gap:6}}>
+            <Shield size={12} /> Estatus fiscal
+          </div>
+          <div style={{display:'flex',alignItems:'center',gap:14,marginBottom:16,padding:'12px 14px',background:'#f0fdf4',borderRadius:12}}>
+            <div style={{width:44,height:44,borderRadius:'50%',background:'#16a34a',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,color:'white',fontWeight:700,flexShrink:0}}>✓</div>
+            <div>
+              <div style={{fontSize:14,fontWeight:600,color:'#15803d'}}>Al corriente</div>
+              <div style={{fontSize:11,color:'#4ade80',marginTop:1}}>Opinion de cumplimiento SAT</div>
+            </div>
+          </div>
           {[
-            { label: 'Declaración mensual IVA/ISR', fecha: `17 de ${new Date().toLocaleString('es-MX', { month: 'long' })}`, color: '#185FA5', dias: 17 - new Date().getDate() },
-            { label: 'DIOT', fecha: `17 de ${new Date().toLocaleString('es-MX', { month: 'long' })}`, color: '#185FA5', dias: 17 - new Date().getDate() },
-            { label: 'IMSS cuotas', fecha: `17 de ${new Date().toLocaleString('es-MX', { month: 'long' })}`, color: '#854F0B', dias: 17 - new Date().getDate() },
-          ].map(p => (
-            <div key={p.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '0.5px solid #f3f4f6' }}>
-              <div>
-                <div style={{ fontSize: 13, color: '#1f2937', fontWeight: 400 }}>{p.label}</div>
-                <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>{p.fecha}</div>
+            {label:'Declaraciones presentadas',val:'Abr 2026',ok:true},
+            {label:'RFC activo',val:clienteActivo?.rfc||'Vigente',ok:true},
+            {label:'Buzon tributario',val:'Activo',ok:true},
+            {label:'FIEL / e.firma',
+              // ← CAMBIO 1: mostrar días reales en lugar de "Vence en 45 dias"
+              val: diasEfirma === null ? 'Sin e.firma' : diasEfirma <= 0 ? 'Vencida' : `Vence en ${diasEfirma} días`,
+              ok: diasEfirma === null || diasEfirma > 30
+            },
+          ].map(item => (
+            <div key={item.label} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'6px 0',borderBottom:'1px solid #f8fafc'}}>
+              <div style={{display:'flex',alignItems:'center',gap:8}}>
+                <div style={{width:6,height:6,borderRadius:'50%',background:item.ok?'#16a34a':'#f59e0b',flexShrink:0}}></div>
+                <span style={{fontSize:12,color:'#64748b'}}>{item.label}</span>
               </div>
-              <span style={{
-                fontSize: 11, padding: '3px 10px', borderRadius: 20, fontWeight: 500,
-                background: p.dias < 0 ? '#FCEBEB' : p.dias <= 5 ? '#fffbeb' : '#eff6ff',
-                color: p.dias < 0 ? '#A32D2D' : p.dias <= 5 ? '#92400e' : '#185FA5'
-              }}>
-                {p.dias < 0 ? 'Vencido' : p.dias === 0 ? 'Hoy' : `${p.dias} días`}
-              </span>
+              <span style={{fontSize:11,fontWeight:500,color:item.ok?'#0f172a':'#d97706'}}>{item.val}</span>
             </div>
           ))}
         </div>
 
-        {/* Clientes con e.firma */}
-        <div style={{ background: 'white', borderRadius: 12, border: '0.5px solid #e5e7eb', padding: 20 }}>
-          <div style={{ fontSize: 14, fontWeight: 500, color: '#1f2937', marginBottom: 4 }}>Estado e.firma clientes</div>
-          <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 16 }}>Vigencia de certificados</div>
-          {loading ? (
-            <div style={{ color: '#9ca3af', fontSize: 13 }}>Cargando...</div>
-          ) : clientes.length === 0 ? (
-            <div style={{ color: '#9ca3af', fontSize: 13, textAlign: 'center', padding: '20px 0' }}>
-              No hay clientes registrados
-            </div>
-          ) : (
-            clientes.slice(0, 6).map(c => {
-              const dias = diasParaVencer(c.vencimiento_efirma)
-              const vencida = dias !== null && dias <= 0
-              const porVencer = dias !== null && dias > 0 && dias <= 30
-              const vigente = dias !== null && dias > 30
-              const sinEfirma = !c.vencimiento_efirma
-
-              return (
-                <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '0.5px solid #f3f4f6' }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: vencida ? '#A32D2D' : porVencer ? '#d97706' : vigente ? '#16a34a' : '#9ca3af' }}></div>
-                  <div style={{ flex: 1, overflow: 'hidden' }}>
-                    <div style={{ fontSize: 12, fontWeight: 500, color: '#1f2937', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {c.nombre.split(' ').slice(0, 3).join(' ')}
-                    </div>
-                    <div style={{ fontSize: 10, color: '#9ca3af', fontFamily: 'monospace' }}>{c.rfc}</div>
-                  </div>
-                  <div style={{ fontSize: 11, textAlign: 'right', flexShrink: 0 }}>
-                    {sinEfirma && <span style={{ color: '#9ca3af' }}>Sin e.firma</span>}
-                    {vencida && <span style={{ color: '#A32D2D', fontWeight: 500 }}>Vencida</span>}
-                    {porVencer && <span style={{ color: '#d97706', fontWeight: 500 }}>{dias} días</span>}
-                    {vigente && <span style={{ color: '#16a34a' }}>{dias} días</span>}
-                  </div>
+        <div style={card}>
+          <div style={{fontSize:11,fontWeight:600,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:16,display:'flex',alignItems:'center',gap:6}}>
+            <Calendar size={12} /> Proximos pagos
+          </div>
+          {pagos.map((p,i) => {
+            const badge = badgePago(p)
+            const vencido = p.dias < 0 && !pagados[p.id]
+            return (
+              <div key={p.id} style={{display:'flex',alignItems:'center',gap:12,padding:'10px 0',borderBottom:i<pagos.length-1?'1px solid #f8fafc':'none',opacity:pagados[p.id]?0.5:1}}>
+                <div style={{minWidth:42,textAlign:'center',background:vencido?'#fef2f2':'#f8fafc',borderRadius:10,padding:'5px 6px'}}>
+                  <div style={{fontSize:16,fontWeight:700,color:vencido?'#dc2626':'#0f172a',lineHeight:1}}>{p.dia}</div>
+                  <div style={{fontSize:9,color:vencido?'#dc2626':'#94a3b8',textTransform:'uppercase',marginTop:1}}>{p.mes}</div>
                 </div>
-              )
-            })
-          )}
-          {clientes.length > 6 && (
-            <a href="/clientes" style={{ display: 'block', fontSize: 11, color: '#185FA5', textDecoration: 'none', marginTop: 10, textAlign: 'center' }}>
-              Ver todos ({clientes.length}) →
-            </a>
-          )}
+                <div style={{flex:1}}>
+                  <div style={{fontSize:13,fontWeight:500,color:vencido?'#dc2626':'#0f172a',textDecoration:pagados[p.id]?'line-through':'none'}}>{p.nombre}</div>
+                  <div style={{fontSize:11,color:'#94a3b8',marginTop:1}}>{p.tipo}</div>
+                </div>
+                <div style={{display:'flex',alignItems:'center',gap:8}}>
+                  <span style={{fontSize:10,fontWeight:600,padding:'3px 8px',borderRadius:20,background:badge.bg,color:badge.color,whiteSpace:'nowrap'}}>{badge.texto}</span>
+                  <input type="checkbox" checked={!!pagados[p.id]} onChange={() => setPagados(prev=>({...prev,[p.id]:!prev[p.id]}))}
+                    style={{width:14,height:14,cursor:'pointer',accentColor:'#16a34a'}} />
+                </div>
+              </div>
+            )
+          })}
         </div>
+      </div>
 
+      {/* Impuestos */}
+      <div style={{...card,marginBottom:24}}>
+        <div style={{fontSize:11,fontWeight:600,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:16}}>
+          Impuestos estimados · {esModoMaestro ? mesActual : `${clienteActivo?.nombre?.split(' ')[0]} · ${mesActual}`}
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16}}>
+          <div style={{background:'#fef2f2',borderRadius:12,padding:'14px 16px'}}>
+            <div style={{fontSize:11,color:'#94a3b8',marginBottom:4}}>IVA estimado</div>
+            <div style={{fontSize:24,fontWeight:700,color:'#dc2626',letterSpacing:'-0.5px'}}>{fmt(ivaEstimado)}</div>
+          </div>
+          <div style={{background:'#eff6ff',borderRadius:12,padding:'14px 16px'}}>
+            <div style={{fontSize:11,color:'#94a3b8',marginBottom:4}}>ISR estimado (RESICO {(tasaResico*100).toFixed(2)}%)</div>
+            <div style={{fontSize:24,fontWeight:700,color:'#3b82f6',letterSpacing:'-0.5px'}}>{fmt(isrEstimado)}</div>
+          </div>
+        </div>
+        {[
+          {lbl:'Ingresos registrados',v:fmt(totalIngresos)},
+          {lbl:'Egresos registrados',v:fmt(totalEgresos)},
+          {lbl:'IVA estimado (16% no facturados)',v:fmt(ivaEstimado),red:true},
+          {lbl:'ISR segun tabla RESICO',v:fmt(isrEstimado),red:true},
+        ].map(r => (
+          <div key={r.lbl} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'7px 0',borderBottom:'1px solid #f8fafc'}}>
+            <span style={{fontSize:12,color:'#64748b'}}>{r.lbl}</span>
+            <span style={{fontSize:13,fontWeight:600,color:r.red?'#dc2626':'#0f172a'}}>{r.v}</span>
+          </div>
+        ))}
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:14,padding:'14px 16px',background:'#f8fafc',borderRadius:12}}>
+          <span style={{fontSize:13,color:'#64748b'}}>Total estimado a pagar al SAT</span>
+          <span style={{fontSize:22,fontWeight:700,color:'#dc2626',letterSpacing:'-0.5px'}}>{fmt(ivaEstimado+isrEstimado)}</span>
+        </div>
+      </div>
+
+      {/* Acciones rapidas */}
+      <div>
+        <div style={{fontSize:11,fontWeight:600,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:14}}>Acciones rapidas</div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',gap:12}}>
+          {[
+            {icon:'💰',label:'Registrar ingreso',href:'/movimientos/nuevo?tipo=ingreso',bg:'#eff6ff'},
+            {icon:'🧾',label:'Registrar egreso',href:'/movimientos/nuevo?tipo=egreso',bg:'#fef2f2'},
+            {icon:'📋',label:'Ver ingresos',href:'/ingresos',bg:'#f0fdf4'},
+            {icon:'📊',label:'Ver egresos',href:'/egresos',bg:'#fffbeb'},
+          ].map(a => (
+            <a key={a.label} href={a.href} style={{textDecoration:'none',...card,padding:'16px',display:'flex',alignItems:'center',gap:12}}
+              onMouseEnter={e => e.currentTarget.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)'}
+              onMouseLeave={e => e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,0.06)'}>
+              <div style={{width:36,height:36,borderRadius:10,background:a.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0}}>
+                {a.icon}
+              </div>
+              <span style={{fontSize:13,color:'#0f172a',fontWeight:500}}>{a.label}</span>
+            </a>
+          ))}
+        </div>
       </div>
     </div>
   )
