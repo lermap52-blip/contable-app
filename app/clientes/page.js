@@ -152,56 +152,39 @@ export default function Clientes() {
       try {
         const bytes = new Uint8Array(e.target.result)
 
+        // Decodificar en latin-1 como vienen los .cer del SAT
+        const texto = Array.from(bytes).map(b => String.fromCharCode(b)).join('')
+
         // Buscar RFC
         let rfc = ''
-        for (let i = 0; i < bytes.length - 13; i++) {
-          let chunk = ''
-          for (let j = 0; j < 13; j++) chunk += String.fromCharCode(bytes[i + j])
-          if (/^[A-Z&]{4}\d{6}[A-Z0-9]{3}$/.test(chunk)) { rfc = chunk; break }
-        }
-        if (!rfc) {
-          for (let i = 0; i < bytes.length - 12; i++) {
-            let chunk = ''
-            for (let j = 0; j < 12; j++) chunk += String.fromCharCode(bytes[i + j])
-            if (/^[A-Z]{3}\d{6}[A-Z0-9]{3}$/.test(chunk)) { rfc = chunk; break }
-          }
-        }
+        const rfcMatch13 = texto.match(/[A-Z&]{4}\d{6}[A-Z0-9]{3}/)
+        const rfcMatch12 = texto.match(/[A-Z]{3}\d{6}[A-Z0-9]{3}/)
+        if (rfcMatch13) rfc = rfcMatch13[0]
+        else if (rfcMatch12) rfc = rfcMatch12[0]
 
-        // Buscar nombre usando TextDecoder
+        // Buscar nombre — aparece como secuencia de mayúsculas con espacios
         let nombre = ''
-        const texto = new TextDecoder('utf-8', { fatal: false }).decode(bytes)
-        if (rfc) {
-          const idx = texto.indexOf(rfc)
-          if (idx !== -1) {
-            const despues = texto.slice(idx + rfc.length, idx + rfc.length + 400)
-            const matches = despues.match(/[A-ZÁÉÍÓÚÜÑ][A-ZÁÉÍÓÚÜÑa-záéíóúüñ\s]{10,80}/g)
-            if (matches) {
-              for (const m of matches) {
-                const limpio = m.trim()
-                if (limpio.length > 8 &&
-                  !limpio.toLowerCase().includes('mexico') &&
-                  !limpio.toLowerCase().includes('servicio') &&
-                  !limpio.toLowerCase().includes('administracion') &&
-                  !limpio.toLowerCase().includes('tributaria') &&
-                  !limpio.toLowerCase().includes('internet') &&
-                  !limpio.toLowerCase().includes('autoridad') &&
-                  !limpio.toLowerCase().includes('fiscal')) {
-                  nombre = limpio
-                  break
-                }
-              }
+        const EXCLUIR = ['SERVICIO','ADMINISTRACION','TRIBUTARIA','CONTRIBUYENTE','AUTORIDAD','MEXICO','CENTRAL','SERVICIOS','HIDALGO','GUERRERO','CUAUHTEMOC','RESPONSABLE']
+        const nombres = texto.match(/[A-ZÁÉÍÓÚÜÑ]{2,}(?:\s[A-ZÁÉÍÓÚÜÑ]{2,}){1,4}/g)
+        if (nombres) {
+          for (const n of nombres) {
+            const palabras = n.trim().split(' ')
+            if (
+              palabras.length >= 2 &&
+              palabras.length <= 5 &&
+              n.length >= 10 &&
+              n.length <= 80 &&
+              !EXCLUIR.some(ex => n.includes(ex))
+            ) {
+              nombre = n.trim()
+              break
             }
           }
         }
 
-        // Buscar fechas
+        // Buscar fechas de vencimiento
         const fechas = []
         for (let i = 0; i < bytes.length - 13; i++) {
-          if (bytes[i] === 0x18 && bytes[i+1] === 0x0F) {
-            let fecha = ''
-            for (let j = 0; j < 15; j++) fecha += String.fromCharCode(bytes[i+2+j])
-            if (/^20\d{12}Z$/.test(fecha)) fechas.push(fecha)
-          }
           if (bytes[i] === 0x17 && bytes[i+1] === 0x0D) {
             let fecha = ''
             for (let j = 0; j < 13; j++) fecha += String.fromCharCode(bytes[i+2+j])
@@ -211,7 +194,13 @@ export default function Clientes() {
               fechas.push(fullYear + fecha.slice(2))
             }
           }
+          if (bytes[i] === 0x18 && bytes[i+1] === 0x0F) {
+            let fecha = ''
+            for (let j = 0; j < 15; j++) fecha += String.fromCharCode(bytes[i+2+j])
+            if (/^20\d{12}Z$/.test(fecha)) fechas.push(fecha)
+          }
         }
+
         let vence = ''
         if (fechas.length >= 2) {
           const raw = fechas[1]
@@ -219,7 +208,13 @@ export default function Clientes() {
         }
 
         const espm = rfc.length === 12
-        setForm(prev => ({ ...prev, rfc: rfc || prev.rfc, nombre: nombre || prev.nombre, esPersonaMoral: espm, regimenes: [] }))
+        setForm(prev => ({
+          ...prev,
+          rfc: rfc || prev.rfc,
+          nombre: nombre || prev.nombre,
+          esPersonaMoral: espm,
+          regimenes: [],
+        }))
         setVencimiento(vence)
         setCerUploaded(true)
       } catch { setCerUploaded(true) }
@@ -378,10 +373,10 @@ export default function Clientes() {
                       <button onClick={e => { e.stopPropagation(); eliminarCliente(c.id, c.nombre) }}
                         style={{padding:'4px 6px',background:'none',border:'none',cursor:'pointer'}}
                         onMouseEnter={e => e.currentTarget.querySelector('svg').setAttribute('stroke','#A32D2D')}
-                        onMouseLeave={e => e.currentTarget.querySelector('svg').setAttribute('stroke','#1f2937')}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1f2937" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                          <path className="tapa" style={{transition:'transform 0.2s',transformOrigin:'12px 4px'}} d="M3 6h18"/>
-                          <path d="M8 6V4h8v2"/><rect x="5" y="6" width="14" height="15" rx="2"/>
+                        onMouseLeave={e => e.currentTarget.querySelector('svg').setAttribute('stroke','#9ca3af')}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M3 6h18"/><path d="M8 6V4h8v2"/>
+                          <rect x="5" y="6" width="14" height="15" rx="2"/>
                           <line x1="9" y1="11" x2="9" y2="17"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="15" y1="11" x2="15" y2="17"/>
                         </svg>
                       </button>
@@ -410,7 +405,6 @@ export default function Clientes() {
               </div>
             ) : (
               <>
-                {/* Tipo persona */}
                 {nuevo && (
                   <div style={{marginBottom:14}}>
                     <label style={{display:'block',fontSize:12,color:'#6b7280',marginBottom:6}}>Tipo de persona</label>
@@ -432,7 +426,7 @@ export default function Clientes() {
                   <input value={nuevo?form.nombre:clienteActivo?.nombre||''}
                     onChange={e => nuevo&&setForm({...form,nombre:e.target.value})}
                     readOnly={!nuevo} placeholder="Se autocompleta con el .cer"
-                    style={{width:'100%',padding:'8px 10px',border:'0.5px solid #e5e7eb',borderRadius:8,fontSize:13,color:'#1f2937',outline:'none',background:nuevo?'#f9fafb':'#f3f4f6',boxSizing:'border-box'}} />
+                    style={{width:'100%',padding:'8px 10px',border:'0.5px solid #e5e7eb',borderRadius:8,fontSize:13,color:'#1f2937',outline:'none',background:nuevo?'white':'#f3f4f6',boxSizing:'border-box'}} />
                 </div>
 
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:14}}>
@@ -441,7 +435,7 @@ export default function Clientes() {
                     <input value={nuevo?form.rfc:clienteActivo?.rfc||''}
                       onChange={e => nuevo&&setForm({...form,rfc:e.target.value})}
                       readOnly={!nuevo} placeholder="Autocompleta con .cer"
-                      style={{width:'100%',padding:'8px 10px',border:'0.5px solid #e5e7eb',borderRadius:8,fontSize:12,color:'#1f2937',outline:'none',background:nuevo?'#f9fafb':'#f3f4f6',fontFamily:'monospace',boxSizing:'border-box'}} />
+                      style={{width:'100%',padding:'8px 10px',border:'0.5px solid #e5e7eb',borderRadius:8,fontSize:12,color:'#1f2937',outline:'none',background:nuevo?'white':'#f3f4f6',fontFamily:'monospace',boxSizing:'border-box'}} />
                   </div>
                   <div>
                     <label style={{display:'block',fontSize:12,color:'#6b7280',marginBottom:4}}>Vencimiento e.firma</label>
@@ -450,10 +444,9 @@ export default function Clientes() {
                   </div>
                 </div>
 
-                {/* Regímenes */}
                 <div style={{fontSize:10,fontWeight:500,color:'#9ca3af',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:8}}>
                   Regímenes fiscales
-                  {!nuevo&&clienteActivo && (
+                  {!nuevo&&clienteActivo&&(
                     <span style={{marginLeft:8,fontSize:9,padding:'2px 6px',borderRadius:20,background:clienteActivo.es_persona_moral?'#f3f0ff':'#f0fdf4',color:clienteActivo.es_persona_moral?'#7c3aed':'#15803d'}}>
                       {clienteActivo.es_persona_moral?'Persona Moral':'Persona Física'}
                     </span>
@@ -475,7 +468,6 @@ export default function Clientes() {
                   </div>
                 )}
 
-                {/* e.firma */}
                 <div style={{fontSize:10,fontWeight:500,color:'#9ca3af',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:10}}>e.firma</div>
 
                 {clienteActivo&&!nuevo&&(
