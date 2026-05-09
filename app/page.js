@@ -27,7 +27,21 @@ export default function Dashboard() {
   const [ingresos, setIngresos] = useState([])
   const [egresos, setEgresos] = useState([])
   const [pagados, setPagados] = useState({})
+  const [vencimientoDespacho, setVencimientoDespacho] = useState(null)
   const pagos = pagosCalc()
+
+  useEffect(() => {
+    const config = localStorage.getItem('config_app')
+    if (config) {
+      const parsed = JSON.parse(config)
+      if (parsed.vencimiento_efirma) setVencimientoDespacho(parsed.vencimiento_efirma)
+    }
+    const handler = (e) => {
+      if (e.detail?.vencimiento_efirma) setVencimientoDespacho(e.detail.vencimiento_efirma)
+    }
+    window.addEventListener('config_actualizada', handler)
+    return () => window.removeEventListener('config_actualizada', handler)
+  }, [])
 
   useEffect(() => {
     if (empresaId) cargarDatos()
@@ -58,9 +72,11 @@ export default function Dashboard() {
   const saludo = hora < 12 ? 'Buenos dias' : hora < 19 ? 'Buenas tardes' : 'Buenas noches'
   const mesActual = new Date().toLocaleString('es-MX', { month: 'long', year: 'numeric' })
 
-  // ← CAMBIO 1: días reales de e.firma
-  const diasEfirma = clienteActivo ? diasParaVencimiento(clienteActivo.vencimiento_efirma) : null
+  // e.firma — cliente activo o despacho si estamos en modo maestro
+  const fechaEfirma = clienteActivo ? clienteActivo.vencimiento_efirma : vencimientoDespacho
+  const diasEfirma = diasParaVencimiento(fechaEfirma)
   const alertaEfirma = diasEfirma !== null && diasEfirma <= 30
+  const nombreContexto = clienteActivo ? clienteActivo.nombre : 'Mi Despacho'
 
   const badgePago = (p) => {
     if (pagados[p.id]) return { bg:'#f0fdf4', color:'#16a34a', texto:'Pagado' }
@@ -81,16 +97,20 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* ← CAMBIO 2: alerta e.firma cuando faltan menos de 30 días */}
-      {alertaEfirma && clienteActivo && (
+      {/* Alerta e.firma */}
+      {alertaEfirma && (
         <div style={{...card,marginBottom:20,background:'#fffbeb',border:'0.5px solid #fde68a',padding:'14px 18px',display:'flex',alignItems:'center',gap:12}}>
           <AlertTriangle size={20} color="#d97706" />
           <div>
             <div style={{fontSize:13,fontWeight:600,color:'#92400e'}}>
-              {diasEfirma <= 0 ? `e.firma de ${clienteActivo.nombre} vencida` : `e.firma de ${clienteActivo.nombre} vence en ${diasEfirma} días`}
+              {diasEfirma <= 0
+                ? `e.firma de ${nombreContexto} vencida`
+                : `e.firma de ${nombreContexto} vence en ${diasEfirma} día${diasEfirma!==1?'s':''}`}
             </div>
             <div style={{fontSize:11,color:'#b45309',marginTop:1}}>
-              {diasEfirma <= 0 ? 'Renueva la e.firma para poder timbrar CFDIs' : `Vence el ${clienteActivo.vencimiento_efirma} — Renueva antes de que expire`}
+              {diasEfirma <= 0
+                ? 'Renueva la e.firma para poder timbrar CFDIs'
+                : `Vence el ${fechaEfirma} — Renueva antes de que expire`}
             </div>
           </div>
         </div>
@@ -157,18 +177,22 @@ export default function Dashboard() {
             {label:'Declaraciones presentadas',val:'Abr 2026',ok:true},
             {label:'RFC activo',val:clienteActivo?.rfc||'Vigente',ok:true},
             {label:'Buzon tributario',val:'Activo',ok:true},
-            {label:'FIEL / e.firma',
-              // ← CAMBIO 1: mostrar días reales en lugar de "Vence en 45 dias"
-              val: diasEfirma === null ? 'Sin e.firma' : diasEfirma <= 0 ? 'Vencida' : `Vence en ${diasEfirma} días`,
-              ok: diasEfirma === null || diasEfirma > 30
+            {
+              label:'FIEL / e.firma',
+              val: diasEfirma === null
+                ? 'Sin e.firma'
+                : diasEfirma <= 0
+                  ? 'Vencida'
+                  : `Vence en ${diasEfirma} día${diasEfirma!==1?'s':''}`,
+              ok: diasEfirma !== null && diasEfirma > 30
             },
           ].map(item => (
             <div key={item.label} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'6px 0',borderBottom:'1px solid #f8fafc'}}>
               <div style={{display:'flex',alignItems:'center',gap:8}}>
-                <div style={{width:6,height:6,borderRadius:'50%',background:item.ok?'#16a34a':'#f59e0b',flexShrink:0}}></div>
+                <div style={{width:6,height:6,borderRadius:'50%',background:item.ok?'#16a34a':diasEfirma===null?'#9ca3af':'#f59e0b',flexShrink:0}}></div>
                 <span style={{fontSize:12,color:'#64748b'}}>{item.label}</span>
               </div>
-              <span style={{fontSize:11,fontWeight:500,color:item.ok?'#0f172a':'#d97706'}}>{item.val}</span>
+              <span style={{fontSize:11,fontWeight:500,color:item.ok?'#0f172a':diasEfirma===null?'#9ca3af':'#d97706'}}>{item.val}</span>
             </div>
           ))}
         </div>
