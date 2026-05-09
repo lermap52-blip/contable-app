@@ -15,32 +15,34 @@ export async function POST(req) {
       return NextResponse.json({ texto: 'Escribe tu pregunta.' })
     }
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: {
-            parts: [{ text: 'Eres un asistente fiscal y contable experto en el sistema tributario mexicano. Ayudas con dudas sobre RESICO, IVA, ISR, CFDI, SAT, declaraciones, e.firma, facturacion electronica, deducciones y retenciones en Mexico. Responde claro, conciso y amigable. Usa emojis.' }]
-          },
-          contents: historial,
-          generationConfig: { maxOutputTokens: 1000, temperature: 0.7 }
-        })
-      }
-    )
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`
+
+    const body = {
+      system_instruction: {
+        parts: [{ text: 'Eres un asistente fiscal y contable experto en el sistema tributario mexicano. Ayudas con dudas sobre RESICO, IVA, ISR, CFDI, SAT, declaraciones, e.firma, facturacion electronica, deducciones y retenciones en Mexico. Responde claro, conciso y amigable. Usa emojis.' }]
+      },
+      contents: historial,
+      generationConfig: { maxOutputTokens: 1000, temperature: 0.7 }
+    }
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    })
 
     const data = await response.json()
 
-    if (data.error) {
-      console.error('Gemini error:', data.error)
-      return NextResponse.json({ texto: 'Error de API: ' + data.error.message }, { status: 500 })
+    if (!response.ok) {
+      console.error('Gemini error:', JSON.stringify(data))
+      return NextResponse.json({ texto: `Error ${response.status}: ${data?.error?.message || 'Error desconocido'}` })
     }
 
-    const texto = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No pude procesar tu pregunta.'
+    const texto = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sin respuesta.'
     return NextResponse.json({ texto })
+
   } catch (error) {
-    console.error('Error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error('Error general:', error)
+    return NextResponse.json({ texto: 'Error interno: ' + error.message }, { status: 500 })
   }
 }
