@@ -199,7 +199,7 @@ function DockBubble({ modulo, activo, onClick }) {
           transition:'transform 0.2s cubic-bezier(.34,1.56,.64,1),background 0.15s',
           flexShrink:0,
         }}>
-        <i className={`ti ${modulo.icon}`} style={{fontSize:22,color:activo?modulo.color:hover?modulo.color:'#9ca3af',transition:'color 0.15s'}} aria-hidden="true"></i>
+        <i className={`ti ${modulo.icon}`} style={{fontSize:22,color:modulo.color,transition:'color 0.15s'}} aria-hidden="true"></i>
       </button>
       <div style={{width:4,height:4,borderRadius:'50%',background:activo?modulo.color:'transparent',transition:'background 0.2s'}}></div>
       {hover && (
