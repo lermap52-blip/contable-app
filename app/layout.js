@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { supabase } from './supabase'
 import { ClienteProvider, useCliente } from './ClienteContext'
 import "./globals.css"
@@ -9,15 +9,15 @@ import {
   Users, Calculator, FolderOpen, Settings, LogOut,
   ChevronLeft, ChevronRight, ChevronDown, AlertTriangle,
   Building2, BookOpen, ScrollText, Scale, Clock,
-  ShoppingCart, Package, Landmark, HeartHandshake,
-  BarChart3, UserSearch, Truck, Warehouse
+  ShoppingCart, Package, Landmark, BarChart3, UserSearch,
+  Truck, Warehouse
 } from 'lucide-react'
 
 const authRoutes = ['/auth/login', '/auth/registro', '/auth/recuperar', '/auth/nueva-password']
 
 const MODULOS = [
   {
-    id: 'fiscal', label: 'Fiscal', color: '#4ade80', icon: '📊', tag: 'Fiscal / Contable',
+    id: 'fiscal', label: 'Fiscal', icon: '📊', tag: 'Fiscal / Contable',
     nav: [
       { section: 'Contabilidad', items: [
         { label: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -40,7 +40,7 @@ const MODULOS = [
     ]
   },
   {
-    id: 'ventas', label: 'Ventas', color: '#60a5fa', icon: '🧾', tag: 'Ventas y Facturación',
+    id: 'ventas', label: 'Ventas', icon: '🧾', tag: 'Ventas y Facturación',
     nav: [
       { section: 'Facturación', items: [
         { label: 'Facturas CFDI', href: '/facturas', icon: FileText },
@@ -55,7 +55,7 @@ const MODULOS = [
     ]
   },
   {
-    id: 'compras', label: 'Compras', color: '#fb923c', icon: '🛒', tag: 'Compras y Gastos',
+    id: 'compras', label: 'Compras', icon: '🛒', tag: 'Compras y Gastos',
     nav: [
       { section: 'Compras', items: [
         { label: 'Órdenes de compra', href: '/compras/ordenes', icon: ShoppingCart },
@@ -66,7 +66,7 @@ const MODULOS = [
     ]
   },
   {
-    id: 'nomina', label: 'Nómina', color: '#c084fc', icon: '👥', tag: 'Nómina y RRHH',
+    id: 'nomina', label: 'Nómina', icon: '👥', tag: 'Nómina y RRHH',
     nav: [
       { section: 'Empleados', items: [
         { label: 'Expedientes digitales', href: '/nomina/empleados', icon: Users },
@@ -82,7 +82,7 @@ const MODULOS = [
     ]
   },
   {
-    id: 'inventarios', label: 'Inventario', color: '#fbbf24', icon: '📦', tag: 'Inventarios',
+    id: 'inventarios', label: 'Inventario', icon: '📦', tag: 'Inventarios',
     nav: [
       { section: 'Productos', items: [
         { label: 'Catálogo SKU', href: '/inventarios/productos', icon: Package },
@@ -96,7 +96,7 @@ const MODULOS = [
     ]
   },
   {
-    id: 'tesoreria', label: 'Tesorería', color: '#34d399', icon: '🏦', tag: 'Tesorería y Bancos',
+    id: 'tesoreria', label: 'Tesorería', icon: '🏦', tag: 'Tesorería y Bancos',
     nav: [
       { section: 'Cuentas', items: [
         { label: 'Cuentas bancarias', href: '/tesoreria/cuentas', icon: Landmark },
@@ -110,7 +110,7 @@ const MODULOS = [
     ]
   },
   {
-    id: 'crm', label: 'CRM', color: '#f472b6', icon: '🤝', tag: 'CRM Clientes',
+    id: 'crm', label: 'CRM', icon: '🤝', tag: 'CRM Clientes',
     nav: [
       { section: 'CRM', items: [
         { label: 'Prospectos', href: '/crm/prospectos', icon: UserSearch },
@@ -120,7 +120,7 @@ const MODULOS = [
     ]
   },
   {
-    id: 'bi', label: 'Business', color: '#a78bfa', icon: '📈', tag: 'Business Intelligence',
+    id: 'bi', label: 'Business', icon: '📈', tag: 'Business Intelligence',
     nav: [
       { section: 'Dashboard', items: [
         { label: 'Resumen ejecutivo', href: '/bi/resumen', icon: BarChart3 },
@@ -143,6 +143,48 @@ const resico = [
 function getTramo(m) { for (let t of resico) { if (m <= t.hasta) return t } return resico[resico.length-1] }
 function fmtN(n) { return '$'+n.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2}) }
 
+function DockButton({ modulo, activo, onClick }) {
+  const [hover, setHover] = useState(false)
+  return (
+    <div style={{position:'relative',display:'flex',flexDirection:'column',alignItems:'center'}}>
+      <button
+        onClick={onClick}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        style={{
+          width:36,height:36,borderRadius:'50%',
+          display:'flex',alignItems:'center',justifyContent:'center',
+          cursor:'pointer',border:'none',
+          background:activo?'#f1f5f9':'transparent',
+          outline:activo?'1.5px solid #e2e8f0':'1.5px solid transparent',
+          fontSize:17,
+          transform:hover?'scale(1.28)':'scale(1)',
+          transition:'transform 0.2s cubic-bezier(.34,1.56,.64,1), background 0.15s',
+          flexShrink:0,
+        }}>
+        <span style={{lineHeight:1}}>{modulo.icon}</span>
+      </button>
+      {activo && (
+        <div style={{width:4,height:4,borderRadius:'50%',background:'#185FA5',position:'absolute',bottom:-7}}></div>
+      )}
+      {hover && (
+        <div style={{
+          position:'absolute',top:'calc(100% + 12px)',left:'50%',
+          transform:'translateX(-50%)',
+          background:'rgba(15,23,42,0.88)',color:'white',
+          fontSize:11,fontWeight:500,padding:'5px 10px',borderRadius:7,
+          whiteSpace:'nowrap',pointerEvents:'none',
+          zIndex:300,
+          boxShadow:'0 4px 12px rgba(0,0,0,0.15)',
+        }}>
+          {modulo.tag}
+          <div style={{position:'absolute',top:-4,left:'50%',transform:'translateX(-50%)',width:8,height:8,background:'rgba(15,23,42,0.88)',clipPath:'polygon(50% 0%, 0% 100%, 100% 100%)'}}></div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function SelectorCliente({ collapsed }) {
   const { clientes, clienteActivo, seleccionarCliente, diasParaVencimiento } = useCliente()
   const [open, setOpen] = useState(false)
@@ -160,7 +202,7 @@ function SelectorCliente({ collapsed }) {
   if (collapsed) return (
     <div style={{padding:'8px',borderBottom:'0.5px solid #f3f4f6',display:'flex',justifyContent:'center'}}>
       <div title={clienteActivo?.nombre||'Mi Despacho'} onClick={() => setOpen(!open)}
-        style={{width:34,height:34,borderRadius:8,background:clienteActivo?'#185FA5':'#f0fdf4',border:`1px solid ${clienteActivo?'#bfdbfe':'#bbf7d0'}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:clienteActivo?'white':'#16a34a',cursor:'pointer'}}>
+        style={{width:32,height:32,borderRadius:8,background:clienteActivo?'#185FA5':'#f0fdf4',border:`1px solid ${clienteActivo?'#bfdbfe':'#bbf7d0'}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:clienteActivo?'white':'#16a34a',cursor:'pointer'}}>
         {clienteActivo?clienteActivo.nombre.charAt(0):'🏢'}
       </div>
     </div>
@@ -174,7 +216,7 @@ function SelectorCliente({ collapsed }) {
         <div style={{display:'flex',alignItems:'center',gap:8,overflow:'hidden',flex:1}}>
           {clienteActivo ? (
             <>
-              <div style={{width:24,height:24,minWidth:24,borderRadius:6,background:'#185FA5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:'white'}}>{clienteActivo.nombre.charAt(0)}</div>
+              <div style={{width:22,height:22,minWidth:22,borderRadius:6,background:'#185FA5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:'white'}}>{clienteActivo.nombre.charAt(0)}</div>
               <div style={{overflow:'hidden'}}>
                 <div style={{fontSize:12,fontWeight:500,color:'#1e3a8a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{clienteActivo.nombre.split(' ').slice(0,2).join(' ')}</div>
                 <div style={{fontSize:10,color:'#93c5fd',fontFamily:'monospace'}}>{clienteActivo.rfc}</div>
@@ -182,8 +224,8 @@ function SelectorCliente({ collapsed }) {
             </>
           ) : (
             <div style={{display:'flex',alignItems:'center',gap:8}}>
-              <div style={{width:24,height:24,minWidth:24,borderRadius:6,background:'#16a34a',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                <Building2 size={13} color="white" />
+              <div style={{width:22,height:22,minWidth:22,borderRadius:6,background:'#16a34a',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <Building2 size={12} color="white" />
               </div>
               <div>
                 <div style={{fontSize:12,fontWeight:600,color:'#15803d'}}>Mi Despacho</div>
@@ -192,12 +234,12 @@ function SelectorCliente({ collapsed }) {
             </div>
           )}
         </div>
-        <ChevronDown size={14} color="#94a3b8" style={{flexShrink:0,transform:open?'rotate(180deg)':'rotate(0deg)',transition:'transform 0.15s'}} />
+        <ChevronDown size={13} color="#94a3b8" style={{flexShrink:0,transform:open?'rotate(180deg)':'rotate(0deg)',transition:'transform 0.15s'}} />
       </button>
 
       {alertaEfirma && clienteActivo && (
         <div style={{marginTop:6,padding:'5px 8px',background:'#fffbeb',border:'0.5px solid #fde68a',borderRadius:6,display:'flex',alignItems:'center',gap:6}}>
-          <AlertTriangle size={12} color="#d97706" />
+          <AlertTriangle size={11} color="#d97706" />
           <span style={{fontSize:10,color:'#d97706',fontWeight:500}}>{diasVenc<=0?'e.firma vencida':`e.firma vence en ${diasVenc} dias`}</span>
         </div>
       )}
@@ -209,8 +251,8 @@ function SelectorCliente({ collapsed }) {
               style={{width:'100%',padding:'10px 12px',background:!clienteActivo?'#f0fdf4':'none',border:'none',cursor:'pointer',textAlign:'left',borderBottom:'0.5px solid #f3f4f6',display:'flex',alignItems:'center',gap:8}}
               onMouseEnter={e => { if(clienteActivo) e.currentTarget.style.background='#f9fafb' }}
               onMouseLeave={e => { if(clienteActivo) e.currentTarget.style.background='none' }}>
-              <div style={{width:26,height:26,borderRadius:7,background:'#16a34a',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                <Building2 size={14} color="white" />
+              <div style={{width:24,height:24,borderRadius:6,background:'#16a34a',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <Building2 size={13} color="white" />
               </div>
               <div>
                 <div style={{fontSize:12,fontWeight:600,color:'#15803d'}}>Mi Despacho</div>
@@ -228,12 +270,12 @@ function SelectorCliente({ collapsed }) {
                   style={{width:'100%',padding:'9px 12px',background:isActive?'#eff6ff':'none',border:'none',cursor:'pointer',textAlign:'left',borderBottom:'0.5px solid #f3f4f6',display:'flex',alignItems:'center',gap:8}}
                   onMouseEnter={e => { if(!isActive) e.currentTarget.style.background='#f9fafb' }}
                   onMouseLeave={e => { if(!isActive) e.currentTarget.style.background=isActive?'#eff6ff':'none' }}>
-                  <div style={{width:26,height:26,minWidth:26,borderRadius:7,background:'#185FA5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:'white'}}>{c.nombre.charAt(0)}</div>
+                  <div style={{width:24,height:24,minWidth:24,borderRadius:6,background:'#185FA5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:'white'}}>{c.nombre.charAt(0)}</div>
                   <div style={{flex:1,overflow:'hidden'}}>
                     <div style={{fontSize:12,fontWeight:500,color:'#0f172a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{c.nombre.split(' ').slice(0,3).join(' ')}</div>
                     <div style={{fontSize:10,color:'#94a3b8',fontFamily:'monospace'}}>{c.rfc}</div>
                   </div>
-                  {alerta && <AlertTriangle size={12} color="#d97706" style={{flexShrink:0}} />}
+                  {alerta && <AlertTriangle size={11} color="#d97706" style={{flexShrink:0}} />}
                   {isActive && <span style={{marginLeft:4,fontSize:10,background:'#dbeafe',color:'#1d4ed8',padding:'2px 7px',borderRadius:20,fontWeight:500,flexShrink:0}}>Activo</span>}
                 </button>
               )
@@ -415,53 +457,7 @@ function CalculadoraFlotante() {
   )
 }
 
-function DockButton({ modulo, activo, onClick }) {
-  const [hover, setHover] = useState(false)
-  return (
-    <div style={{position:'relative',display:'flex',flexDirection:'column',alignItems:'center'}}>
-      <button
-        onClick={onClick}
-        onMouseEnter={() => setHover(true)}
-        onMouseLeave={() => setHover(false)}
-        title={modulo.tag}
-        style={{
-          width:38,height:38,borderRadius:'50%',
-          display:'flex',alignItems:'center',justifyContent:'center',
-          cursor:'pointer',border:'none',
-          background:activo?'rgba(255,255,255,0.15)':'transparent',
-          outline:activo?'1.5px solid rgba(255,255,255,0.25)':'1.5px solid transparent',
-          fontSize:18,
-          transform:hover?'scale(1.3)':'scale(1)',
-          transition:'transform 0.2s cubic-bezier(.34,1.56,.64,1), background 0.15s, outline 0.15s',
-          flexShrink:0,
-        }}>
-        <span style={{lineHeight:1,filter:activo?'drop-shadow(0 0 4px rgba(255,255,255,0.4))':'none'}}>{modulo.icon}</span>
-      </button>
-      {/* Indicador activo */}
-      {activo && (
-        <div style={{width:4,height:4,borderRadius:'50%',background:'white',marginTop:2,position:'absolute',bottom:-6}}></div>
-      )}
-      {/* Tooltip */}
-      {hover && (
-        <div style={{
-          position:'absolute',top:'calc(100% + 10px)',left:'50%',
-          transform:'translateX(-50%)',
-          background:'rgba(10,15,28,0.95)',color:'white',
-          fontSize:11,fontWeight:500,padding:'5px 10px',borderRadius:7,
-          whiteSpace:'nowrap',pointerEvents:'none',
-          zIndex:300,
-          boxShadow:'0 4px 12px rgba(0,0,0,0.3)',
-          animation:'fadeIn 0.1s ease'
-        }}>
-          {modulo.tag}
-          <div style={{position:'absolute',top:-4,left:'50%',transform:'translateX(-50%)',width:8,height:8,background:'rgba(10,15,28,0.95)',clipPath:'polygon(50% 0%, 0% 100%, 100% 100%)'}}></div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed }) {
+function Sidebar({ user, moduloActivo, collapsed, setCollapsed }) {
   const pathname = usePathname()
   const { clienteActivo } = useCliente()
   const [config, setConfig] = useState({})
@@ -488,9 +484,9 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed 
   const modulo = MODULOS.find(m => m.id === moduloActivo) || MODULOS[0]
 
   return (
-    <aside style={{width:collapsed?64:240,minWidth:collapsed?64:240,background:sidebarBg,borderRight:`0.5px solid ${clienteActivo?'#bfdbfe':'#e5e7eb'}`,display:'flex',flexDirection:'column',transition:'width 0.25s ease,min-width 0.25s ease',overflow:'hidden',height:'100%',boxShadow:clienteActivo?'1px 0 8px rgba(29,78,216,0.08)':'1px 0 8px rgba(0,0,0,0.04)'}}>
+    <aside style={{width:collapsed?64:240,minWidth:collapsed?64:240,background:sidebarBg,borderRight:`0.5px solid ${clienteActivo?'#bfdbfe':'#e5e7eb'}`,display:'flex',flexDirection:'column',transition:'width 0.25s ease,min-width 0.25s ease',overflow:'hidden',height:'100%',boxShadow:clienteActivo?'1px 0 8px rgba(29,78,216,0.06)':'1px 0 6px rgba(0,0,0,0.03)'}}>
 
-      <div style={{padding:'10px 12px',borderBottom:`0.5px solid ${clienteActivo?'#dbeafe':'#f3f4f6'}`,display:'flex',alignItems:'center',justifyContent:collapsed?'center':'space-between',gap:8,minHeight:52}}>
+      <div style={{padding:'10px 12px',borderBottom:`0.5px solid ${clienteActivo?'#dbeafe':'#f3f4f6'}`,display:'flex',alignItems:'center',justifyContent:collapsed?'center':'space-between',gap:8,minHeight:50}}>
         {!collapsed && (
           <div style={{display:'flex',alignItems:'center',gap:8,overflow:'hidden'}}>
             <div style={{width:26,height:26,minWidth:26,borderRadius:7,background:accentColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,color:'white',fontWeight:700}}>{appNombre.charAt(0)}</div>
@@ -505,7 +501,7 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed 
         </button>
       </div>
 
-      <div style={{padding:collapsed?'10px 8px':'10px 12px',borderBottom:`0.5px solid ${clienteActivo?'#dbeafe':'#f3f4f6'}`,display:'flex',alignItems:'center',gap:8,justifyContent:collapsed?'center':'flex-start'}}>
+      <div style={{padding:collapsed?'8px':'10px 12px',borderBottom:`0.5px solid ${clienteActivo?'#dbeafe':'#f3f4f6'}`,display:'flex',alignItems:'center',gap:8,justifyContent:collapsed?'center':'flex-start'}}>
         <div style={{width:30,height:30,minWidth:30,borderRadius:'50%',background:accentColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:600,color:'white',flexShrink:0}}>{initials}</div>
         {!collapsed && (
           <div style={{overflow:'hidden'}}>
@@ -614,24 +610,26 @@ function AppLayout({ children }) {
     <html lang="es">
       <body style={{margin:0,fontFamily:'system-ui,sans-serif',display:'flex',flexDirection:'column',minHeight:'100vh',background:'#f8fafc'}}>
 
-        {/* Topbar minimalista */}
-        <div style={{background:'#1a1f2e',padding:'5px 20px',display:'flex',alignItems:'center',gap:8,flexShrink:0,position:'sticky',top:0,zIndex:100,boxShadow:'0 1px 4px rgba(0,0,0,0.25)'}}>
-          <div style={{width:26,height:26,borderRadius:7,background:avatarColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:'white',flexShrink:0,marginRight:6}}>
+        {/* Topbar blanca minimalista */}
+        <div style={{background:'white',padding:'4px 20px',display:'flex',alignItems:'center',gap:6,flexShrink:0,position:'sticky',top:0,zIndex:100,borderBottom:'0.5px solid #e5e7eb',boxShadow:'0 1px 6px rgba(0,0,0,0.04)'}}>
+          <div style={{width:26,height:26,borderRadius:7,background:avatarColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:'white',flexShrink:0,marginRight:4}}>
             {appNombre.charAt(0)}
           </div>
-          <div style={{width:0.5,height:20,background:'rgba(255,255,255,0.08)',margin:'0 6px',flexShrink:0}}></div>
+          <div style={{width:0.5,height:20,background:'#e5e7eb',margin:'0 8px',flexShrink:0}}></div>
 
-          {MODULOS.map(m => (
-            <DockButton key={m.id} modulo={m} activo={moduloActivo===m.id} onClick={() => cambiarModulo(m.id)} />
-          ))}
+          <div style={{display:'flex',alignItems:'center',gap:4}}>
+            {MODULOS.map(m => (
+              <DockButton key={m.id} modulo={m} activo={moduloActivo===m.id} onClick={() => cambiarModulo(m.id)} />
+            ))}
+          </div>
 
           <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
-            <div style={{width:0.5,height:20,background:'rgba(255,255,255,0.08)',margin:'0 4px'}}></div>
+            <div style={{width:0.5,height:20,background:'#e5e7eb',margin:'0 4px'}}></div>
             <button title="Configuracion" onClick={() => { window.location.href='/configuracion' }}
               style={{width:30,height:30,borderRadius:'50%',background:'transparent',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'transform 0.2s'}}
               onMouseEnter={e => e.currentTarget.style.transform='scale(1.2)'}
               onMouseLeave={e => e.currentTarget.style.transform='scale(1)'}>
-              <Settings size={14} color="rgba(255,255,255,0.4)" strokeWidth={1.5}/>
+              <Settings size={14} color="#9ca3af" strokeWidth={1.5}/>
             </button>
             <div style={{width:28,height:28,borderRadius:'50%',background:avatarColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:600,color:'white',cursor:'pointer'}}
               title={nombre}>
@@ -652,7 +650,7 @@ function AppLayout({ children }) {
 
         {/* Body */}
         <div style={{display:'flex',flex:1,overflow:'hidden'}}>
-          <Sidebar user={user} moduloActivo={moduloActivo} setModuloActivo={setModuloActivo} collapsed={collapsed} setCollapsed={setCollapsed} />
+          <Sidebar user={user} moduloActivo={moduloActivo} collapsed={collapsed} setCollapsed={setCollapsed} />
           <main style={{flex:1,overflowY:'auto',position:'relative'}}>
             {children}
             <ChatBot />
