@@ -32,6 +32,8 @@ export function ClienteProvider({ children }) {
         nombre: empresa.razon_social || user.email?.split('@')[0] || 'Mi Despacho',
         rfc: empresa.rfc || '',
         regimen_fiscal: empresa.regimen_fiscal || 'RESICO',
+        regimenes: empresa.regimenes || ['resico'],
+        es_persona_moral: false,
         esMaestro: true,
         empresa_id: user.id,
       })
@@ -81,6 +83,15 @@ export function ClienteProvider({ children }) {
     return Math.ceil((vence - hoy) / (1000 * 60 * 60 * 24))
   }
 
+  // Regímenes activos del contexto actual
+  const regimenesActivos = clienteActivo
+    ? (clienteActivo.regimenes || [])
+    : (perfilMaestro?.regimenes || ['resico'])
+
+  const esPersonaMoral = clienteActivo
+    ? (clienteActivo.es_persona_moral || false)
+    : false
+
   const empresaId = user?.id
   const rfcActivo = clienteActivo?.rfc || null
 
@@ -97,6 +108,8 @@ export function ClienteProvider({ children }) {
       rfcActivo,
       moduloActivo,
       cambiarModulo,
+      regimenesActivos,
+      esPersonaMoral,
       cargarClientes: inicializar,
       diasParaVencimiento,
     }}>

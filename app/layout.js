@@ -26,13 +26,16 @@ const MODULOS = [
             { label: 'Dashboard', href: '/', icon: LayoutDashboard },
           ]},
           { section: 'Regímenes', items: [
-            { label: 'RESICO PF', href: '/ingresos', icon: TrendingUp, chip: 'Activo' },
-            { label: 'Actividad Empresarial', href: '/fiscal/actividad', icon: FileText },
-            { label: 'Arrendamiento', href: '/fiscal/arrendamiento', icon: Building2 },
-            { label: 'RIF', href: '/fiscal/rif', icon: ScrollText, chip: 'Legacy' },
-            { label: 'Sueldos y Salarios', href: '/fiscal/sueldos', icon: Users },
+            { label: 'RESICO PF', href: '/ingresos', icon: TrendingUp, chip: 'Activo', regimen: 'resico' },
+            { label: 'Actividad Empresarial', href: '/fiscal/actividad', icon: FileText, regimen: 'actividad' },
+            { label: 'Arrendamiento', href: '/fiscal/arrendamiento', icon: Building2, regimen: 'arrendamiento' },
+            { label: 'RIF', href: '/fiscal/rif', icon: ScrollText, chip: 'Legacy', regimen: 'rif' },
+            { label: 'Sueldos y Salarios', href: '/fiscal/sueldos', icon: Users, regimen: 'sueldos' },
+            { label: 'Plataformas Tecnológicas', href: '/fiscal/plataformas', icon: FileText, regimen: 'plataformas' },
+            { label: 'Intereses', href: '/fiscal/intereses', icon: Calculator, regimen: 'intereses' },
+            { label: 'Dividendos', href: '/fiscal/dividendos', icon: TrendingUp, regimen: 'dividendos' },
           ]},
-          { section: 'Impuestos SAT', items: [
+          { section: 'Impuestos y SAT', items: [
             { label: 'Declaración mensual', href: '/fiscal/declaraciones', icon: FileText, chip: 'SAT' },
             { label: 'DIOT mensual', href: '/fiscal/diot', icon: ScrollText, chip: 'SAT' },
             { label: 'Calendario fiscal', href: '/fiscal/pagos', icon: Clock },
@@ -51,15 +54,17 @@ const MODULOS = [
             { label: 'Dashboard PM', href: '/', icon: LayoutDashboard },
           ]},
           { section: 'Regímenes', items: [
-            { label: 'Régimen General PM', href: '/fiscal/general-pm', icon: FileText },
-            { label: 'RESICO PM', href: '/fiscal/resico-pm', icon: TrendingUp, chip: 'Nuevo' },
+            { label: 'Régimen General PM', href: '/fiscal/general-pm', icon: FileText, regimen: 'general_pm' },
+            { label: 'RESICO PM', href: '/fiscal/resico-pm', icon: TrendingUp, chip: 'Nuevo', regimen: 'resico_pm' },
+            { label: 'Fines No Lucrativos', href: '/fiscal/fnl', icon: Building2, regimen: 'fines_no_lucrativos' },
+            { label: 'AGAPES', href: '/fiscal/agapes', icon: FileText, regimen: 'agapes' },
           ]},
           { section: 'Contabilidad electrónica', items: [
             { label: 'Catálogo de cuentas', href: '/fiscal/cuentas', icon: BookOpen, chip: 'SAT' },
             { label: 'Pólizas / Asientos', href: '/fiscal/polizas', icon: ScrollText },
             { label: 'Balanza de comprobación', href: '/fiscal/balanza', icon: Scale, chip: 'SAT' },
           ]},
-          { section: 'Impuestos SAT', items: [
+          { section: 'Impuestos y SAT', items: [
             { label: 'Pago provisional ISR', href: '/fiscal/declaraciones', icon: FileText, chip: 'SAT' },
             { label: 'DIOT mensual', href: '/fiscal/diot', icon: ScrollText, chip: 'SAT' },
             { label: 'Declaración anual PM', href: '/fiscal/anual', icon: Calculator },
@@ -231,7 +236,9 @@ function SelectorCliente({ collapsed }) {
               <div style={{width:26,height:26,minWidth:26,borderRadius:7,background:'#185FA5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:'white'}}>{clienteActivo.nombre.charAt(0)}</div>
               <div style={{overflow:'hidden'}}>
                 <div style={{fontSize:12,fontWeight:600,color:'#1e3a8a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{clienteActivo.nombre.split(' ').slice(0,2).join(' ')}</div>
-                <div style={{fontSize:10,color:'#60a5fa',fontWeight:400}}>Gestionando cliente</div>
+                <div style={{fontSize:10,color:'#60a5fa'}}>
+                  {clienteActivo.es_persona_moral ? 'PM' : 'PF'} · {(clienteActivo.regimenes||[]).length} régimen{(clienteActivo.regimenes||[]).length !== 1 ? 'es' : ''}
+                </div>
               </div>
             </>
           ) : (
@@ -282,10 +289,12 @@ function SelectorCliente({ collapsed }) {
                   style={{width:'100%',padding:'9px 12px',background:isActive?'#eff6ff':'none',border:'none',cursor:'pointer',textAlign:'left',borderBottom:'0.5px solid #f3f4f6',display:'flex',alignItems:'center',gap:9}}
                   onMouseEnter={e => { if(!isActive) e.currentTarget.style.background='#f9fafb' }}
                   onMouseLeave={e => { if(!isActive) e.currentTarget.style.background=isActive?'#eff6ff':'none' }}>
-                  <div style={{width:24,height:24,minWidth:24,borderRadius:6,background:'#185FA5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:'white'}}>{c.nombre.charAt(0)}</div>
+                  <div style={{width:24,height:24,minWidth:24,borderRadius:6,background:c.es_persona_moral?'#7c3aed':'#185FA5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:'white'}}>{c.nombre.charAt(0)}</div>
                   <div style={{flex:1,overflow:'hidden'}}>
                     <div style={{fontSize:12,fontWeight:500,color:'#0f172a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{c.nombre.split(' ').slice(0,3).join(' ')}</div>
-                    <div style={{fontSize:10,color:'#9ca3af',fontFamily:'monospace'}}>{c.rfc}</div>
+                    <div style={{fontSize:10,color:'#9ca3af'}}>
+                      {c.es_persona_moral?'PM':'PF'} · {(c.regimenes||[]).length} régimen{(c.regimenes||[]).length!==1?'es':''}
+                    </div>
                   </div>
                   {alerta && <AlertTriangle size={11} color="#d97706" style={{flexShrink:0}} />}
                   {isActive && <span style={{fontSize:10,background:'#dbeafe',color:'#1d4ed8',padding:'2px 7px',borderRadius:20,fontWeight:500,flexShrink:0}}>Activo</span>}
@@ -471,7 +480,7 @@ function CalculadoraFlotante() {
 
 function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed }) {
   const pathname = usePathname()
-  const { clienteActivo } = useCliente()
+  const { clienteActivo, regimenesActivos, esPersonaMoral } = useCliente()
   const [config, setConfig] = useState({})
   const [moduloOpen, setModuloOpen] = useState(false)
   const [tabFiscal, setTabFiscal] = useState('pf')
@@ -484,6 +493,12 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed 
     return () => window.removeEventListener('config_actualizada', handler)
   }, [])
 
+  // Auto-detectar tab según si el cliente es PM
+  useEffect(() => {
+    if (esPersonaMoral) setTabFiscal('pm')
+    else setTabFiscal('pf')
+  }, [esPersonaMoral, clienteActivo])
+
   const handleLogout = async () => {
     await supabase.auth.signOut()
     window.location.href = '/auth/login'
@@ -495,10 +510,21 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed 
   const sidebarBg = clienteActivo ? '#f8faff' : 'white'
   const modulo = MODULOS.find(m => m.id === moduloActivo) || MODULOS[0]
 
-  // Obtener nav actual
+  // Filtrar nav según regímenes activos
+  const filtrarNav = (nav) => {
+    if (!nav) return []
+    return nav.map(group => ({
+      ...group,
+      items: group.items.filter(item => {
+        if (!item.regimen) return true
+        return regimenesActivos.includes(item.regimen)
+      })
+    })).filter(group => group.items.length > 0)
+  }
+
   const navActual = modulo.tabs
-    ? modulo.tabs.find(t => t.id === tabFiscal)?.nav || []
-    : modulo.nav || []
+    ? filtrarNav(modulo.tabs.find(t => t.id === tabFiscal)?.nav || [])
+    : filtrarNav(modulo.nav || [])
 
   return (
     <aside style={{width:collapsed?64:240,minWidth:collapsed?64:240,background:sidebarBg,borderRight:`0.5px solid ${clienteActivo?'#bfdbfe':'#e5e7eb'}`,display:'flex',flexDirection:'column',transition:'width 0.25s ease,min-width 0.25s ease',overflow:'hidden',height:'100%',boxShadow:'1px 0 6px rgba(0,0,0,0.03)'}}>
@@ -553,8 +579,8 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed 
         </div>
       )}
 
-      {/* Tabs P. Física / P. Moral para módulo fiscal */}
-      {!collapsed && moduloActivo === 'fiscal' && (
+      {/* Tabs P. Física / P. Moral — solo en módulo fiscal y si no hay cliente PM detectado */}
+      {!collapsed && moduloActivo === 'fiscal' && !clienteActivo && (
         <div style={{display:'flex',gap:4,padding:'7px 10px',borderBottom:'0.5px solid #f3f4f6'}}>
           {modulo.tabs.map(tab => (
             <button key={tab.id} onClick={() => setTabFiscal(tab.id)}
@@ -562,6 +588,21 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed 
               {tab.label}
             </button>
           ))}
+        </div>
+      )}
+
+      {/* Indicador de régimen cuando hay cliente */}
+      {!collapsed && clienteActivo && moduloActivo === 'fiscal' && (
+        <div style={{padding:'6px 12px',borderBottom:'0.5px solid #f3f4f6',background:'#f8faff'}}>
+          <div style={{fontSize:9,fontWeight:600,color:'#9ca3af',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:3}}>Regímenes del cliente</div>
+          <div style={{display:'flex',flexWrap:'wrap',gap:3}}>
+            {regimenesActivos.slice(0,3).map(r => (
+              <span key={r} style={{fontSize:9,padding:'2px 6px',borderRadius:20,background:'#dbeafe',color:'#1d4ed8',fontWeight:500}}>
+                {r}
+              </span>
+            ))}
+            {regimenesActivos.length > 3 && <span style={{fontSize:9,color:'#9ca3af'}}>+{regimenesActivos.length-3}</span>}
+          </div>
         </div>
       )}
 
@@ -589,7 +630,7 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed 
                     onMouseLeave={e => { if(!isActive) e.currentTarget.style.background='transparent' }}>
                     <Icon size={14} color={isActive?accentColor:'#9ca3af'} strokeWidth={isActive?2:1.75} />
                     <span style={{fontSize:12,color:isActive?accentColor:'#4b5563',fontWeight:isActive?500:400,whiteSpace:'nowrap',flex:1}}>{item.label}</span>
-                    {item.chip && <span style={{fontSize:9,padding:'2px 6px',borderRadius:10,background:item.chip==='SAT'?'#EAF3DE':item.chip==='Legacy'?'#f3f4f6':'#E6F1FB',color:item.chip==='SAT'?'#3B6D11':item.chip==='Legacy'?'#6b7280':'#185FA5',fontWeight:500,whiteSpace:'nowrap'}}>{item.chip}</span>}
+                    {item.chip && <span style={{fontSize:9,padding:'2px 6px',borderRadius:10,background:item.chip==='SAT'?'#EAF3DE':item.chip==='Legacy'?'#f3f4f6':item.chip==='Nuevo'?'#FAEEDA':'#E6F1FB',color:item.chip==='SAT'?'#3B6D11':item.chip==='Legacy'?'#6b7280':item.chip==='Nuevo'?'#854F0B':'#185FA5',fontWeight:500,whiteSpace:'nowrap'}}>{item.chip}</span>}
                   </a>
                 )
               })}
@@ -655,7 +696,7 @@ function AppLayout({ children }) {
     <html lang="es">
       <body style={{margin:0,fontFamily:'system-ui,sans-serif',display:'flex',flexDirection:'column',minHeight:'100vh',background:'#f8fafc'}}>
 
-        {/* Topbar blanca con burbujas */}
+        {/* Topbar */}
         <div style={{background:'white',padding:'5px 20px',display:'flex',alignItems:'center',gap:4,flexShrink:0,position:'sticky',top:0,zIndex:100,borderBottom:'0.5px solid #f1f5f9',boxShadow:'0 1px 4px rgba(0,0,0,0.04)'}}>
           <div style={{width:26,height:26,borderRadius:7,background:avatarColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:'white',flexShrink:0,marginRight:4}}>
             {appNombre.charAt(0)}
@@ -680,13 +721,17 @@ function AppLayout({ children }) {
           </div>
         </div>
 
-        {/* Banner cliente activo */}
+        {/* Banner cliente */}
         {clienteActivo && (
           <div style={{background:'#1d4ed8',padding:'6px 20px',display:'flex',alignItems:'center',gap:10,zIndex:50,flexShrink:0}}>
             <div style={{width:18,height:18,borderRadius:5,background:'rgba(255,255,255,0.2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:700,color:'white',flexShrink:0}}>{clienteActivo.nombre.charAt(0)}</div>
             <span style={{fontSize:11,color:'rgba(255,255,255,0.75)'}}>Consultando cliente:</span>
             <span style={{fontSize:12,fontWeight:600,color:'white'}}>{clienteActivo.nombre}</span>
-            <span style={{fontSize:10,color:'rgba(255,255,255,0.55)',fontFamily:'monospace'}}>{clienteActivo.rfc}</span>
+            <span style={{fontSize:10,color:'rgba(255,255,255,0.6)',fontFamily:'monospace'}}>{clienteActivo.rfc}</span>
+            {clienteActivo.es_persona_moral && <span style={{fontSize:10,background:'rgba(255,255,255,0.15)',color:'white',padding:'2px 7px',borderRadius:20}}>PM</span>}
+            {(clienteActivo.regimenes||[]).slice(0,2).map(r => (
+              <span key={r} style={{fontSize:10,background:'rgba(255,255,255,0.15)',color:'white',padding:'2px 7px',borderRadius:20}}>{r}</span>
+            ))}
           </div>
         )}
 
