@@ -18,25 +18,59 @@ const authRoutes = ['/auth/login', '/auth/registro', '/auth/recuperar', '/auth/n
 const MODULOS = [
   {
     id: 'fiscal', label: 'Fiscal', icon: '📊', tag: 'Fiscal / Contable',
-    nav: [
-      { section: 'Contabilidad', items: [
-        { label: 'Dashboard', href: '/', icon: LayoutDashboard },
-        { label: 'Catálogo de cuentas', href: '/fiscal/cuentas', icon: BookOpen },
-        { label: 'Pólizas / Asientos', href: '/fiscal/polizas', icon: ScrollText },
-        { label: 'Balanza de comprobación', href: '/fiscal/balanza', icon: Scale },
-      ]},
-      { section: 'Impuestos SAT', items: [
-        { label: 'Ingresos', href: '/ingresos', icon: TrendingUp },
-        { label: 'Egresos', href: '/egresos', icon: TrendingDown },
-        { label: 'Liquidación IVA/ISR', href: '/impuestos', icon: Calculator },
-        { label: 'Declaraciones', href: '/fiscal/declaraciones', icon: FileText, chip: 'SAT' },
-        { label: 'Próximos pagos', href: '/fiscal/pagos', icon: Clock },
-      ]},
-      { section: 'Reportes', items: [
-        { label: 'Estado de resultados', href: '/fiscal/resultados', icon: BarChart3 },
-        { label: 'Balance general', href: '/fiscal/balance', icon: Scale },
-        { label: 'Reportes SAT', href: '/fiscal/reportes', icon: FileText },
-      ]}
+    tabs: [
+      {
+        id: 'pf', label: 'P. Física',
+        nav: [
+          { section: 'General', items: [
+            { label: 'Dashboard', href: '/', icon: LayoutDashboard },
+          ]},
+          { section: 'Regímenes', items: [
+            { label: 'RESICO PF', href: '/ingresos', icon: TrendingUp, chip: 'Activo' },
+            { label: 'Actividad Empresarial', href: '/fiscal/actividad', icon: FileText },
+            { label: 'Arrendamiento', href: '/fiscal/arrendamiento', icon: Building2 },
+            { label: 'RIF', href: '/fiscal/rif', icon: ScrollText, chip: 'Legacy' },
+            { label: 'Sueldos y Salarios', href: '/fiscal/sueldos', icon: Users },
+          ]},
+          { section: 'Impuestos SAT', items: [
+            { label: 'Declaración mensual', href: '/fiscal/declaraciones', icon: FileText, chip: 'SAT' },
+            { label: 'DIOT mensual', href: '/fiscal/diot', icon: ScrollText, chip: 'SAT' },
+            { label: 'Calendario fiscal', href: '/fiscal/pagos', icon: Clock },
+          ]},
+          { section: 'Comprobantes', items: [
+            { label: 'Ingresos', href: '/ingresos', icon: TrendingUp },
+            { label: 'Egresos / XML SAT', href: '/egresos', icon: TrendingDown },
+            { label: 'Liquidación IVA/ISR', href: '/impuestos', icon: Calculator },
+          ]},
+        ]
+      },
+      {
+        id: 'pm', label: 'P. Moral',
+        nav: [
+          { section: 'General', items: [
+            { label: 'Dashboard PM', href: '/', icon: LayoutDashboard },
+          ]},
+          { section: 'Regímenes', items: [
+            { label: 'Régimen General PM', href: '/fiscal/general-pm', icon: FileText },
+            { label: 'RESICO PM', href: '/fiscal/resico-pm', icon: TrendingUp, chip: 'Nuevo' },
+          ]},
+          { section: 'Contabilidad electrónica', items: [
+            { label: 'Catálogo de cuentas', href: '/fiscal/cuentas', icon: BookOpen, chip: 'SAT' },
+            { label: 'Pólizas / Asientos', href: '/fiscal/polizas', icon: ScrollText },
+            { label: 'Balanza de comprobación', href: '/fiscal/balanza', icon: Scale, chip: 'SAT' },
+          ]},
+          { section: 'Impuestos SAT', items: [
+            { label: 'Pago provisional ISR', href: '/fiscal/declaraciones', icon: FileText, chip: 'SAT' },
+            { label: 'DIOT mensual', href: '/fiscal/diot', icon: ScrollText, chip: 'SAT' },
+            { label: 'Declaración anual PM', href: '/fiscal/anual', icon: Calculator },
+          ]},
+          { section: 'Estados financieros', items: [
+            { label: 'Estado de resultados', href: '/fiscal/resultados', icon: BarChart3 },
+            { label: 'Balance general', href: '/fiscal/balance', icon: Scale },
+            { label: 'Flujo de efectivo', href: '/fiscal/flujo', icon: TrendingUp },
+          ]},
+        ]
+      }
     ]
   },
   {
@@ -440,6 +474,7 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed 
   const { clienteActivo } = useCliente()
   const [config, setConfig] = useState({})
   const [moduloOpen, setModuloOpen] = useState(false)
+  const [tabFiscal, setTabFiscal] = useState('pf')
 
   useEffect(() => {
     const saved = localStorage.getItem('config_app')
@@ -459,6 +494,11 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed 
   const accentColor = clienteActivo ? '#1d4ed8' : avatarColor
   const sidebarBg = clienteActivo ? '#f8faff' : 'white'
   const modulo = MODULOS.find(m => m.id === moduloActivo) || MODULOS[0]
+
+  // Obtener nav actual
+  const navActual = modulo.tabs
+    ? modulo.tabs.find(t => t.id === tabFiscal)?.nav || []
+    : modulo.nav || []
 
   return (
     <aside style={{width:collapsed?64:240,minWidth:collapsed?64:240,background:sidebarBg,borderRight:`0.5px solid ${clienteActivo?'#bfdbfe':'#e5e7eb'}`,display:'flex',flexDirection:'column',transition:'width 0.25s ease,min-width 0.25s ease',overflow:'hidden',height:'100%',boxShadow:'1px 0 6px rgba(0,0,0,0.03)'}}>
@@ -485,7 +525,7 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed 
       {/* Selector cliente */}
       <SelectorCliente collapsed={collapsed} />
 
-      {/* Selector módulo dropdown */}
+      {/* Selector módulo */}
       {!collapsed && (
         <div style={{padding:'8px 10px',borderBottom:'0.5px solid #f3f4f6',position:'relative',zIndex:10}}>
           <button onClick={() => setModuloOpen(!moduloOpen)}
@@ -513,23 +553,30 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed 
         </div>
       )}
 
+      {/* Tabs P. Física / P. Moral para módulo fiscal */}
+      {!collapsed && moduloActivo === 'fiscal' && (
+        <div style={{display:'flex',gap:4,padding:'7px 10px',borderBottom:'0.5px solid #f3f4f6'}}>
+          {modulo.tabs.map(tab => (
+            <button key={tab.id} onClick={() => setTabFiscal(tab.id)}
+              style={{flex:1,padding:'6px 4px',border:'0.5px solid #e5e7eb',borderRadius:6,fontSize:11,cursor:'pointer',fontWeight:500,background:tabFiscal===tab.id?'#185FA5':'#f9fafb',color:tabFiscal===tab.id?'white':'#6b7280',transition:'background 0.15s'}}>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Nav */}
       <nav style={{flex:1,padding:'6px 8px',overflowY:'auto',display:'flex',flexDirection:'column',gap:1}}>
         {collapsed ? (
-          MODULOS.map(m => {
-            const activo = moduloActivo === m.id
-            return (
-              <div key={m.id} style={{position:'relative'}}>
-                <button onClick={() => { setModuloActivo(m.id); localStorage.setItem('modulo_activo',m.id) }}
-                  title={m.tag}
-                  style={{width:'100%',padding:'9px',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',border:'none',background:activo?'#EFF6FF':'transparent',fontSize:16,marginBottom:2}}>
-                  {m.icon}
-                </button>
-              </div>
-            )
-          })
+          MODULOS.map(m => (
+            <button key={m.id} onClick={() => { setModuloActivo(m.id); localStorage.setItem('modulo_activo',m.id) }}
+              title={m.tag}
+              style={{width:'100%',padding:'9px',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',border:'none',background:moduloActivo===m.id?'#EFF6FF':'transparent',fontSize:16,marginBottom:2}}>
+              {m.icon}
+            </button>
+          ))
         ) : (
-          modulo.nav.map(group => (
+          navActual.map(group => (
             <div key={group.section} style={{marginBottom:2}}>
               <div style={{fontSize:9,fontWeight:600,color:'#c4c4c4',textTransform:'uppercase',letterSpacing:'0.1em',padding:'6px 8px 3px',whiteSpace:'nowrap'}}>{group.section}</div>
               {group.items.map(item => {
@@ -542,7 +589,7 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed 
                     onMouseLeave={e => { if(!isActive) e.currentTarget.style.background='transparent' }}>
                     <Icon size={14} color={isActive?accentColor:'#9ca3af'} strokeWidth={isActive?2:1.75} />
                     <span style={{fontSize:12,color:isActive?accentColor:'#4b5563',fontWeight:isActive?500:400,whiteSpace:'nowrap',flex:1}}>{item.label}</span>
-                    {item.chip && <span style={{fontSize:9,padding:'2px 6px',borderRadius:10,background:'#E6F1FB',color:'#185FA5',fontWeight:500,whiteSpace:'nowrap'}}>{item.chip}</span>}
+                    {item.chip && <span style={{fontSize:9,padding:'2px 6px',borderRadius:10,background:item.chip==='SAT'?'#EAF3DE':item.chip==='Legacy'?'#f3f4f6':'#E6F1FB',color:item.chip==='SAT'?'#3B6D11':item.chip==='Legacy'?'#6b7280':'#185FA5',fontWeight:500,whiteSpace:'nowrap'}}>{item.chip}</span>}
                   </a>
                 )
               })}
