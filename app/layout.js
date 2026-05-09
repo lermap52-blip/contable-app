@@ -17,11 +17,7 @@ const authRoutes = ['/auth/login', '/auth/registro', '/auth/recuperar', '/auth/n
 
 const MODULOS = [
   {
-    id: 'fiscal',
-    label: 'Fiscal',
-    color: '#4ade80',
-    icon: '📊',
-    tag: 'Fiscal / Contable',
+    id: 'fiscal', label: 'Fiscal', color: '#4ade80', icon: '📊', tag: 'Fiscal / Contable',
     nav: [
       { section: 'Contabilidad', items: [
         { label: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -44,15 +40,10 @@ const MODULOS = [
     ]
   },
   {
-    id: 'ventas',
-    label: 'Ventas',
-    color: '#60a5fa',
-    icon: '🧾',
-    tag: 'Ventas y Facturación',
+    id: 'ventas', label: 'Ventas', color: '#60a5fa', icon: '🧾', tag: 'Ventas y Facturación',
     nav: [
       { section: 'Facturación', items: [
         { label: 'Facturas CFDI', href: '/facturas', icon: FileText },
-        { label: 'Nueva factura', href: '/facturas/nueva', icon: FileText, chip: 'CFDI 4.0' },
         { label: 'Notas de crédito', href: '/ventas/notas', icon: ScrollText },
         { label: 'Complementos de pago', href: '/ventas/complementos', icon: FileText },
       ]},
@@ -64,11 +55,7 @@ const MODULOS = [
     ]
   },
   {
-    id: 'compras',
-    label: 'Compras',
-    color: '#fb923c',
-    icon: '🛒',
-    tag: 'Compras y Gastos',
+    id: 'compras', label: 'Compras', color: '#fb923c', icon: '🛒', tag: 'Compras y Gastos',
     nav: [
       { section: 'Compras', items: [
         { label: 'Órdenes de compra', href: '/compras/ordenes', icon: ShoppingCart },
@@ -79,11 +66,7 @@ const MODULOS = [
     ]
   },
   {
-    id: 'nomina',
-    label: 'Nómina',
-    color: '#c084fc',
-    icon: '👥',
-    tag: 'Nómina y RRHH',
+    id: 'nomina', label: 'Nómina', color: '#c084fc', icon: '👥', tag: 'Nómina y RRHH',
     nav: [
       { section: 'Empleados', items: [
         { label: 'Expedientes digitales', href: '/nomina/empleados', icon: Users },
@@ -99,11 +82,7 @@ const MODULOS = [
     ]
   },
   {
-    id: 'inventarios',
-    label: 'Inventario',
-    color: '#fbbf24',
-    icon: '📦',
-    tag: 'Inventarios',
+    id: 'inventarios', label: 'Inventario', color: '#fbbf24', icon: '📦', tag: 'Inventarios',
     nav: [
       { section: 'Productos', items: [
         { label: 'Catálogo SKU', href: '/inventarios/productos', icon: Package },
@@ -117,11 +96,7 @@ const MODULOS = [
     ]
   },
   {
-    id: 'tesoreria',
-    label: 'Tesorería',
-    color: '#34d399',
-    icon: '🏦',
-    tag: 'Tesorería y Bancos',
+    id: 'tesoreria', label: 'Tesorería', color: '#34d399', icon: '🏦', tag: 'Tesorería y Bancos',
     nav: [
       { section: 'Cuentas', items: [
         { label: 'Cuentas bancarias', href: '/tesoreria/cuentas', icon: Landmark },
@@ -135,11 +110,7 @@ const MODULOS = [
     ]
   },
   {
-    id: 'crm',
-    label: 'CRM',
-    color: '#f472b6',
-    icon: '🤝',
-    tag: 'CRM Clientes',
+    id: 'crm', label: 'CRM', color: '#f472b6', icon: '🤝', tag: 'CRM Clientes',
     nav: [
       { section: 'CRM', items: [
         { label: 'Prospectos', href: '/crm/prospectos', icon: UserSearch },
@@ -149,11 +120,7 @@ const MODULOS = [
     ]
   },
   {
-    id: 'bi',
-    label: 'Business',
-    color: '#a78bfa',
-    icon: '📈',
-    tag: 'Business Intelligence',
+    id: 'bi', label: 'Business', color: '#a78bfa', icon: '📈', tag: 'Business Intelligence',
     nav: [
       { section: 'Dashboard', items: [
         { label: 'Resumen ejecutivo', href: '/bi/resumen', icon: BarChart3 },
@@ -448,9 +415,54 @@ function CalculadoraFlotante() {
   )
 }
 
+function DockButton({ modulo, activo, onClick }) {
+  const [hover, setHover] = useState(false)
+  return (
+    <div style={{position:'relative',display:'flex',flexDirection:'column',alignItems:'center'}}>
+      <button
+        onClick={onClick}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        title={modulo.tag}
+        style={{
+          width:38,height:38,borderRadius:'50%',
+          display:'flex',alignItems:'center',justifyContent:'center',
+          cursor:'pointer',border:'none',
+          background:activo?'rgba(255,255,255,0.15)':'transparent',
+          outline:activo?'1.5px solid rgba(255,255,255,0.25)':'1.5px solid transparent',
+          fontSize:18,
+          transform:hover?'scale(1.3)':'scale(1)',
+          transition:'transform 0.2s cubic-bezier(.34,1.56,.64,1), background 0.15s, outline 0.15s',
+          flexShrink:0,
+        }}>
+        <span style={{lineHeight:1,filter:activo?'drop-shadow(0 0 4px rgba(255,255,255,0.4))':'none'}}>{modulo.icon}</span>
+      </button>
+      {/* Indicador activo */}
+      {activo && (
+        <div style={{width:4,height:4,borderRadius:'50%',background:'white',marginTop:2,position:'absolute',bottom:-6}}></div>
+      )}
+      {/* Tooltip */}
+      {hover && (
+        <div style={{
+          position:'absolute',top:'calc(100% + 10px)',left:'50%',
+          transform:'translateX(-50%)',
+          background:'rgba(10,15,28,0.95)',color:'white',
+          fontSize:11,fontWeight:500,padding:'5px 10px',borderRadius:7,
+          whiteSpace:'nowrap',pointerEvents:'none',
+          zIndex:300,
+          boxShadow:'0 4px 12px rgba(0,0,0,0.3)',
+          animation:'fadeIn 0.1s ease'
+        }}>
+          {modulo.tag}
+          <div style={{position:'absolute',top:-4,left:'50%',transform:'translateX(-50%)',width:8,height:8,background:'rgba(10,15,28,0.95)',clipPath:'polygon(50% 0%, 0% 100%, 100% 100%)'}}></div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed }) {
   const pathname = usePathname()
-  const router = useRouter()
   const { clienteActivo } = useCliente()
   const [config, setConfig] = useState({})
 
@@ -473,31 +485,28 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed 
   const initials = nombre.charAt(0).toUpperCase()
   const accentColor = clienteActivo ? '#1d4ed8' : avatarColor
   const sidebarBg = clienteActivo ? '#f8faff' : 'white'
-
   const modulo = MODULOS.find(m => m.id === moduloActivo) || MODULOS[0]
 
   return (
-    <aside style={{width:collapsed?64:240,minWidth:collapsed?64:240,background:sidebarBg,borderRight:`0.5px solid ${clienteActivo?'#bfdbfe':'#e5e7eb'}`,display:'flex',flexDirection:'column',transition:'width 0.25s ease,min-width 0.25s ease',overflow:'hidden',position:'sticky',top:0,height:'100vh',boxShadow:clienteActivo?'1px 0 8px rgba(29,78,216,0.08)':'1px 0 8px rgba(0,0,0,0.04)'}}>
+    <aside style={{width:collapsed?64:240,minWidth:collapsed?64:240,background:sidebarBg,borderRight:`0.5px solid ${clienteActivo?'#bfdbfe':'#e5e7eb'}`,display:'flex',flexDirection:'column',transition:'width 0.25s ease,min-width 0.25s ease',overflow:'hidden',height:'100%',boxShadow:clienteActivo?'1px 0 8px rgba(29,78,216,0.08)':'1px 0 8px rgba(0,0,0,0.04)'}}>
 
-      {/* Logo y nombre app */}
-      <div style={{padding:'12px',borderBottom:`0.5px solid ${clienteActivo?'#dbeafe':'#f3f4f6'}`,display:'flex',alignItems:'center',justifyContent:collapsed?'center':'space-between',gap:10,minHeight:54}}>
+      <div style={{padding:'10px 12px',borderBottom:`0.5px solid ${clienteActivo?'#dbeafe':'#f3f4f6'}`,display:'flex',alignItems:'center',justifyContent:collapsed?'center':'space-between',gap:8,minHeight:52}}>
         {!collapsed && (
           <div style={{display:'flex',alignItems:'center',gap:8,overflow:'hidden'}}>
-            <div style={{width:28,height:28,minWidth:28,borderRadius:7,background:accentColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,color:'white',fontWeight:700}}>{appNombre.charAt(0)}</div>
-            <span style={{fontSize:14,fontWeight:600,color:'#1f2937',whiteSpace:'nowrap'}}>{appNombre}</span>
+            <div style={{width:26,height:26,minWidth:26,borderRadius:7,background:accentColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,color:'white',fontWeight:700}}>{appNombre.charAt(0)}</div>
+            <span style={{fontSize:13,fontWeight:600,color:'#1f2937',whiteSpace:'nowrap'}}>{appNombre}</span>
           </div>
         )}
         <button onClick={() => setCollapsed(!collapsed)}
           style={{background:'#f9fafb',border:'0.5px solid #e5e7eb',borderRadius:7,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:5,color:'#6b7280',flexShrink:0}}
           onMouseEnter={e => e.currentTarget.style.background='#f3f4f6'}
           onMouseLeave={e => e.currentTarget.style.background='#f9fafb'}>
-          {collapsed?<ChevronRight size={15}/>:<ChevronLeft size={15}/>}
+          {collapsed?<ChevronRight size={14}/>:<ChevronLeft size={14}/>}
         </button>
       </div>
 
-      {/* Perfil */}
       <div style={{padding:collapsed?'10px 8px':'10px 12px',borderBottom:`0.5px solid ${clienteActivo?'#dbeafe':'#f3f4f6'}`,display:'flex',alignItems:'center',gap:8,justifyContent:collapsed?'center':'flex-start'}}>
-        <div style={{width:32,height:32,minWidth:32,borderRadius:'50%',background:accentColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:600,color:'white',flexShrink:0}}>{initials}</div>
+        <div style={{width:30,height:30,minWidth:30,borderRadius:'50%',background:accentColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:600,color:'white',flexShrink:0}}>{initials}</div>
         {!collapsed && (
           <div style={{overflow:'hidden'}}>
             <div style={{fontSize:12,fontWeight:500,color:'#1f2937',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{nombre}</div>
@@ -506,21 +515,18 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed 
         )}
       </div>
 
-      {/* Selector cliente */}
       <SelectorCliente collapsed={collapsed} />
 
-      {/* Modulo activo label */}
       {!collapsed && (
-        <div style={{padding:'8px 14px 4px',borderBottom:'0.5px solid #f3f4f6'}}>
+        <div style={{padding:'6px 14px 4px',borderBottom:'0.5px solid #f3f4f6'}}>
           <div style={{fontSize:9,fontWeight:600,color:'#c4c4c4',textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:2}}>Módulo activo</div>
-          <div style={{fontSize:12,fontWeight:500,color:accentColor,display:'flex',alignItems:'center',gap:6}}>
-            <span style={{fontSize:14}}>{modulo.icon}</span>
+          <div style={{fontSize:12,fontWeight:500,color:accentColor,display:'flex',alignItems:'center',gap:5}}>
+            <span style={{fontSize:13}}>{modulo.icon}</span>
             {modulo.tag}
           </div>
         </div>
       )}
 
-      {/* Nav dinámico */}
       <nav style={{flex:1,padding:'6px 8px',overflowY:'auto',display:'flex',flexDirection:'column',gap:1}}>
         {modulo.nav.map(group => (
           <div key={group.section} style={{marginBottom:2}}>
@@ -530,10 +536,10 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed 
               const isActive = pathname === item.href
               return (
                 <a key={item.label} href={item.href} title={collapsed?item.label:''}
-                  style={{display:'flex',alignItems:'center',gap:8,padding:collapsed?'9px':'8px 10px',borderRadius:7,cursor:'pointer',textDecoration:'none',background:isActive?(clienteActivo?'#dbeafe':'#EFF6FF'):'transparent',justifyContent:collapsed?'center':'flex-start',marginBottom:1,transition:'background 0.15s'}}
+                  style={{display:'flex',alignItems:'center',gap:8,padding:collapsed?'9px':'7px 10px',borderRadius:7,cursor:'pointer',textDecoration:'none',background:isActive?(clienteActivo?'#dbeafe':'#EFF6FF'):'transparent',justifyContent:collapsed?'center':'flex-start',marginBottom:1,transition:'background 0.15s'}}
                   onMouseEnter={e => { if(!isActive) e.currentTarget.style.background='#f9fafb' }}
                   onMouseLeave={e => { if(!isActive) e.currentTarget.style.background='transparent' }}>
-                  <Icon size={16} color={isActive?accentColor:'#9ca3af'} strokeWidth={isActive?2:1.75} />
+                  <Icon size={15} color={isActive?accentColor:'#9ca3af'} strokeWidth={isActive?2:1.75} />
                   {!collapsed && (
                     <>
                       <span style={{fontSize:12,color:isActive?accentColor:'#4b5563',fontWeight:isActive?500:400,whiteSpace:'nowrap',flex:1}}>{item.label}</span>
@@ -547,20 +553,19 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed 
         ))}
       </nav>
 
-      {/* Bottom */}
-      <div style={{padding:'8px',borderTop:`0.5px solid ${clienteActivo?'#dbeafe':'#f3f4f6'}`,display:'flex',flexDirection:'column',gap:1}}>
+      <div style={{padding:'6px 8px',borderTop:`0.5px solid ${clienteActivo?'#dbeafe':'#f3f4f6'}`,display:'flex',flexDirection:'column',gap:1}}>
         <a href="/configuracion" title={collapsed?'Configuracion':''}
-          style={{display:'flex',alignItems:'center',gap:8,padding:collapsed?'9px':'8px 10px',borderRadius:7,cursor:'pointer',textDecoration:'none',justifyContent:collapsed?'center':'flex-start',background:pathname==='/configuracion'?(clienteActivo?'#dbeafe':'#EFF6FF'):'transparent',transition:'background 0.15s'}}
+          style={{display:'flex',alignItems:'center',gap:8,padding:collapsed?'9px':'7px 10px',borderRadius:7,cursor:'pointer',textDecoration:'none',justifyContent:collapsed?'center':'flex-start',background:pathname==='/configuracion'?(clienteActivo?'#dbeafe':'#EFF6FF'):'transparent',transition:'background 0.15s'}}
           onMouseEnter={e => { if(pathname!=='/configuracion') e.currentTarget.style.background='#f9fafb' }}
           onMouseLeave={e => { if(pathname!=='/configuracion') e.currentTarget.style.background=pathname==='/configuracion'?(clienteActivo?'#dbeafe':'#EFF6FF'):'transparent' }}>
-          <Settings size={16} color={pathname==='/configuracion'?accentColor:'#9ca3af'} strokeWidth={1.75}/>
+          <Settings size={15} color={pathname==='/configuracion'?accentColor:'#9ca3af'} strokeWidth={1.75}/>
           {!collapsed && <span style={{fontSize:12,color:pathname==='/configuracion'?accentColor:'#4b5563',fontWeight:pathname==='/configuracion'?500:400}}>Configuracion</span>}
         </a>
         <button onClick={handleLogout} title={collapsed?'Cerrar sesion':''}
-          style={{display:'flex',alignItems:'center',gap:8,padding:collapsed?'9px':'8px 10px',borderRadius:7,cursor:'pointer',background:'none',border:'none',justifyContent:collapsed?'center':'flex-start',width:'100%',transition:'background 0.15s'}}
+          style={{display:'flex',alignItems:'center',gap:8,padding:collapsed?'9px':'7px 10px',borderRadius:7,cursor:'pointer',background:'none',border:'none',justifyContent:collapsed?'center':'flex-start',width:'100%',transition:'background 0.15s'}}
           onMouseEnter={e => e.currentTarget.style.background='#fef2f2'}
           onMouseLeave={e => e.currentTarget.style.background='none'}>
-          <LogOut size={16} color="#ef4444" strokeWidth={1.75}/>
+          <LogOut size={15} color="#ef4444" strokeWidth={1.75}/>
           {!collapsed && <span style={{fontSize:12,color:'#ef4444'}}>Cerrar sesion</span>}
         </button>
       </div>
@@ -574,27 +579,24 @@ function AppLayout({ children }) {
   const [collapsed, setCollapsed] = useState(false)
   const [user, setUser] = useState(null)
   const [moduloActivo, setModuloActivo] = useState('fiscal')
+  const [config, setConfig] = useState({})
   const isAuthPage = authRoutes.includes(pathname)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user))
     const saved = localStorage.getItem('modulo_activo')
     if (saved) setModuloActivo(saved)
+    const savedConfig = localStorage.getItem('config_app')
+    if (savedConfig) setConfig(JSON.parse(savedConfig))
+    const handler = (e) => setConfig(e.detail)
+    window.addEventListener('config_actualizada', handler)
+    return () => window.removeEventListener('config_actualizada', handler)
   }, [])
 
   const cambiarModulo = (id) => {
     setModuloActivo(id)
     localStorage.setItem('modulo_activo', id)
   }
-
-  const [config, setConfig] = useState({})
-  useEffect(() => {
-    const saved = localStorage.getItem('config_app')
-    if (saved) setConfig(JSON.parse(saved))
-    const handler = (e) => setConfig(e.detail)
-    window.addEventListener('config_actualizada', handler)
-    return () => window.removeEventListener('config_actualizada', handler)
-  }, [])
 
   const avatarColor = config.avatarColor || '#185FA5'
   const appNombre = config.appNombre || 'ContableApp'
@@ -612,30 +614,27 @@ function AppLayout({ children }) {
     <html lang="es">
       <body style={{margin:0,fontFamily:'system-ui,sans-serif',display:'flex',flexDirection:'column',minHeight:'100vh',background:'#f8fafc'}}>
 
-        {/* Topbar con burbujas */}
-        <div style={{background:'#1a1f2e',padding:'8px 16px',display:'flex',alignItems:'center',gap:6,flexShrink:0,overflowX:'auto',position:'sticky',top:0,zIndex:100,boxShadow:'0 2px 8px rgba(0,0,0,0.2)'}}>
-          <div style={{width:32,height:32,borderRadius:8,background:avatarColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:700,color:'white',flexShrink:0,marginRight:4}}>
+        {/* Topbar minimalista */}
+        <div style={{background:'#1a1f2e',padding:'5px 20px',display:'flex',alignItems:'center',gap:8,flexShrink:0,position:'sticky',top:0,zIndex:100,boxShadow:'0 1px 4px rgba(0,0,0,0.25)'}}>
+          <div style={{width:26,height:26,borderRadius:7,background:avatarColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:'white',flexShrink:0,marginRight:6}}>
             {appNombre.charAt(0)}
           </div>
-          <div style={{width:0.5,height:28,background:'rgba(255,255,255,0.1)',margin:'0 6px',flexShrink:0}}></div>
+          <div style={{width:0.5,height:20,background:'rgba(255,255,255,0.08)',margin:'0 6px',flexShrink:0}}></div>
 
           {MODULOS.map(m => (
-            <button key={m.id} onClick={() => cambiarModulo(m.id)} title={m.tag}
-              style={{minWidth:48,height:48,borderRadius:'50%',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',cursor:'pointer',gap:2,transition:'all 0.2s',border:moduloActivo===m.id?'2px solid white':'2px solid transparent',background:moduloActivo===m.id?'white':'rgba(255,255,255,0.07)',flexShrink:0,padding:'0 2px'}}
-              onMouseEnter={e => { if(moduloActivo!==m.id) e.currentTarget.style.background='rgba(255,255,255,0.13)' }}
-              onMouseLeave={e => { if(moduloActivo!==m.id) e.currentTarget.style.background='rgba(255,255,255,0.07)' }}>
-              <span style={{fontSize:18,lineHeight:1,filter:moduloActivo===m.id?'none':'none'}}>{m.icon}</span>
-              <span style={{fontSize:7,color:moduloActivo===m.id?'#1a1f2e':'rgba(255,255,255,0.5)',whiteSpace:'nowrap',fontWeight:moduloActivo===m.id?600:400}}>{m.label}</span>
-            </button>
+            <DockButton key={m.id} modulo={m} activo={moduloActivo===m.id} onClick={() => cambiarModulo(m.id)} />
           ))}
 
-          <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:8,flexShrink:0}}>
-            <div style={{width:0.5,height:28,background:'rgba(255,255,255,0.1)',margin:'0 4px'}}></div>
-            <button onClick={() => cambiarModulo('fiscal')} title="Configuracion"
-              style={{width:36,height:36,borderRadius:'50%',background:'rgba(255,255,255,0.07)',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
-              <Settings size={16} color="rgba(255,255,255,0.5)" />
+          <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
+            <div style={{width:0.5,height:20,background:'rgba(255,255,255,0.08)',margin:'0 4px'}}></div>
+            <button title="Configuracion" onClick={() => { window.location.href='/configuracion' }}
+              style={{width:30,height:30,borderRadius:'50%',background:'transparent',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'transform 0.2s'}}
+              onMouseEnter={e => e.currentTarget.style.transform='scale(1.2)'}
+              onMouseLeave={e => e.currentTarget.style.transform='scale(1)'}>
+              <Settings size={14} color="rgba(255,255,255,0.4)" strokeWidth={1.5}/>
             </button>
-            <div style={{width:32,height:32,borderRadius:'50%',background:avatarColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:600,color:'white'}}>
+            <div style={{width:28,height:28,borderRadius:'50%',background:avatarColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:600,color:'white',cursor:'pointer'}}
+              title={nombre}>
               {nombre.charAt(0).toUpperCase()}
             </div>
           </div>
@@ -643,11 +642,11 @@ function AppLayout({ children }) {
 
         {/* Banner cliente activo */}
         {clienteActivo && (
-          <div style={{background:'#1d4ed8',padding:'7px 20px',display:'flex',alignItems:'center',gap:12,zIndex:50,flexShrink:0}}>
-            <div style={{width:20,height:20,borderRadius:5,background:'rgba(255,255,255,0.2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:'white',flexShrink:0}}>{clienteActivo.nombre.charAt(0)}</div>
-            <span style={{fontSize:11,color:'rgba(255,255,255,0.8)'}}>Consultando cliente:</span>
+          <div style={{background:'#1d4ed8',padding:'6px 20px',display:'flex',alignItems:'center',gap:10,zIndex:50,flexShrink:0}}>
+            <div style={{width:18,height:18,borderRadius:5,background:'rgba(255,255,255,0.2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:700,color:'white',flexShrink:0}}>{clienteActivo.nombre.charAt(0)}</div>
+            <span style={{fontSize:11,color:'rgba(255,255,255,0.75)'}}>Consultando cliente:</span>
             <span style={{fontSize:12,fontWeight:600,color:'white'}}>{clienteActivo.nombre}</span>
-            <span style={{fontSize:11,color:'rgba(255,255,255,0.6)',fontFamily:'monospace'}}>{clienteActivo.rfc}</span>
+            <span style={{fontSize:10,color:'rgba(255,255,255,0.55)',fontFamily:'monospace'}}>{clienteActivo.rfc}</span>
           </div>
         )}
 
