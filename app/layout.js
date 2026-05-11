@@ -166,16 +166,15 @@ const MODULOS = [
 ]
 
 const resico = [
-  { hasta: 25000, tasa: 0.0100, label: 'hasta $25,000' },
-  { hasta: 50000, tasa: 0.0110, label: 'hasta $50,000' },
-  { hasta: 83333.33, tasa: 0.0150, label: 'hasta $83,333' },
-  { hasta: 208333.33, tasa: 0.0200, label: 'hasta $208,333' },
-  { hasta: 3500000, tasa: 0.0250, label: 'hasta $3,500,000' },
+  { hasta: 25000, tasa: 0.0100 },
+  { hasta: 50000, tasa: 0.0110 },
+  { hasta: 83333.33, tasa: 0.0150 },
+  { hasta: 208333.33, tasa: 0.0200 },
+  { hasta: 3500000, tasa: 0.0250 },
 ]
 function getTramo(m) { for (let t of resico) { if (m <= t.hasta) return t } return resico[resico.length-1] }
 function fmtN(n) { return '$'+n.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2}) }
 
-// Tema claro y oscuro
 const TEMA = {
   claro: {
     topbarBg: 'white',
@@ -188,12 +187,12 @@ const TEMA = {
     sidebarBorder: 'rgba(255,255,255,0.06)',
     sidebarText: 'white',
     sidebarSubtext: 'rgba(255,255,255,0.35)',
-    sidebarItem: 'rgba(255,255,255,0.45)',
+    sidebarItem: 'rgba(255,255,255,0.55)',
     sidebarItemOn: 'rgba(255,255,255,0.1)',
     sidebarItemOnText: 'white',
-    sidebarSec: 'rgba(255,255,255,0.25)',
+    sidebarSec: 'rgba(255,255,255,0.3)',
     sidebarBox: 'rgba(255,255,255,0.06)',
-    sidebarBoxBorder: 'rgba(255,255,255,0.1)',
+    sidebarBoxBorder: 'rgba(255,255,255,0.12)',
     contentBg: '#F9FAFB',
     dotOn: '#60a5fa',
     avatarBg: 'linear-gradient(135deg,#60a5fa,#818cf8)',
@@ -209,7 +208,7 @@ const TEMA = {
     sidebarBorder: '#3a3a3c',
     sidebarText: '#f1f5f9',
     sidebarSubtext: '#666',
-    sidebarItem: '#555',
+    sidebarItem: '#8e8e93',
     sidebarItemOn: 'rgba(96,165,250,0.12)',
     sidebarItemOnText: '#93c5fd',
     sidebarSec: '#555',
@@ -228,17 +227,8 @@ function DockBubble({ modulo, activo, onClick, t }) {
       <button onClick={onClick}
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
-        style={{
-          width:34,height:34,borderRadius:'50%',
-          display:'flex',alignItems:'center',justifyContent:'center',
-          cursor:'pointer',border:'none',
-          background:activo?t.bubbleOn:'transparent',
-          outline:activo?`1.5px solid ${t.bubbleOnOutline}`:'1.5px solid transparent',
-          transform:hover?'scale(1.25)':'scale(1)',
-          transition:'transform 0.2s cubic-bezier(.34,1.56,.64,1),background 0.15s',
-          flexShrink:0,
-        }}>
-        <i className={`ti ${modulo.icon}`} style={{fontSize:18,color:modulo.color}} aria-hidden="true"></i>
+        style={{width:36,height:36,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',border:'none',background:activo?t.bubbleOn:'transparent',outline:activo?`1.5px solid ${t.bubbleOnOutline}`:'1.5px solid transparent',transform:hover?'scale(1.25)':'scale(1)',transition:'transform 0.2s cubic-bezier(.34,1.56,.64,1),background 0.15s',flexShrink:0}}>
+        <i className={`ti ${modulo.icon}`} style={{fontSize:19,color:modulo.color}} aria-hidden="true"></i>
       </button>
       <div style={{width:4,height:4,borderRadius:'50%',background:activo?t.dotOn:'transparent',transition:'background 0.2s'}}></div>
       {hover && (
@@ -268,68 +258,70 @@ function SelectorCliente({ collapsed, t }) {
   if (collapsed) return (
     <div style={{padding:'8px',borderBottom:`0.5px solid ${t.sidebarBorder}`,display:'flex',justifyContent:'center'}}>
       <div title={clienteActivo?.nombre||'Mi Despacho'} onClick={() => setOpen(!open)}
-        style={{width:32,height:32,borderRadius:8,background:t.sidebarBox,border:`1px solid ${t.sidebarBoxBorder}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:t.sidebarText,cursor:'pointer'}}>
+        style={{width:32,height:32,borderRadius:8,background:t.sidebarBox,border:`1px solid ${t.sidebarBoxBorder}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:t.sidebarText,cursor:'pointer'}}>
         {clienteActivo?clienteActivo.nombre.charAt(0):'🏢'}
       </div>
     </div>
   )
 
   return (
-    <div ref={ref} style={{padding:'7px 8px',borderBottom:`0.5px solid ${t.sidebarBorder}`,position:'relative'}}>
-      <div style={{fontSize:7,fontWeight:600,color:t.sidebarSec,textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:4}}>Contexto</div>
+    <div ref={ref} style={{padding:'8px 10px',borderBottom:`0.5px solid ${t.sidebarBorder}`,position:'relative'}}>
+      <div style={{fontSize:9,fontWeight:600,color:t.sidebarSec,textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:5}}>Contexto activo</div>
       <button onClick={() => setOpen(!open)}
-        style={{width:'100%',padding:'5px 7px',background:t.sidebarBox,border:`0.5px solid ${t.sidebarBoxBorder}`,borderRadius:7,cursor:'pointer',display:'flex',alignItems:'center',gap:6}}>
+        style={{width:'100%',padding:'7px 9px',background:t.sidebarBox,border:`0.5px solid ${t.sidebarBoxBorder}`,borderRadius:8,cursor:'pointer',display:'flex',alignItems:'center',gap:8}}>
         <div style={{width:6,height:6,borderRadius:'50%',background:clienteActivo?'#60a5fa':'#4ade80',flexShrink:0}}></div>
-        <span style={{fontSize:10,color:t.sidebarItem,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',flex:1,textAlign:'left'}}>
+        <span style={{fontSize:12,color:t.sidebarItem,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',flex:1,textAlign:'left'}}>
           {clienteActivo?clienteActivo.nombre.split(' ').slice(0,2).join(' '):'Mi Despacho'}
         </span>
-        <ChevronDown size={9} color={t.sidebarSec} style={{flexShrink:0,transform:open?'rotate(180deg)':'rotate(0)',transition:'transform 0.15s'}} />
+        <ChevronDown size={10} color={t.sidebarSec} style={{flexShrink:0,transform:open?'rotate(180deg)':'rotate(0)',transition:'transform 0.15s'}} />
       </button>
 
       {alertaEfirma && clienteActivo && (
-        <div style={{marginTop:4,padding:'3px 6px',background:'rgba(251,191,36,0.1)',border:'0.5px solid rgba(251,191,36,0.2)',borderRadius:5,display:'flex',alignItems:'center',gap:4}}>
-          <AlertTriangle size={9} color="#fbbf24" />
-          <span style={{fontSize:9,color:'#fbbf24'}}>{diasVenc<=0?'e.firma vencida':`${diasVenc}d para vencer`}</span>
+        <div style={{marginTop:5,padding:'4px 7px',background:'rgba(251,191,36,0.1)',border:'0.5px solid rgba(251,191,36,0.2)',borderRadius:6,display:'flex',alignItems:'center',gap:5}}>
+          <AlertTriangle size={10} color="#fbbf24" />
+          <span style={{fontSize:10,color:'#fbbf24'}}>{diasVenc<=0?'e.firma vencida':`${diasVenc}d para vencer`}</span>
         </div>
       )}
 
       {open && (
-        <div style={{position:'absolute',top:'calc(100% + 4px)',left:8,right:8,background:'white',border:'0.5px solid #e5e7eb',borderRadius:10,boxShadow:'0 4px 20px rgba(0,0,0,0.12)',zIndex:200,overflow:'hidden'}}>
-          <div style={{maxHeight:200,overflowY:'auto'}}>
+        <div style={{position:'absolute',top:'calc(100% + 4px)',left:10,right:10,background:'white',border:'0.5px solid #e5e7eb',borderRadius:10,boxShadow:'0 4px 20px rgba(0,0,0,0.12)',zIndex:200,overflow:'hidden'}}>
+          <div style={{maxHeight:220,overflowY:'auto'}}>
             <button onClick={() => { seleccionarCliente(null); setOpen(false) }}
-              style={{width:'100%',padding:'9px 10px',background:!clienteActivo?'#f0fdf4':'none',border:'none',cursor:'pointer',textAlign:'left',borderBottom:'0.5px solid #f3f4f6',display:'flex',alignItems:'center',gap:8}}
-              onMouseEnter={e => { if(clienteActivo) e.currentTarget.style.background='#f9fafb' }}
-              onMouseLeave={e => { if(clienteActivo) e.currentTarget.style.background='none' }}>
-              <div style={{width:22,height:22,borderRadius:6,background:'#f0fdf4',border:'0.5px solid #bbf7d0',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                <Building2 size={12} color="#16a34a" />
+              style={{width:'100%',padding:'10px 12px',background:'none',border:'none',cursor:'pointer',textAlign:'left',borderBottom:'0.5px solid #f3f4f6',display:'flex',alignItems:'center',gap:9}}
+              onMouseEnter={e => e.currentTarget.style.background='#f9fafb'}
+              onMouseLeave={e => e.currentTarget.style.background='none'}>
+              <div style={{width:24,height:24,borderRadius:6,background:'#f0fdf4',border:'0.5px solid #bbf7d0',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <Building2 size={13} color="#16a34a" />
               </div>
               <div style={{flex:1}}>
                 <div style={{fontSize:12,fontWeight:600,color:'#1f2937'}}>Mi Despacho</div>
                 <div style={{fontSize:10,color:'#9ca3af'}}>Vista personal</div>
               </div>
-              {!clienteActivo && <span style={{fontSize:9,background:'#dcfce7',color:'#16a34a',padding:'2px 6px',borderRadius:20,fontWeight:500}}>Activo</span>}
+              {!clienteActivo && <span style={{fontSize:10,background:'#dcfce7',color:'#16a34a',padding:'2px 7px',borderRadius:20,fontWeight:500}}>Activo</span>}
             </button>
-            {clientes.length > 0 && <div style={{padding:'4px 10px',fontSize:8,fontWeight:600,color:'#c4c4c4',textTransform:'uppercase',letterSpacing:'0.1em',background:'#fafafa'}}>Clientes</div>}
+            {clientes.length > 0 && <div style={{padding:'5px 12px',fontSize:9,fontWeight:600,color:'#c4c4c4',textTransform:'uppercase',letterSpacing:'0.1em',background:'#fafafa'}}>Clientes</div>}
             {clientes.map(c => {
               const isActive = clienteActivo?.id === c.id
               return (
                 <button key={c.id} onClick={() => { seleccionarCliente(c); setOpen(false) }}
-                  style={{width:'100%',padding:'8px 10px',background:isActive?'#eff6ff':'none',border:'none',cursor:'pointer',textAlign:'left',borderBottom:'0.5px solid #f3f4f6',display:'flex',alignItems:'center',gap:8}}
+                  style={{width:'100%',padding:'9px 12px',background:isActive?'#eff6ff':'none',border:'none',cursor:'pointer',textAlign:'left',borderBottom:'0.5px solid #f3f4f6',display:'flex',alignItems:'center',gap:9}}
                   onMouseEnter={e => { if(!isActive) e.currentTarget.style.background='#f9fafb' }}
                   onMouseLeave={e => { if(!isActive) e.currentTarget.style.background=isActive?'#eff6ff':'none' }}>
-                  <div style={{width:22,height:22,minWidth:22,borderRadius:6,background:c.es_persona_moral?'#7c3aed':'#185FA5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:700,color:'white'}}>{c.nombre.charAt(0)}</div>
+                  <div style={{width:24,height:24,minWidth:24,borderRadius:6,background:c.es_persona_moral?'#7c3aed':'#1e2a4a',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:'white'}}>{c.nombre.charAt(0)}</div>
                   <div style={{flex:1,overflow:'hidden'}}>
-                    <div style={{fontSize:11,fontWeight:500,color:'#0f172a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{c.nombre.split(' ').slice(0,3).join(' ')}</div>
-                    <div style={{fontSize:9,color:'#9ca3af',fontFamily:'monospace'}}>{c.rfc}</div>
+                    <div style={{fontSize:12,fontWeight:500,color:'#0f172a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{c.nombre.split(' ').slice(0,3).join(' ')}</div>
+                    <div style={{fontSize:10,color:'#9ca3af'}}>{c.es_persona_moral?'PM':'PF'} · {(c.regimenes||[]).length} régimen{(c.regimenes||[]).length!==1?'es':''}</div>
                   </div>
-                  {isActive && <span style={{fontSize:9,background:'#dbeafe',color:'#1d4ed8',padding:'2px 6px',borderRadius:20,fontWeight:500,flexShrink:0}}>Activo</span>}
+                  {isActive && <span style={{fontSize:10,background:'#dbeafe',color:'#1d4ed8',padding:'2px 7px',borderRadius:20,fontWeight:500,flexShrink:0}}>Activo</span>}
                 </button>
               )
             })}
-            {clientes.length === 0 && <div style={{padding:'12px',fontSize:11,color:'#94a3b8',textAlign:'center'}}>No hay clientes</div>}
+            {clientes.length === 0 && <div style={{padding:'14px',fontSize:12,color:'#94a3b8',textAlign:'center'}}>No hay clientes</div>}
           </div>
           <a href="/clientes" onClick={() => setOpen(false)}
-            style={{display:'block',padding:'8px 10px',fontSize:10,color:'#185FA5',textDecoration:'none',borderTop:'0.5px solid #f3f4f6',textAlign:'center',background:'#f9fafb'}}>
+            style={{display:'block',padding:'8px 12px',fontSize:11,color:'#1e2a4a',textDecoration:'none',borderTop:'0.5px solid #f3f4f6',textAlign:'center',background:'#f9fafb'}}
+            onMouseEnter={e => e.currentTarget.style.background='#eff6ff'}
+            onMouseLeave={e => e.currentTarget.style.background='#f9fafb'}>
             + Agregar cliente
           </a>
         </div>
@@ -341,7 +333,7 @@ function SelectorCliente({ collapsed, t }) {
 function ChatBot({ darkMode }) {
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState([
-    { role: 'assistant', text: '¡Hola! Soy tu asistente fiscal de Audify. ¿En qué te puedo ayudar?' }
+    { role: 'assistant', text: '¡Hola! Soy el asistente fiscal de Audify. ¿En qué te puedo ayudar?' }
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -352,11 +344,8 @@ function ChatBot({ darkMode }) {
     if (bottomRef.current) bottomRef.current.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  // Cerrar al clic fuera
   useEffect(() => {
-    const handler = (e) => {
-      if (panelRef.current && !panelRef.current.contains(e.target)) setOpen(false)
-    }
+    const handler = (e) => { if (panelRef.current && !panelRef.current.contains(e.target)) setOpen(false) }
     if (open) document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [open])
@@ -370,11 +359,7 @@ function ChatBot({ darkMode }) {
     try {
       const historial = messages.filter((_,i) => i > 0).map(m => ({ role: m.role, content: m.text }))
       historial.push({ role: 'user', content: userMsg })
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: historial })
-      })
+      const response = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: historial }) })
       const data = await response.json()
       setMessages(prev => [...prev, { role: 'assistant', text: data.texto || 'Ocurrio un error.' }])
     } catch {
@@ -383,10 +368,10 @@ function ChatBot({ darkMode }) {
     setLoading(false)
   }
 
-  const bg = darkMode ? '#1c1c1e' : 'white'
+  const bg = darkMode ? '#2c2c2e' : 'white'
   const border = darkMode ? '#3a3a3c' : '#e5e7eb'
   const textColor = darkMode ? '#f1f5f9' : '#1f2937'
-  const inputBg = darkMode ? '#2c2c2e' : '#f9fafb'
+  const inputBg = darkMode ? '#3a3a3c' : '#f9fafb'
 
   return (
     <div ref={panelRef} style={{position:'fixed',bottom:24,right:24,zIndex:999,display:'flex',flexDirection:'column',alignItems:'flex-end',gap:10}}>
@@ -403,14 +388,14 @@ function ChatBot({ darkMode }) {
           <div style={{flex:1,overflowY:'auto',padding:14,display:'flex',flexDirection:'column',gap:10,maxHeight:320}}>
             {messages.map((m,i) => (
               <div key={i} style={{display:'flex',justifyContent:m.role==='user'?'flex-end':'flex-start'}}>
-                <div style={{maxWidth:'85%',padding:'9px 12px',borderRadius:m.role==='user'?'16px 16px 4px 16px':'16px 16px 16px 4px',background:m.role==='user'?'#1e2a4a':darkMode?'#2c2c2e':'#f8fafc',color:m.role==='user'?'white':textColor,fontSize:13,lineHeight:1.5,border:m.role==='assistant'?`0.5px solid ${border}`:'none'}}>
+                <div style={{maxWidth:'85%',padding:'9px 12px',borderRadius:m.role==='user'?'16px 16px 4px 16px':'16px 16px 16px 4px',background:m.role==='user'?'#1e2a4a':darkMode?'#3a3a3c':'#f8fafc',color:m.role==='user'?'white':textColor,fontSize:13,lineHeight:1.5,border:m.role==='assistant'?`0.5px solid ${border}`:'none'}}>
                   {m.text}
                 </div>
               </div>
             ))}
             {loading && (
               <div style={{display:'flex',justifyContent:'flex-start'}}>
-                <div style={{padding:'9px 14px',borderRadius:'16px 16px 16px 4px',background:darkMode?'#2c2c2e':'#f8fafc',border:`0.5px solid ${border}`,display:'flex',gap:4,alignItems:'center'}}>
+                <div style={{padding:'9px 14px',borderRadius:'16px 16px 16px 4px',background:darkMode?'#3a3a3c':'#f8fafc',border:`0.5px solid ${border}`,display:'flex',gap:4,alignItems:'center'}}>
                   {[0,1,2].map(i => <div key={i} style={{width:6,height:6,borderRadius:'50%',background:'#9ca3af'}}></div>)}
                 </div>
               </div>
@@ -449,9 +434,7 @@ function CalculadoraFlotante({ darkMode }) {
   const panelRef = useRef()
 
   useEffect(() => {
-    const handler = (e) => {
-      if (panelRef.current && !panelRef.current.contains(e.target)) setOpen(false)
-    }
+    const handler = (e) => { if (panelRef.current && !panelRef.current.contains(e.target)) setOpen(false) }
     if (open) document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [open])
@@ -491,7 +474,7 @@ function CalculadoraFlotante({ darkMode }) {
                 </button>
               ))}
             </div>
-            <div style={{background:darkMode?'rgba(59,107,17,0.2)':'#EAF3DE',border:`0.5px solid ${darkMode?'#3B6D11':'#3B6D11'}`,borderRadius:8,padding:'8px 12px',fontSize:12,fontWeight:500,color:'#3B6D11',marginBottom:14}}>
+            <div style={{background:darkMode?'rgba(59,107,17,0.15)':'#EAF3DE',border:'0.5px solid #3B6D11',borderRadius:8,padding:'8px 12px',fontSize:12,fontWeight:500,color:'#4ade80',marginBottom:14}}>
               RESICO · Persona fisica · SAT {new Date().getFullYear()}
             </div>
             {[
@@ -512,7 +495,7 @@ function CalculadoraFlotante({ darkMode }) {
           </div>
         </div>
       )}
-      <button onClick={() => setOpen(!open)} title="Calculadora de impuestos"
+      <button onClick={() => setOpen(!open)} title="Calculadora"
         style={{width:52,height:52,borderRadius:'50%',background:darkMode?'#2c2c2e':'white',border:`2px solid ${darkMode?'#3a3a3c':'#1e2a4a'}`,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 12px rgba(0,0,0,0.15)',transition:'transform 0.2s'}}
         onMouseEnter={e => e.currentTarget.style.transform='scale(1.08)'}
         onMouseLeave={e => e.currentTarget.style.transform='scale(1)'}>
@@ -576,33 +559,24 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed,
     : filtrarNav(modulo.nav || [])
 
   return (
-    <aside style={{
-      width: collapsed ? 56 : 200,
-      minWidth: collapsed ? 56 : 200,
-      background: t.sidebarBg,
-      borderRight: `0.5px solid ${t.sidebarBorder}`,
-      display: 'flex', flexDirection: 'column',
-      transition: 'width 0.25s ease, min-width 0.25s ease',
-      overflow: 'hidden', height: '100vh',
-      boxShadow: darkMode ? '1px 0 8px rgba(0,0,0,0.3)' : '1px 0 8px rgba(0,0,0,0.08)',
-    }}>
+    <aside style={{width:collapsed?56:200,minWidth:collapsed?56:200,background:t.sidebarBg,borderRight:`0.5px solid ${t.sidebarBorder}`,display:'flex',flexDirection:'column',transition:'width 0.25s ease,min-width 0.25s ease',overflow:'hidden',height:'100vh',boxShadow:darkMode?'1px 0 8px rgba(0,0,0,0.3)':'1px 0 8px rgba(0,0,0,0.08)'}}>
 
       {/* Perfil */}
-      <div style={{padding: collapsed ? '12px 8px' : '12px 10px', borderBottom: `0.5px solid ${t.sidebarBorder}`, display: 'flex', alignItems: 'center', gap: 8, justifyContent: collapsed ? 'center' : 'flex-start', position: 'relative', minHeight: 54}}>
-        <div style={{width: 30, height: 30, minWidth: 30, borderRadius: '50%', background: t.avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'white', flexShrink: 0}}>
+      <div style={{padding:collapsed?'14px 8px':'14px 12px 10px',borderBottom:`0.5px solid ${t.sidebarBorder}`,display:'flex',alignItems:'center',gap:10,justifyContent:collapsed?'center':'flex-start',position:'relative',minHeight:58}}>
+        <div style={{width:34,height:34,minWidth:34,borderRadius:'50%',background:t.avatarBg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:700,color:'white',flexShrink:0}}>
           {nombre.charAt(0).toUpperCase()}
         </div>
         {!collapsed && (
-          <div style={{overflow: 'hidden', flex: 1}}>
-            <div style={{fontSize: 11, fontWeight: 500, color: t.sidebarText, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{nombre}</div>
-            <div style={{fontSize: 8, color: t.sidebarSubtext}}>Audify</div>
+          <div style={{overflow:'hidden',flex:1}}>
+            <div style={{fontSize:13,fontWeight:500,color:t.sidebarText,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{nombre}</div>
+            <div style={{fontSize:10,color:t.sidebarSubtext}}>Audify</div>
           </div>
         )}
         <button onClick={() => setCollapsed(!collapsed)}
-          style={{position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.06)', border: `0.5px solid ${t.sidebarBorder}`, borderRadius: 5, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 3, color: t.sidebarSubtext, flexShrink: 0}}
-          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-          onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}>
-          {collapsed ? <ChevronRight size={12}/> : <ChevronLeft size={12}/>}
+          style={{position:'absolute',right:8,top:'50%',transform:'translateY(-50%)',background:'rgba(255,255,255,0.06)',border:`0.5px solid ${t.sidebarBorder}`,borderRadius:6,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:4,color:t.sidebarSubtext,flexShrink:0}}
+          onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.1)'}
+          onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,0.06)'}>
+          {collapsed?<ChevronRight size={13}/>:<ChevronLeft size={13}/>}
         </button>
       </div>
 
@@ -611,24 +585,24 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed,
 
       {/* Selector módulo */}
       {!collapsed && (
-        <div style={{padding: '6px 8px', borderBottom: `0.5px solid ${t.sidebarBorder}`, position: 'relative', zIndex: 10}}>
+        <div style={{padding:'8px 10px',borderBottom:`0.5px solid ${t.sidebarBorder}`,position:'relative',zIndex:10}}>
           <button onClick={() => setModuloOpen(!moduloOpen)}
-            style={{width: '100%', padding: '5px 7px', background: t.sidebarBox, border: `0.5px solid ${t.sidebarBoxBorder}`, borderRadius: 7, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'space-between'}}>
-            <div style={{display: 'flex', alignItems: 'center', gap: 6}}>
-              <i className={`ti ${modulo.icon}`} style={{fontSize: 12, color: modulo.color}} aria-hidden="true"></i>
-              <span style={{fontSize: 10, color: t.sidebarItem, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 80}}>{modulo.label}</span>
+            style={{width:'100%',padding:'7px 9px',background:t.sidebarBox,border:`0.5px solid ${t.sidebarBoxBorder}`,borderRadius:8,cursor:'pointer',display:'flex',alignItems:'center',gap:8,justifyContent:'space-between'}}>
+            <div style={{display:'flex',alignItems:'center',gap:7}}>
+              <i className={`ti ${modulo.icon}`} style={{fontSize:14,color:modulo.color}} aria-hidden="true"></i>
+              <span style={{fontSize:12,color:t.sidebarItem,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:100}}>{modulo.tag}</span>
             </div>
-            <ChevronDown size={10} color={t.sidebarSec} style={{transform: moduloOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.15s', flexShrink: 0}} />
+            <ChevronDown size={11} color={t.sidebarSec} style={{transform:moduloOpen?'rotate(180deg)':'rotate(0)',transition:'transform 0.15s',flexShrink:0}} />
           </button>
           {moduloOpen && (
-            <div style={{position: 'absolute', left: 8, right: 8, top: 'calc(100% - 4px)', background: darkMode ? '#2c2c2e' : 'white', border: `0.5px solid ${darkMode ? '#3a3a3c' : '#e5e7eb'}`, borderRadius: 9, overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.15)', zIndex: 100}}>
+            <div style={{position:'absolute',left:10,right:10,top:'calc(100% - 4px)',background:darkMode?'#2c2c2e':'white',border:`0.5px solid ${darkMode?'#3a3a3c':'#e5e7eb'}`,borderRadius:9,overflow:'hidden',boxShadow:'0 4px 16px rgba(0,0,0,0.15)',zIndex:100}}>
               {MODULOS.map(m => (
-                <button key={m.id} onClick={() => { setModuloActivo(m.id); localStorage.setItem('modulo_activo', m.id); setModuloOpen(false) }}
-                  style={{width: '100%', padding: '7px 10px', border: 'none', background: moduloActivo === m.id ? (darkMode ? 'rgba(96,165,250,0.1)' : '#EFF6FF') : 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7, borderBottom: `0.5px solid ${darkMode ? '#3a3a3c' : '#f3f4f6'}`, textAlign: 'left'}}
-                  onMouseEnter={e => { if (moduloActivo !== m.id) e.currentTarget.style.background = darkMode ? 'rgba(255,255,255,0.05)' : '#f9fafb' }}
-                  onMouseLeave={e => { if (moduloActivo !== m.id) e.currentTarget.style.background = 'none' }}>
-                  <i className={`ti ${m.icon}`} style={{fontSize: 13, color: m.color}} aria-hidden="true"></i>
-                  <span style={{fontSize: 11, color: moduloActivo === m.id ? (darkMode ? '#93c5fd' : '#185FA5') : (darkMode ? '#9ca3af' : '#374151'), fontWeight: moduloActivo === m.id ? 500 : 400}}>{m.tag}</span>
+                <button key={m.id} onClick={() => { setModuloActivo(m.id); localStorage.setItem('modulo_activo',m.id); setModuloOpen(false) }}
+                  style={{width:'100%',padding:'8px 12px',border:'none',background:moduloActivo===m.id?(darkMode?'rgba(96,165,250,0.1)':'#EFF6FF'):'none',cursor:'pointer',display:'flex',alignItems:'center',gap:8,borderBottom:`0.5px solid ${darkMode?'#3a3a3c':'#f3f4f6'}`,textAlign:'left'}}
+                  onMouseEnter={e => { if(moduloActivo!==m.id) e.currentTarget.style.background=darkMode?'rgba(255,255,255,0.05)':'#f9fafb' }}
+                  onMouseLeave={e => { if(moduloActivo!==m.id) e.currentTarget.style.background='none' }}>
+                  <i className={`ti ${m.icon}`} style={{fontSize:14,color:m.color}} aria-hidden="true"></i>
+                  <span style={{fontSize:12,color:moduloActivo===m.id?(darkMode?'#93c5fd':'#1e2a4a'):darkMode?'#9ca3af':'#374151',fontWeight:moduloActivo===m.id?500:400}}>{m.tag}</span>
                 </button>
               ))}
             </div>
@@ -637,11 +611,11 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed,
       )}
 
       {/* Tabs PF/PM */}
-      {!collapsed && moduloActivo === 'fiscal' && !clienteActivo && (
-        <div style={{display: 'flex', gap: 3, padding: '5px 8px', borderBottom: `0.5px solid ${t.sidebarBorder}`}}>
+      {!collapsed && moduloActivo==='fiscal' && !clienteActivo && (
+        <div style={{display:'flex',gap:4,padding:'7px 10px',borderBottom:`0.5px solid ${t.sidebarBorder}`}}>
           {modulo.tabs.map(tab => (
             <button key={tab.id} onClick={() => setTabFiscal(tab.id)}
-              style={{flex: 1, padding: '4px 2px', border: `0.5px solid ${t.sidebarBorder}`, borderRadius: 5, fontSize: 9, cursor: 'pointer', fontWeight: 500, background: tabFiscal === tab.id ? '#60a5fa' : t.sidebarBox, color: tabFiscal === tab.id ? 'white' : t.sidebarItem, transition: 'background 0.15s'}}>
+              style={{flex:1,padding:'5px 4px',border:`0.5px solid ${t.sidebarBorder}`,borderRadius:6,fontSize:11,cursor:'pointer',fontWeight:500,background:tabFiscal===tab.id?'#60a5fa':t.sidebarBox,color:tabFiscal===tab.id?'white':t.sidebarItem,transition:'background 0.15s'}}>
               {tab.label}
             </button>
           ))}
@@ -649,43 +623,43 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed,
       )}
 
       {/* Regímenes del cliente */}
-      {!collapsed && clienteActivo && moduloActivo === 'fiscal' && (
-        <div style={{padding: '5px 10px', borderBottom: `0.5px solid ${t.sidebarBorder}`, background: 'rgba(96,165,250,0.05)'}}>
-          <div style={{fontSize: 8, fontWeight: 600, color: t.sidebarSec, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 3}}>Regímenes</div>
-          <div style={{display: 'flex', flexWrap: 'wrap', gap: 3}}>
-            {regimenesActivos.slice(0, 2).map(r => (
-              <span key={r} style={{fontSize: 8, padding: '1px 5px', borderRadius: 20, background: 'rgba(96,165,250,0.15)', color: '#60a5fa', fontWeight: 500}}>{r}</span>
+      {!collapsed && clienteActivo && moduloActivo==='fiscal' && (
+        <div style={{padding:'6px 12px',borderBottom:`0.5px solid ${t.sidebarBorder}`,background:'rgba(96,165,250,0.05)'}}>
+          <div style={{fontSize:9,fontWeight:600,color:t.sidebarSec,textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:3}}>Regímenes</div>
+          <div style={{display:'flex',flexWrap:'wrap',gap:3}}>
+            {regimenesActivos.slice(0,2).map(r => (
+              <span key={r} style={{fontSize:9,padding:'2px 6px',borderRadius:20,background:'rgba(96,165,250,0.15)',color:'#60a5fa',fontWeight:500}}>{r}</span>
             ))}
-            {regimenesActivos.length > 2 && <span style={{fontSize: 8, color: t.sidebarSec}}>+{regimenesActivos.length - 2}</span>}
+            {regimenesActivos.length>2&&<span style={{fontSize:9,color:t.sidebarSec}}>+{regimenesActivos.length-2}</span>}
           </div>
         </div>
       )}
 
       {/* Nav */}
-      <nav style={{flex: 1, padding: '4px 6px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 1}}>
+      <nav style={{flex:1,padding:'6px 8px',overflowY:'auto',display:'flex',flexDirection:'column',gap:1}}>
         {collapsed ? (
           MODULOS.map(m => (
-            <button key={m.id} onClick={() => { setModuloActivo(m.id); localStorage.setItem('modulo_activo', m.id) }}
+            <button key={m.id} onClick={() => { setModuloActivo(m.id); localStorage.setItem('modulo_activo',m.id) }}
               title={m.tag}
-              style={{width: '100%', padding: '9px', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: 'none', background: moduloActivo === m.id ? t.sidebarItemOn : 'transparent', marginBottom: 2}}>
-              <i className={`ti ${m.icon}`} style={{fontSize: 18, color: moduloActivo === m.id ? m.color : t.sidebarItem}} aria-hidden="true"></i>
+              style={{width:'100%',padding:'10px',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',border:'none',background:moduloActivo===m.id?t.sidebarItemOn:'transparent',marginBottom:2}}>
+              <i className={`ti ${m.icon}`} style={{fontSize:20,color:moduloActivo===m.id?m.color:t.sidebarItem}} aria-hidden="true"></i>
             </button>
           ))
         ) : (
           navActual.map(group => (
-            <div key={group.section} style={{marginBottom: 2}}>
-              <div style={{fontSize: 7, fontWeight: 600, color: t.sidebarSec, textTransform: 'uppercase', letterSpacing: '0.1em', padding: '5px 8px 2px', whiteSpace: 'nowrap'}}>{group.section}</div>
+            <div key={group.section} style={{marginBottom:2}}>
+              <div style={{fontSize:9,fontWeight:600,color:t.sidebarSec,textTransform:'uppercase',letterSpacing:'0.1em',padding:'6px 8px 3px',whiteSpace:'nowrap'}}>{group.section}</div>
               {group.items.map(item => {
                 const Icon = item.icon
-                const isActive = pathname === item.href
+                const isActive = pathname===item.href
                 return (
                   <a key={item.label} href={item.href}
-                    style={{display: 'flex', alignItems: 'center', gap: 7, padding: '6px 8px', borderRadius: 6, cursor: 'pointer', textDecoration: 'none', background: isActive ? t.sidebarItemOn : 'transparent', marginBottom: 1, transition: 'background 0.15s', borderLeft: isActive ? '2px solid #60a5fa' : '2px solid transparent'}}
-                    onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
-                    onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent' }}>
-                    <Icon size={13} color={isActive ? '#60a5fa' : t.sidebarItem} strokeWidth={isActive ? 2 : 1.75} />
-                    <span style={{fontSize: 10, color: isActive ? t.sidebarItemOnText : t.sidebarItem, fontWeight: isActive ? 500 : 400, whiteSpace: 'nowrap', flex: 1}}>{item.label}</span>
-                    {item.chip && <span style={{fontSize: 8, padding: '1px 5px', borderRadius: 10, background: item.chip === 'SAT' ? 'rgba(59,107,17,0.2)' : 'rgba(96,165,250,0.15)', color: item.chip === 'SAT' ? '#4ade80' : '#60a5fa', fontWeight: 500, whiteSpace: 'nowrap'}}>{item.chip}</span>}
+                    style={{display:'flex',alignItems:'center',gap:8,padding:'7px 10px',borderRadius:7,cursor:'pointer',textDecoration:'none',background:isActive?t.sidebarItemOn:'transparent',marginBottom:1,transition:'background 0.15s',borderLeft:isActive?'2px solid #60a5fa':'2px solid transparent'}}
+                    onMouseEnter={e => { if(!isActive) e.currentTarget.style.background='rgba(255,255,255,0.05)' }}
+                    onMouseLeave={e => { if(!isActive) e.currentTarget.style.background='transparent' }}>
+                    <Icon size={14} color={isActive?'#60a5fa':t.sidebarItem} strokeWidth={isActive?2:1.75} />
+                    <span style={{fontSize:12,color:isActive?t.sidebarItemOnText:t.sidebarItem,fontWeight:isActive?500:400,whiteSpace:'nowrap',flex:1}}>{item.label}</span>
+                    {item.chip&&<span style={{fontSize:9,padding:'2px 6px',borderRadius:10,background:item.chip==='SAT'?'rgba(74,222,128,0.15)':'rgba(96,165,250,0.15)',color:item.chip==='SAT'?'#4ade80':'#60a5fa',fontWeight:500,whiteSpace:'nowrap'}}>{item.chip}</span>}
                   </a>
                 )
               })}
@@ -695,20 +669,20 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed,
       </nav>
 
       {/* Bottom */}
-      <div style={{padding: '6px 8px', borderTop: `0.5px solid ${t.sidebarBorder}`, display: 'flex', flexDirection: 'column', gap: 1}}>
-        <a href="/configuracion" title={collapsed ? 'Configuracion' : ''}
-          style={{display: 'flex', alignItems: 'center', gap: 7, padding: collapsed ? '8px' : '6px 8px', borderRadius: 6, cursor: 'pointer', textDecoration: 'none', justifyContent: collapsed ? 'center' : 'flex-start', background: pathname === '/configuracion' ? t.sidebarItemOn : 'transparent', transition: 'background 0.15s'}}
-          onMouseEnter={e => { if (pathname !== '/configuracion') e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
-          onMouseLeave={e => { if (pathname !== '/configuracion') e.currentTarget.style.background = pathname === '/configuracion' ? t.sidebarItemOn : 'transparent' }}>
-          <Settings size={13} color={pathname === '/configuracion' ? '#60a5fa' : t.sidebarItem} strokeWidth={1.75}/>
-          {!collapsed && <span style={{fontSize: 10, color: pathname === '/configuracion' ? t.sidebarItemOnText : t.sidebarItem, fontWeight: pathname === '/configuracion' ? 500 : 400}}>Configuracion</span>}
+      <div style={{padding:'6px 8px',borderTop:`0.5px solid ${t.sidebarBorder}`,display:'flex',flexDirection:'column',gap:1}}>
+        <a href="/configuracion" title={collapsed?'Configuracion':''}
+          style={{display:'flex',alignItems:'center',gap:8,padding:collapsed?'9px':'7px 10px',borderRadius:7,cursor:'pointer',textDecoration:'none',justifyContent:collapsed?'center':'flex-start',background:pathname==='/configuracion'?t.sidebarItemOn:'transparent',transition:'background 0.15s'}}
+          onMouseEnter={e => { if(pathname!=='/configuracion') e.currentTarget.style.background='rgba(255,255,255,0.05)' }}
+          onMouseLeave={e => { if(pathname!=='/configuracion') e.currentTarget.style.background=pathname==='/configuracion'?t.sidebarItemOn:'transparent' }}>
+          <Settings size={14} color={pathname==='/configuracion'?'#60a5fa':t.sidebarItem} strokeWidth={1.75}/>
+          {!collapsed&&<span style={{fontSize:12,color:pathname==='/configuracion'?t.sidebarItemOnText:t.sidebarItem,fontWeight:pathname==='/configuracion'?500:400}}>Configuracion</span>}
         </a>
-        <button onClick={handleLogout} title={collapsed ? 'Cerrar sesion' : ''}
-          style={{display: 'flex', alignItems: 'center', gap: 7, padding: collapsed ? '8px' : '6px 8px', borderRadius: 6, cursor: 'pointer', background: 'none', border: 'none', justifyContent: collapsed ? 'center' : 'flex-start', width: '100%', transition: 'background 0.15s'}}
-          onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'}
-          onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-          <LogOut size={13} color="rgba(239,68,68,0.6)" strokeWidth={1.75}/>
-          {!collapsed && <span style={{fontSize: 10, color: 'rgba(239,68,68,0.6)'}}>Cerrar sesion</span>}
+        <button onClick={handleLogout} title={collapsed?'Cerrar sesion':''}
+          style={{display:'flex',alignItems:'center',gap:8,padding:collapsed?'9px':'7px 10px',borderRadius:7,cursor:'pointer',background:'none',border:'none',justifyContent:collapsed?'center':'flex-start',width:'100%',transition:'background 0.15s'}}
+          onMouseEnter={e => e.currentTarget.style.background='rgba(239,68,68,0.1)'}
+          onMouseLeave={e => e.currentTarget.style.background='none'}>
+          <LogOut size={14} color="rgba(239,68,68,0.6)" strokeWidth={1.75}/>
+          {!collapsed&&<span style={{fontSize:12,color:'rgba(239,68,68,0.6)'}}>Cerrar sesion</span>}
         </button>
       </div>
     </aside>
@@ -733,7 +707,7 @@ function AppLayout({ children }) {
     const handler = (e) => {
       if (e.detail?.darkMode !== undefined) {
         setDarkMode(e.detail.darkMode)
-        localStorage.setItem('dark_mode', e.detail.darkMode)
+        localStorage.setItem('dark_mode', String(e.detail.darkMode))
       }
     }
     window.addEventListener('config_actualizada', handler)
@@ -745,7 +719,7 @@ function AppLayout({ children }) {
   if (isAuthPage) {
     return (
       <html lang="es">
-        <body style={{margin: 0, fontFamily: 'system-ui,sans-serif'}}>{children}</body>
+        <body style={{margin:0,fontFamily:'system-ui,sans-serif'}}>{children}</body>
       </html>
     )
   }
@@ -755,39 +729,37 @@ function AppLayout({ children }) {
       <head>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
       </head>
-      <body style={{margin: 0, fontFamily: 'system-ui,sans-serif', display: 'flex', flexDirection: 'column', minHeight: '100vh', background: t.contentBg}}>
+      <body style={{margin:0,fontFamily:'system-ui,sans-serif',display:'flex',flexDirection:'column',minHeight:'100vh',background:t.contentBg}}>
 
         {/* Topbar */}
-        <div style={{background: t.topbarBg, padding: '5px 20px', display: 'flex', alignItems: 'center', flexShrink: 0, position: 'sticky', top: 0, zIndex: 100, borderBottom: `0.5px solid ${t.topbarBorder}`, boxShadow: t.topbarShadow}}>
-          {/* Logo Audify */}
-          <div style={{width: 28, height: 28, borderRadius: 8, background: '#1e2a4a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'white', flexShrink: 0}}>
+        <div style={{background:t.topbarBg,padding:'5px 20px',display:'flex',alignItems:'center',flexShrink:0,position:'sticky',top:0,zIndex:100,borderBottom:`0.5px solid ${t.topbarBorder}`,boxShadow:t.topbarShadow}}>
+          <div style={{width:28,height:28,borderRadius:8,background:'#1e2a4a',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:'white',flexShrink:0}}>
             A
           </div>
-          <div style={{width: 0.5, height: 20, background: t.sepColor, margin: '0 14px', flexShrink: 0}}></div>
-
-          {/* Burbujas centradas */}
-          <div style={{display: 'flex', alignItems: 'center', gap: 6, flex: 1, justifyContent: 'center'}}>
+          <div style={{width:0.5,height:20,background:t.sepColor,margin:'0 14px',flexShrink:0}}></div>
+          <div style={{display:'flex',alignItems:'center',gap:6,flex:1,justifyContent:'center'}}>
             {MODULOS.map(m => (
-              <DockBubble key={m.id} modulo={m} activo={moduloActivo === m.id} t={t}
-                onClick={() => { setModuloActivo(m.id); localStorage.setItem('modulo_activo', m.id) }} />
+              <DockBubble key={m.id} modulo={m} activo={moduloActivo===m.id} t={t}
+                onClick={() => { setModuloActivo(m.id); localStorage.setItem('modulo_activo',m.id) }} />
             ))}
           </div>
         </div>
 
         {/* Banner cliente */}
         {clienteActivo && (
-          <div style={{background: '#1e2a4a', padding: '5px 20px', display: 'flex', alignItems: 'center', gap: 10, zIndex: 50, flexShrink: 0}}>
-            <div style={{width: 16, height: 16, borderRadius: 4, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 700, color: 'white', flexShrink: 0}}>{clienteActivo.nombre.charAt(0)}</div>
-            <span style={{fontSize: 11, color: 'rgba(255,255,255,0.6)'}}>Consultando:</span>
-            <span style={{fontSize: 11, fontWeight: 600, color: 'white'}}>{clienteActivo.nombre}</span>
-            <span style={{fontSize: 10, color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace'}}>{clienteActivo.rfc}</span>
+          <div style={{background:'#1e2a4a',padding:'5px 20px',display:'flex',alignItems:'center',gap:10,zIndex:50,flexShrink:0}}>
+            <div style={{width:16,height:16,borderRadius:4,background:'rgba(255,255,255,0.15)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:8,fontWeight:700,color:'white',flexShrink:0}}>{clienteActivo.nombre.charAt(0)}</div>
+            <span style={{fontSize:11,color:'rgba(255,255,255,0.6)'}}>Consultando:</span>
+            <span style={{fontSize:11,fontWeight:600,color:'white'}}>{clienteActivo.nombre}</span>
+            <span style={{fontSize:10,color:'rgba(255,255,255,0.4)',fontFamily:'monospace'}}>{clienteActivo.rfc}</span>
+            {clienteActivo.es_persona_moral&&<span style={{fontSize:9,background:'rgba(255,255,255,0.1)',color:'white',padding:'1px 6px',borderRadius:20}}>PM</span>}
           </div>
         )}
 
         {/* Body */}
-        <div style={{display: 'flex', flex: 1, overflow: 'hidden'}}>
+        <div style={{display:'flex',flex:1,overflow:'hidden'}}>
           <Sidebar user={user} moduloActivo={moduloActivo} setModuloActivo={setModuloActivo} collapsed={collapsed} setCollapsed={setCollapsed} darkMode={darkMode} />
-          <main style={{flex: 1, overflowY: 'auto', position: 'relative', background: t.contentBg}}>
+          <main style={{flex:1,overflowY:'auto',position:'relative',background:t.contentBg}}>
             {children}
             <ChatBot darkMode={darkMode} />
           </main>
