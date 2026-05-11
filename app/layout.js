@@ -38,7 +38,7 @@ const MODULOS = [
           { section: 'Impuestos y SAT', items: [
             { label: 'Declaración mensual', href: '/fiscal/declaraciones', icon: FileText, chip: 'SAT' },
             { label: 'DIOT mensual', href: '/fiscal/diot', icon: ScrollText, chip: 'SAT' },
-            { label: 'Calendario fiscal', href: '/fiscal/pagos', icon: Clock },
+            { label: 'Calendario fiscal', href: '/fiscal/calendario', icon: Clock },
           ]},
           { section: 'Comprobantes', items: [
             { label: 'Ingresos', href: '/ingresos', icon: TrendingUp },
