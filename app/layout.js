@@ -78,8 +78,7 @@ const MODULOS = [
       }
     ]
   },
-  {
-    id: 'ventas', label: 'Ventas', icon: 'ti-receipt-2', color: '#e8590c', tag: 'Ventas y Facturación',
+  { id: 'ventas', label: 'Ventas', icon: 'ti-receipt-2', color: '#e8590c', tag: 'Ventas y Facturación',
     nav: [
       { section: 'Facturación', items: [
         { label: 'Facturas CFDI', href: '/facturas', icon: FileText },
@@ -93,8 +92,7 @@ const MODULOS = [
       ]}
     ]
   },
-  {
-    id: 'compras', label: 'Compras', icon: 'ti-truck-delivery', color: '#f08c00', tag: 'Compras y Gastos',
+  { id: 'compras', label: 'Compras', icon: 'ti-truck-delivery', color: '#f08c00', tag: 'Compras y Gastos',
     nav: [
       { section: 'Compras', items: [
         { label: 'Órdenes de compra', href: '/compras/ordenes', icon: ShoppingCart },
@@ -104,8 +102,7 @@ const MODULOS = [
       ]}
     ]
   },
-  {
-    id: 'nomina', label: 'Nómina', icon: 'ti-address-book', color: '#2f9e44', tag: 'Nómina y RRHH',
+  { id: 'nomina', label: 'Nómina', icon: 'ti-address-book', color: '#2f9e44', tag: 'Nómina y RRHH',
     nav: [
       { section: 'Empleados', items: [
         { label: 'Expedientes digitales', href: '/nomina/empleados', icon: Users },
@@ -120,8 +117,7 @@ const MODULOS = [
       ]}
     ]
   },
-  {
-    id: 'inventarios', label: 'Inventario', icon: 'ti-box', color: '#1098ad', tag: 'Inventarios',
+  { id: 'inventarios', label: 'Inventario', icon: 'ti-box', color: '#1098ad', tag: 'Inventarios',
     nav: [
       { section: 'Productos', items: [
         { label: 'Catálogo SKU', href: '/inventarios/productos', icon: Package },
@@ -134,8 +130,7 @@ const MODULOS = [
       ]}
     ]
   },
-  {
-    id: 'tesoreria', label: 'Tesorería', icon: 'ti-coin', color: '#1971c2', tag: 'Tesorería y Bancos',
+  { id: 'tesoreria', label: 'Tesorería', icon: 'ti-coin', color: '#1971c2', tag: 'Tesorería y Bancos',
     nav: [
       { section: 'Cuentas', items: [
         { label: 'Cuentas bancarias', href: '/tesoreria/cuentas', icon: Landmark },
@@ -148,8 +143,7 @@ const MODULOS = [
       ]}
     ]
   },
-  {
-    id: 'crm', label: 'CRM', icon: 'ti-phone-call', color: '#3b5bdb', tag: 'CRM Clientes',
+  { id: 'crm', label: 'CRM', icon: 'ti-phone-call', color: '#3b5bdb', tag: 'CRM Clientes',
     nav: [
       { section: 'CRM', items: [
         { label: 'Prospectos', href: '/crm/prospectos', icon: UserSearch },
@@ -158,8 +152,7 @@ const MODULOS = [
       ]}
     ]
   },
-  {
-    id: 'bi', label: 'Business', icon: 'ti-presentation-analytics', color: '#6741d9', tag: 'Business Intelligence',
+  { id: 'bi', label: 'Business', icon: 'ti-presentation-analytics', color: '#6741d9', tag: 'Business Intelligence',
     nav: [
       { section: 'Dashboard', items: [
         { label: 'Resumen ejecutivo', href: '/bi/resumen', icon: BarChart3 },
@@ -182,7 +175,53 @@ const resico = [
 function getTramo(m) { for (let t of resico) { if (m <= t.hasta) return t } return resico[resico.length-1] }
 function fmtN(n) { return '$'+n.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2}) }
 
-function DockBubble({ modulo, activo, onClick }) {
+// Tema claro y oscuro
+const TEMA = {
+  claro: {
+    topbarBg: 'white',
+    topbarBorder: '#f1f5f9',
+    topbarShadow: '0 1px 4px rgba(0,0,0,0.04)',
+    sepColor: '#e5e7eb',
+    bubbleOn: '#f1f5f9',
+    bubbleOnOutline: '#e2e8f0',
+    sidebarBg: '#1e2a4a',
+    sidebarBorder: 'rgba(255,255,255,0.06)',
+    sidebarText: 'white',
+    sidebarSubtext: 'rgba(255,255,255,0.35)',
+    sidebarItem: 'rgba(255,255,255,0.45)',
+    sidebarItemOn: 'rgba(255,255,255,0.1)',
+    sidebarItemOnText: 'white',
+    sidebarSec: 'rgba(255,255,255,0.25)',
+    sidebarBox: 'rgba(255,255,255,0.06)',
+    sidebarBoxBorder: 'rgba(255,255,255,0.1)',
+    contentBg: '#F9FAFB',
+    dotOn: '#60a5fa',
+    avatarBg: 'linear-gradient(135deg,#60a5fa,#818cf8)',
+  },
+  oscuro: {
+    topbarBg: '#2c2c2e',
+    topbarBorder: '#3a3a3c',
+    topbarShadow: '0 1px 4px rgba(0,0,0,0.3)',
+    sepColor: '#3a3a3c',
+    bubbleOn: 'rgba(255,255,255,0.08)',
+    bubbleOnOutline: 'rgba(255,255,255,0.12)',
+    sidebarBg: '#2c2c2e',
+    sidebarBorder: '#3a3a3c',
+    sidebarText: '#f1f5f9',
+    sidebarSubtext: '#666',
+    sidebarItem: '#555',
+    sidebarItemOn: 'rgba(96,165,250,0.12)',
+    sidebarItemOnText: '#93c5fd',
+    sidebarSec: '#555',
+    sidebarBox: '#3a3a3c',
+    sidebarBoxBorder: '#48484a',
+    contentBg: '#1c1c1e',
+    dotOn: '#60a5fa',
+    avatarBg: '#1e2a4a',
+  }
+}
+
+function DockBubble({ modulo, activo, onClick, t }) {
   const [hover, setHover] = useState(false)
   return (
     <div style={{position:'relative',display:'flex',flexDirection:'column',alignItems:'center',gap:3}}>
@@ -190,29 +229,29 @@ function DockBubble({ modulo, activo, onClick }) {
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
         style={{
-          width:44,height:44,borderRadius:'50%',
+          width:34,height:34,borderRadius:'50%',
           display:'flex',alignItems:'center',justifyContent:'center',
           cursor:'pointer',border:'none',
-          background:activo?'#f8fafc':'transparent',
-          outline:activo?`1.5px solid ${modulo.color}22`:'1.5px solid transparent',
+          background:activo?t.bubbleOn:'transparent',
+          outline:activo?`1.5px solid ${t.bubbleOnOutline}`:'1.5px solid transparent',
           transform:hover?'scale(1.25)':'scale(1)',
           transition:'transform 0.2s cubic-bezier(.34,1.56,.64,1),background 0.15s',
           flexShrink:0,
         }}>
-        <i className={`ti ${modulo.icon}`} style={{fontSize:22,color:modulo.color,transition:'color 0.15s'}} aria-hidden="true"></i>
+        <i className={`ti ${modulo.icon}`} style={{fontSize:18,color:modulo.color}} aria-hidden="true"></i>
       </button>
-      <div style={{width:4,height:4,borderRadius:'50%',background:activo?modulo.color:'transparent',transition:'background 0.2s'}}></div>
+      <div style={{width:4,height:4,borderRadius:'50%',background:activo?t.dotOn:'transparent',transition:'background 0.2s'}}></div>
       {hover && (
-        <div style={{position:'absolute',top:'calc(100% + 8px)',left:'50%',transform:'translateX(-50%)',background:'rgba(15,23,42,0.88)',color:'white',fontSize:11,fontWeight:500,padding:'4px 10px',borderRadius:7,whiteSpace:'nowrap',pointerEvents:'none',zIndex:300,boxShadow:'0 4px 12px rgba(0,0,0,0.15)'}}>
+        <div style={{position:'absolute',top:'calc(100% + 8px)',left:'50%',transform:'translateX(-50%)',background:'rgba(15,23,42,0.9)',color:'white',fontSize:11,fontWeight:500,padding:'4px 10px',borderRadius:7,whiteSpace:'nowrap',pointerEvents:'none',zIndex:300,boxShadow:'0 4px 12px rgba(0,0,0,0.2)'}}>
           {modulo.tag}
-          <div style={{position:'absolute',top:-4,left:'50%',transform:'translateX(-50%)',width:8,height:8,background:'rgba(15,23,42,0.88)',clipPath:'polygon(50% 0%, 0% 100%, 100% 100%)'}}></div>
+          <div style={{position:'absolute',top:-4,left:'50%',transform:'translateX(-50%)',width:8,height:8,background:'rgba(15,23,42,0.9)',clipPath:'polygon(50% 0%, 0% 100%, 100% 100%)'}}></div>
         </div>
       )}
     </div>
   )
 }
 
-function SelectorCliente({ collapsed }) {
+function SelectorCliente({ collapsed, t }) {
   const { clientes, clienteActivo, seleccionarCliente, diasParaVencimiento } = useCliente()
   const [open, setOpen] = useState(false)
   const ref = useRef()
@@ -227,92 +266,71 @@ function SelectorCliente({ collapsed }) {
   const alertaEfirma = diasVenc !== null && diasVenc <= 30
 
   if (collapsed) return (
-    <div style={{padding:'8px',borderBottom:'0.5px solid #f3f4f6',display:'flex',justifyContent:'center'}}>
+    <div style={{padding:'8px',borderBottom:`0.5px solid ${t.sidebarBorder}`,display:'flex',justifyContent:'center'}}>
       <div title={clienteActivo?.nombre||'Mi Despacho'} onClick={() => setOpen(!open)}
-        style={{width:32,height:32,borderRadius:8,background:clienteActivo?'#eff6ff':'#f0fdf4',border:`1px solid ${clienteActivo?'#bfdbfe':'#bbf7d0'}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:clienteActivo?'#185FA5':'#16a34a',cursor:'pointer'}}>
+        style={{width:32,height:32,borderRadius:8,background:t.sidebarBox,border:`1px solid ${t.sidebarBoxBorder}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:t.sidebarText,cursor:'pointer'}}>
         {clienteActivo?clienteActivo.nombre.charAt(0):'🏢'}
       </div>
     </div>
   )
 
   return (
-    <div ref={ref} style={{padding:'10px 12px',borderBottom:'0.5px solid #f3f4f6',position:'relative'}}>
+    <div ref={ref} style={{padding:'7px 8px',borderBottom:`0.5px solid ${t.sidebarBorder}`,position:'relative'}}>
+      <div style={{fontSize:7,fontWeight:600,color:t.sidebarSec,textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:4}}>Contexto</div>
       <button onClick={() => setOpen(!open)}
-        style={{width:'100%',padding:'9px 11px',background:clienteActivo?'#eff6ff':'#f8fafc',border:`0.5px solid ${clienteActivo?'#bfdbfe':'#e5e7eb'}`,borderRadius:9,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
-        <div style={{display:'flex',alignItems:'center',gap:9,overflow:'hidden',flex:1}}>
-          {clienteActivo ? (
-            <>
-              <div style={{width:26,height:26,minWidth:26,borderRadius:7,background:'#185FA5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:'white'}}>{clienteActivo.nombre.charAt(0)}</div>
-              <div style={{overflow:'hidden'}}>
-                <div style={{fontSize:12,fontWeight:600,color:'#1e3a8a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{clienteActivo.nombre.split(' ').slice(0,2).join(' ')}</div>
-                <div style={{fontSize:10,color:'#60a5fa'}}>{clienteActivo.es_persona_moral?'PM':'PF'} · {(clienteActivo.regimenes||[]).length} régimen{(clienteActivo.regimenes||[]).length!==1?'es':''}</div>
-              </div>
-            </>
-          ) : (
-            <div style={{display:'flex',alignItems:'center',gap:9}}>
-              <div style={{width:26,height:26,minWidth:26,borderRadius:7,background:'#f0fdf4',border:'0.5px solid #bbf7d0',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                <Building2 size={13} color="#16a34a" />
-              </div>
-              <div>
-                <div style={{fontSize:12,fontWeight:600,color:'#1f2937'}}>Mi Despacho</div>
-                <div style={{fontSize:10,color:'#9ca3af'}}>Vista personal</div>
-              </div>
-            </div>
-          )}
-        </div>
-        <ChevronDown size={13} color="#9ca3af" style={{flexShrink:0,transform:open?'rotate(180deg)':'rotate(0deg)',transition:'transform 0.15s'}} />
+        style={{width:'100%',padding:'5px 7px',background:t.sidebarBox,border:`0.5px solid ${t.sidebarBoxBorder}`,borderRadius:7,cursor:'pointer',display:'flex',alignItems:'center',gap:6}}>
+        <div style={{width:6,height:6,borderRadius:'50%',background:clienteActivo?'#60a5fa':'#4ade80',flexShrink:0}}></div>
+        <span style={{fontSize:10,color:t.sidebarItem,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',flex:1,textAlign:'left'}}>
+          {clienteActivo?clienteActivo.nombre.split(' ').slice(0,2).join(' '):'Mi Despacho'}
+        </span>
+        <ChevronDown size={9} color={t.sidebarSec} style={{flexShrink:0,transform:open?'rotate(180deg)':'rotate(0)',transition:'transform 0.15s'}} />
       </button>
 
       {alertaEfirma && clienteActivo && (
-        <div style={{marginTop:6,padding:'5px 9px',background:'#fffbeb',border:'0.5px solid #fde68a',borderRadius:7,display:'flex',alignItems:'center',gap:6}}>
-          <AlertTriangle size={11} color="#d97706" />
-          <span style={{fontSize:10,color:'#d97706',fontWeight:500}}>{diasVenc<=0?'e.firma vencida':`e.firma vence en ${diasVenc} dias`}</span>
+        <div style={{marginTop:4,padding:'3px 6px',background:'rgba(251,191,36,0.1)',border:'0.5px solid rgba(251,191,36,0.2)',borderRadius:5,display:'flex',alignItems:'center',gap:4}}>
+          <AlertTriangle size={9} color="#fbbf24" />
+          <span style={{fontSize:9,color:'#fbbf24'}}>{diasVenc<=0?'e.firma vencida':`${diasVenc}d para vencer`}</span>
         </div>
       )}
 
       {open && (
-        <div style={{position:'absolute',top:'calc(100% + 4px)',left:12,right:12,background:'white',border:'0.5px solid #e5e7eb',borderRadius:10,boxShadow:'0 4px 20px rgba(0,0,0,0.08)',zIndex:200,overflow:'hidden'}}>
-          <div style={{maxHeight:220,overflowY:'auto'}}>
+        <div style={{position:'absolute',top:'calc(100% + 4px)',left:8,right:8,background:'white',border:'0.5px solid #e5e7eb',borderRadius:10,boxShadow:'0 4px 20px rgba(0,0,0,0.12)',zIndex:200,overflow:'hidden'}}>
+          <div style={{maxHeight:200,overflowY:'auto'}}>
             <button onClick={() => { seleccionarCliente(null); setOpen(false) }}
-              style={{width:'100%',padding:'10px 12px',background:!clienteActivo?'#f0fdf4':'none',border:'none',cursor:'pointer',textAlign:'left',borderBottom:'0.5px solid #f3f4f6',display:'flex',alignItems:'center',gap:9}}
+              style={{width:'100%',padding:'9px 10px',background:!clienteActivo?'#f0fdf4':'none',border:'none',cursor:'pointer',textAlign:'left',borderBottom:'0.5px solid #f3f4f6',display:'flex',alignItems:'center',gap:8}}
               onMouseEnter={e => { if(clienteActivo) e.currentTarget.style.background='#f9fafb' }}
               onMouseLeave={e => { if(clienteActivo) e.currentTarget.style.background='none' }}>
-              <div style={{width:24,height:24,borderRadius:6,background:'#f0fdf4',border:'0.5px solid #bbf7d0',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                <Building2 size={13} color="#16a34a" />
+              <div style={{width:22,height:22,borderRadius:6,background:'#f0fdf4',border:'0.5px solid #bbf7d0',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <Building2 size={12} color="#16a34a" />
               </div>
               <div style={{flex:1}}>
                 <div style={{fontSize:12,fontWeight:600,color:'#1f2937'}}>Mi Despacho</div>
                 <div style={{fontSize:10,color:'#9ca3af'}}>Vista personal</div>
               </div>
-              {!clienteActivo && <span style={{fontSize:10,background:'#dcfce7',color:'#16a34a',padding:'2px 7px',borderRadius:20,fontWeight:500}}>Activo</span>}
+              {!clienteActivo && <span style={{fontSize:9,background:'#dcfce7',color:'#16a34a',padding:'2px 6px',borderRadius:20,fontWeight:500}}>Activo</span>}
             </button>
-            {clientes.length > 0 && <div style={{padding:'5px 12px',fontSize:9,fontWeight:600,color:'#c4c4c4',textTransform:'uppercase',letterSpacing:'0.1em',background:'#fafafa'}}>Clientes</div>}
+            {clientes.length > 0 && <div style={{padding:'4px 10px',fontSize:8,fontWeight:600,color:'#c4c4c4',textTransform:'uppercase',letterSpacing:'0.1em',background:'#fafafa'}}>Clientes</div>}
             {clientes.map(c => {
-              const dias = diasParaVencimiento(c.vencimiento_efirma)
-              const alerta = dias !== null && dias <= 30
               const isActive = clienteActivo?.id === c.id
               return (
                 <button key={c.id} onClick={() => { seleccionarCliente(c); setOpen(false) }}
-                  style={{width:'100%',padding:'9px 12px',background:isActive?'#eff6ff':'none',border:'none',cursor:'pointer',textAlign:'left',borderBottom:'0.5px solid #f3f4f6',display:'flex',alignItems:'center',gap:9}}
+                  style={{width:'100%',padding:'8px 10px',background:isActive?'#eff6ff':'none',border:'none',cursor:'pointer',textAlign:'left',borderBottom:'0.5px solid #f3f4f6',display:'flex',alignItems:'center',gap:8}}
                   onMouseEnter={e => { if(!isActive) e.currentTarget.style.background='#f9fafb' }}
                   onMouseLeave={e => { if(!isActive) e.currentTarget.style.background=isActive?'#eff6ff':'none' }}>
-                  <div style={{width:24,height:24,minWidth:24,borderRadius:6,background:c.es_persona_moral?'#7c3aed':'#185FA5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:'white'}}>{c.nombre.charAt(0)}</div>
+                  <div style={{width:22,height:22,minWidth:22,borderRadius:6,background:c.es_persona_moral?'#7c3aed':'#185FA5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:700,color:'white'}}>{c.nombre.charAt(0)}</div>
                   <div style={{flex:1,overflow:'hidden'}}>
-                    <div style={{fontSize:12,fontWeight:500,color:'#0f172a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{c.nombre.split(' ').slice(0,3).join(' ')}</div>
-                    <div style={{fontSize:10,color:'#9ca3af'}}>{c.es_persona_moral?'PM':'PF'} · {(c.regimenes||[]).length} régimen{(c.regimenes||[]).length!==1?'es':''}</div>
+                    <div style={{fontSize:11,fontWeight:500,color:'#0f172a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{c.nombre.split(' ').slice(0,3).join(' ')}</div>
+                    <div style={{fontSize:9,color:'#9ca3af',fontFamily:'monospace'}}>{c.rfc}</div>
                   </div>
-                  {alerta && <AlertTriangle size={11} color="#d97706" style={{flexShrink:0}} />}
-                  {isActive && <span style={{fontSize:10,background:'#dbeafe',color:'#1d4ed8',padding:'2px 7px',borderRadius:20,fontWeight:500,flexShrink:0}}>Activo</span>}
+                  {isActive && <span style={{fontSize:9,background:'#dbeafe',color:'#1d4ed8',padding:'2px 6px',borderRadius:20,fontWeight:500,flexShrink:0}}>Activo</span>}
                 </button>
               )
             })}
-            {clientes.length === 0 && <div style={{padding:'14px',fontSize:12,color:'#94a3b8',textAlign:'center'}}>No hay clientes registrados</div>}
+            {clientes.length === 0 && <div style={{padding:'12px',fontSize:11,color:'#94a3b8',textAlign:'center'}}>No hay clientes</div>}
           </div>
           <a href="/clientes" onClick={() => setOpen(false)}
-            style={{display:'block',padding:'9px 12px',fontSize:11,color:'#185FA5',textDecoration:'none',borderTop:'0.5px solid #f3f4f6',textAlign:'center',background:'#f9fafb'}}
-            onMouseEnter={e => e.currentTarget.style.background='#eff6ff'}
-            onMouseLeave={e => e.currentTarget.style.background='#f9fafb'}>
-            + Agregar nuevo cliente
+            style={{display:'block',padding:'8px 10px',fontSize:10,color:'#185FA5',textDecoration:'none',borderTop:'0.5px solid #f3f4f6',textAlign:'center',background:'#f9fafb'}}>
+            + Agregar cliente
           </a>
         </div>
       )}
@@ -320,18 +338,28 @@ function SelectorCliente({ collapsed }) {
   )
 }
 
-function ChatBot() {
+function ChatBot({ darkMode }) {
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState([
-    { role: 'assistant', text: '¡Hola! Soy tu asistente fiscal. Puedo ayudarte con dudas sobre RESICO, IVA, ISR, facturas y más. ¿En qué te puedo ayudar?' }
+    { role: 'assistant', text: '¡Hola! Soy tu asistente fiscal de Audify. ¿En qué te puedo ayudar?' }
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const bottomRef = useRef()
+  const panelRef = useRef()
 
   useEffect(() => {
     if (bottomRef.current) bottomRef.current.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  // Cerrar al clic fuera
+  useEffect(() => {
+    const handler = (e) => {
+      if (panelRef.current && !panelRef.current.contains(e.target)) setOpen(false)
+    }
+    if (open) document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
 
   const enviar = async () => {
     if (!input.trim() || loading) return
@@ -355,68 +383,79 @@ function ChatBot() {
     setLoading(false)
   }
 
+  const bg = darkMode ? '#1c1c1e' : 'white'
+  const border = darkMode ? '#3a3a3c' : '#e5e7eb'
+  const textColor = darkMode ? '#f1f5f9' : '#1f2937'
+  const inputBg = darkMode ? '#2c2c2e' : '#f9fafb'
+
   return (
-    <div style={{position:'fixed',bottom:24,right:24,zIndex:999,display:'flex',flexDirection:'column',alignItems:'flex-end',gap:10}}>
+    <div ref={panelRef} style={{position:'fixed',bottom:24,right:24,zIndex:999,display:'flex',flexDirection:'column',alignItems:'flex-end',gap:10}}>
       {open && (
-        <div style={{background:'white',borderRadius:20,boxShadow:'0 8px 32px rgba(0,0,0,0.12)',border:'0.5px solid #e5e7eb',width:340,display:'flex',flexDirection:'column',overflow:'hidden',maxHeight:500}}>
-          <div style={{background:'linear-gradient(135deg,#185FA5,#0C447C)',padding:'14px 16px',display:'flex',alignItems:'center',gap:10}}>
-            <div style={{width:36,height:36,borderRadius:'50%',background:'rgba(255,255,255,0.2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18}}>🤖</div>
+        <div style={{background:bg,borderRadius:20,boxShadow:'0 8px 32px rgba(0,0,0,0.2)',border:`0.5px solid ${border}`,width:340,display:'flex',flexDirection:'column',overflow:'hidden',maxHeight:500}}>
+          <div style={{background:'linear-gradient(135deg,#1e2a4a,#0f1a2e)',padding:'14px 16px',display:'flex',alignItems:'center',gap:10}}>
+            <div style={{width:36,height:36,borderRadius:'50%',background:'rgba(255,255,255,0.1)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,fontWeight:700,color:'white'}}>A</div>
             <div>
-              <div style={{fontSize:14,fontWeight:600,color:'white'}}>Asistente Fiscal</div>
-              <div style={{fontSize:11,color:'rgba(255,255,255,0.7)'}}>Experto en SAT · Mexico</div>
+              <div style={{fontSize:14,fontWeight:600,color:'white'}}>Audify · Asistente Fiscal</div>
+              <div style={{fontSize:11,color:'rgba(255,255,255,0.6)'}}>Experto en SAT · Mexico</div>
             </div>
-            <button onClick={() => setOpen(false)} style={{marginLeft:'auto',background:'none',border:'none',cursor:'pointer',color:'rgba(255,255,255,0.7)',fontSize:18,lineHeight:1}}>✕</button>
+            <button onClick={() => setOpen(false)} style={{marginLeft:'auto',background:'none',border:'none',cursor:'pointer',color:'rgba(255,255,255,0.6)',fontSize:18,lineHeight:1}}>✕</button>
           </div>
           <div style={{flex:1,overflowY:'auto',padding:14,display:'flex',flexDirection:'column',gap:10,maxHeight:320}}>
             {messages.map((m,i) => (
               <div key={i} style={{display:'flex',justifyContent:m.role==='user'?'flex-end':'flex-start'}}>
-                <div style={{maxWidth:'85%',padding:'9px 12px',borderRadius:m.role==='user'?'16px 16px 4px 16px':'16px 16px 16px 4px',background:m.role==='user'?'#185FA5':'#f8fafc',color:m.role==='user'?'white':'#1f2937',fontSize:13,lineHeight:1.5,border:m.role==='assistant'?'0.5px solid #e5e7eb':'none'}}>
+                <div style={{maxWidth:'85%',padding:'9px 12px',borderRadius:m.role==='user'?'16px 16px 4px 16px':'16px 16px 16px 4px',background:m.role==='user'?'#1e2a4a':darkMode?'#2c2c2e':'#f8fafc',color:m.role==='user'?'white':textColor,fontSize:13,lineHeight:1.5,border:m.role==='assistant'?`0.5px solid ${border}`:'none'}}>
                   {m.text}
                 </div>
               </div>
             ))}
             {loading && (
               <div style={{display:'flex',justifyContent:'flex-start'}}>
-                <div style={{padding:'9px 14px',borderRadius:'16px 16px 16px 4px',background:'#f8fafc',border:'0.5px solid #e5e7eb',display:'flex',gap:4,alignItems:'center'}}>
+                <div style={{padding:'9px 14px',borderRadius:'16px 16px 16px 4px',background:darkMode?'#2c2c2e':'#f8fafc',border:`0.5px solid ${border}`,display:'flex',gap:4,alignItems:'center'}}>
                   {[0,1,2].map(i => <div key={i} style={{width:6,height:6,borderRadius:'50%',background:'#9ca3af'}}></div>)}
                 </div>
               </div>
             )}
             <div ref={bottomRef} />
           </div>
-          <div style={{padding:'10px 12px',borderTop:'0.5px solid #e5e7eb',display:'flex',gap:8,alignItems:'center'}}>
+          <div style={{padding:'10px 12px',borderTop:`0.5px solid ${border}`,display:'flex',gap:8,alignItems:'center'}}>
             <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key==='Enter' && enviar()}
               placeholder="Escribe tu pregunta fiscal..."
-              style={{flex:1,padding:'9px 12px',border:'0.5px solid #e5e7eb',borderRadius:20,fontSize:13,color:'#1f2937',outline:'none',background:'#f9fafb'}} />
+              style={{flex:1,padding:'9px 12px',border:`0.5px solid ${border}`,borderRadius:20,fontSize:13,color:textColor,outline:'none',background:inputBg}} />
             <button onClick={enviar} disabled={loading||!input.trim()}
-              style={{width:36,height:36,borderRadius:'50%',background:input.trim()?'#185FA5':'#f3f4f6',border:'none',cursor:input.trim()?'pointer':'default',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+              style={{width:36,height:36,borderRadius:'50%',background:input.trim()?'#1e2a4a':'#f3f4f6',border:'none',cursor:input.trim()?'pointer':'default',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={input.trim()?'white':'#9ca3af'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             </button>
           </div>
         </div>
       )}
       <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:10}}>
-        <button onClick={() => setOpen(!open)} title="Asistente fiscal"
-          style={{width:52,height:52,borderRadius:'50%',background:'white',border:'2px solid #1f2937',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 12px rgba(0,0,0,0.12)',transition:'transform 0.2s'}}
+        <button onClick={() => setOpen(!open)} title="Asistente Audify"
+          style={{width:52,height:52,borderRadius:'50%',background:darkMode?'#2c2c2e':'white',border:`2px solid ${darkMode?'#3a3a3c':'#1e2a4a'}`,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 12px rgba(0,0,0,0.15)',transition:'transform 0.2s'}}
           onMouseEnter={e => e.currentTarget.style.transform='scale(1.08)'}
           onMouseLeave={e => e.currentTarget.style.transform='scale(1)'}>
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1f2937" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 2a4 4 0 0 1 4 4v1h1a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v1a4 4 0 0 1-8 0v-1H7a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1V6a4 4 0 0 1 4-4z"/>
-            <circle cx="9" cy="10" r="0.8" fill="#1f2937"/><circle cx="15" cy="10" r="0.8" fill="#1f2937"/>
-            <path d="M9 14s1 1.5 3 1.5 3-1.5 3-1.5"/>
-          </svg>
+          <span style={{fontSize:20,fontWeight:700,color:darkMode?'#93c5fd':'#1e2a4a'}}>A</span>
         </button>
-        <CalculadoraFlotante />
+        <CalculadoraFlotante darkMode={darkMode} />
       </div>
     </div>
   )
 }
 
-function CalculadoraFlotante() {
+function CalculadoraFlotante({ darkMode }) {
   const [open, setOpen] = useState(false)
   const [ingreso, setIngreso] = useState('')
   const [ivaRate, setIvaRate] = useState(0.16)
   const [ivaLbl, setIvaLbl] = useState('16%')
+  const panelRef = useRef()
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (panelRef.current && !panelRef.current.contains(e.target)) setOpen(false)
+    }
+    if (open) document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+
   const ivasOpts = [{label:'16%',rate:0.16},{label:'8%',rate:0.08},{label:'4%',rate:0.04},{label:'0%',rate:0},{label:'Ex.',rate:-1}]
   const ing = parseFloat(ingreso)||0
   const iva = ivaRate===-1?0:ing*ivaRate
@@ -424,66 +463,75 @@ function CalculadoraFlotante() {
   const isr = ing*tramo.tasa
   const total = iva+isr
 
+  const bg = darkMode ? '#2c2c2e' : 'white'
+  const border = darkMode ? '#3a3a3c' : '#e5e7eb'
+  const textColor = darkMode ? '#f1f5f9' : '#1f2937'
+  const inputBg = darkMode ? '#3a3a3c' : 'white'
+  const btnBg = darkMode ? '#3a3a3c' : '#f9fafb'
+
   return (
-    <div style={{position:'relative'}}>
+    <div ref={panelRef} style={{position:'relative'}}>
       {open && (
-        <div style={{position:'absolute',bottom:64,right:0,width:300,background:'white',border:'0.5px solid #e5e7eb',borderRadius:16,boxShadow:'0 4px 24px rgba(0,0,0,0.10)',overflow:'hidden'}}>
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'14px 16px',borderBottom:'0.5px solid #e5e7eb'}}>
-            <span style={{fontSize:14,fontWeight:500,color:'#1f2937'}}>Calculadora de impuestos</span>
+        <div style={{position:'absolute',bottom:64,right:0,width:300,background:bg,border:`0.5px solid ${border}`,borderRadius:16,boxShadow:'0 4px 24px rgba(0,0,0,0.2)',overflow:'hidden'}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'14px 16px',borderBottom:`0.5px solid ${border}`}}>
+            <span style={{fontSize:14,fontWeight:500,color:textColor}}>Calculadora de impuestos</span>
             <button onClick={() => setOpen(false)} style={{background:'none',border:'none',cursor:'pointer',color:'#9ca3af',display:'flex',alignItems:'center'}}><ChevronRight size={18}/></button>
           </div>
           <div style={{padding:16,maxHeight:400,overflowY:'auto'}}>
             <div style={{position:'relative',marginBottom:14}}>
               <span style={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',fontSize:13,color:'#9ca3af'}}>$</span>
               <input type="number" value={ingreso} onChange={e => setIngreso(e.target.value)} placeholder="0.00"
-                style={{width:'100%',padding:'9px 10px 9px 24px',border:'0.5px solid #e5e7eb',borderRadius:8,fontSize:17,fontWeight:500,color:'#1f2937',outline:'none',boxSizing:'border-box'}} />
+                style={{width:'100%',padding:'9px 10px 9px 24px',border:`0.5px solid ${border}`,borderRadius:8,fontSize:17,fontWeight:500,color:textColor,outline:'none',boxSizing:'border-box',background:inputBg}} />
             </div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:4,marginBottom:14}}>
               {ivasOpts.map(o => (
                 <button key={o.label} onClick={() => { setIvaRate(o.rate); setIvaLbl(o.label) }}
-                  style={{padding:'6px 4px',border:'none',borderRadius:8,fontSize:11,fontWeight:500,cursor:'pointer',background:ivaRate===o.rate?'#E6F1FB':'#f9fafb',color:ivaRate===o.rate?'#185FA5':'#374151'}}>
+                  style={{padding:'6px 4px',border:'none',borderRadius:8,fontSize:11,fontWeight:500,cursor:'pointer',background:ivaRate===o.rate?'#1e2a4a':btnBg,color:ivaRate===o.rate?'white':darkMode?'#9ca3af':'#374151'}}>
                   {o.label}
                 </button>
               ))}
             </div>
-            <div style={{background:'#EAF3DE',border:'0.5px solid #3B6D11',borderRadius:8,padding:'8px 12px',fontSize:12,fontWeight:500,color:'#3B6D11',marginBottom:14}}>
+            <div style={{background:darkMode?'rgba(59,107,17,0.2)':'#EAF3DE',border:`0.5px solid ${darkMode?'#3B6D11':'#3B6D11'}`,borderRadius:8,padding:'8px 12px',fontSize:12,fontWeight:500,color:'#3B6D11',marginBottom:14}}>
               RESICO · Persona fisica · SAT {new Date().getFullYear()}
             </div>
             {[
               {lbl:'Base',v:fmtN(ing)},
               {lbl:ivaRate===-1?'IVA (Exento)':`IVA (${ivaLbl})`,v:fmtN(iva),blue:true},
-              {lbl:`ISR ${(tramo.tasa*100).toFixed(2)}% (${tramo.label})`,v:fmtN(isr),red:true},
+              {lbl:`ISR ${(tramo.tasa*100).toFixed(2)}%`,v:fmtN(isr),red:true},
               {lbl:'IVA al SAT',v:fmtN(iva),red:true},
             ].map(r => (
-              <div key={r.lbl} style={{display:'flex',justifyContent:'space-between',padding:'5px 0',borderBottom:'0.5px solid #f9fafb',fontSize:12}}>
-                <span style={{color:'#6b7280'}}>{r.lbl}</span>
-                <span style={{fontWeight:500,color:r.red?'#A32D2D':r.blue?'#185FA5':'#1f2937'}}>{r.v}</span>
+              <div key={r.lbl} style={{display:'flex',justifyContent:'space-between',padding:'5px 0',borderBottom:`0.5px solid ${darkMode?'#3a3a3c':'#f9fafb'}`,fontSize:12}}>
+                <span style={{color:'#9ca3af'}}>{r.lbl}</span>
+                <span style={{fontWeight:500,color:r.red?'#f87171':r.blue?'#60a5fa':textColor}}>{r.v}</span>
               </div>
             ))}
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:12,padding:'10px 12px',background:'#f9fafb',borderRadius:10}}>
-              <span style={{fontSize:12,color:'#6b7280'}}>Total impuestos</span>
-              <span style={{fontSize:20,fontWeight:600,color:'#A32D2D'}}>{fmtN(total)}</span>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:12,padding:'10px 12px',background:darkMode?'#3a3a3c':'#f9fafb',borderRadius:10}}>
+              <span style={{fontSize:12,color:'#9ca3af'}}>Total impuestos</span>
+              <span style={{fontSize:20,fontWeight:600,color:'#f87171'}}>{fmtN(total)}</span>
             </div>
           </div>
         </div>
       )}
       <button onClick={() => setOpen(!open)} title="Calculadora de impuestos"
-        style={{width:52,height:52,borderRadius:'50%',background:'white',border:'2px solid #1f2937',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 12px rgba(0,0,0,0.12)',transition:'transform 0.2s'}}
+        style={{width:52,height:52,borderRadius:'50%',background:darkMode?'#2c2c2e':'white',border:`2px solid ${darkMode?'#3a3a3c':'#1e2a4a'}`,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 12px rgba(0,0,0,0.15)',transition:'transform 0.2s'}}
         onMouseEnter={e => e.currentTarget.style.transform='scale(1.08)'}
         onMouseLeave={e => e.currentTarget.style.transform='scale(1)'}>
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1f2937" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={darkMode?'#93c5fd':'#1e2a4a'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
           <rect x="4" y="2" width="16" height="20" rx="2"/>
           <rect x="7" y="5" width="10" height="4" rx="1"/>
-          <circle cx="8" cy="13" r="0.8" fill="#1f2937"/><circle cx="12" cy="13" r="0.8" fill="#1f2937"/><circle cx="16" cy="13" r="0.8" fill="#1f2937"/>
-          <circle cx="8" cy="17" r="0.8" fill="#1f2937"/><circle cx="12" cy="17" r="0.8" fill="#1f2937"/>
-          <rect x="14" y="16" width="3" height="2" rx="0.5" fill="#1f2937"/>
+          <circle cx="8" cy="13" r="0.8" fill={darkMode?'#93c5fd':'#1e2a4a'}/>
+          <circle cx="12" cy="13" r="0.8" fill={darkMode?'#93c5fd':'#1e2a4a'}/>
+          <circle cx="16" cy="13" r="0.8" fill={darkMode?'#93c5fd':'#1e2a4a'}/>
+          <circle cx="8" cy="17" r="0.8" fill={darkMode?'#93c5fd':'#1e2a4a'}/>
+          <circle cx="12" cy="17" r="0.8" fill={darkMode?'#93c5fd':'#1e2a4a'}/>
+          <rect x="14" y="16" width="3" height="2" rx="0.5" fill={darkMode?'#93c5fd':'#1e2a4a'}/>
         </svg>
       </button>
     </div>
   )
 }
 
-function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed }) {
+function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed, darkMode }) {
   const pathname = usePathname()
   const { clienteActivo, regimenesActivos, esPersonaMoral } = useCliente()
   const [config, setConfig] = useState({})
@@ -509,9 +557,7 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed 
   }
 
   const nombre = config.nombre || user?.email?.split('@')[0] || 'Usuario'
-  const avatarColor = config.avatarColor || '#185FA5'
-  const accentColor = clienteActivo ? '#1d4ed8' : avatarColor
-  const sidebarBg = clienteActivo ? '#f8faff' : 'white'
+  const t = darkMode ? TEMA.oscuro : TEMA.claro
   const modulo = MODULOS.find(m => m.id === moduloActivo) || MODULOS[0]
 
   const filtrarNav = (nav) => {
@@ -526,52 +572,63 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed 
   }
 
   const navActual = modulo.tabs
-    ? filtrarNav(modulo.tabs.find(t => t.id === tabFiscal)?.nav || [])
+    ? filtrarNav(modulo.tabs.find(tab => tab.id === tabFiscal)?.nav || [])
     : filtrarNav(modulo.nav || [])
 
   return (
-    <aside style={{width:collapsed?64:240,minWidth:collapsed?64:240,background:sidebarBg,borderRight:`0.5px solid ${clienteActivo?'#bfdbfe':'#e5e7eb'}`,display:'flex',flexDirection:'column',transition:'width 0.25s ease,min-width 0.25s ease',overflow:'hidden',height:'100%',boxShadow:'1px 0 6px rgba(0,0,0,0.03)'}}>
+    <aside style={{
+      width: collapsed ? 56 : 155,
+      minWidth: collapsed ? 56 : 155,
+      background: t.sidebarBg,
+      borderRight: `0.5px solid ${t.sidebarBorder}`,
+      display: 'flex', flexDirection: 'column',
+      transition: 'width 0.25s ease, min-width 0.25s ease',
+      overflow: 'hidden', height: '100%',
+      boxShadow: darkMode ? '1px 0 8px rgba(0,0,0,0.3)' : '1px 0 8px rgba(0,0,0,0.08)',
+    }}>
 
-      <div style={{padding:collapsed?'14px 8px':'14px 14px 10px',borderBottom:'0.5px solid #f3f4f6',display:'flex',alignItems:'center',gap:10,justifyContent:collapsed?'center':'flex-start',position:'relative',minHeight:58}}>
-        <div style={{width:36,height:36,minWidth:36,borderRadius:'50%',background:accentColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:600,color:'white',flexShrink:0}}>
+      {/* Perfil */}
+      <div style={{padding: collapsed ? '12px 8px' : '12px 10px', borderBottom: `0.5px solid ${t.sidebarBorder}`, display: 'flex', alignItems: 'center', gap: 8, justifyContent: collapsed ? 'center' : 'flex-start', position: 'relative', minHeight: 54}}>
+        <div style={{width: 30, height: 30, minWidth: 30, borderRadius: '50%', background: t.avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'white', flexShrink: 0}}>
           {nombre.charAt(0).toUpperCase()}
         </div>
         {!collapsed && (
-          <div style={{overflow:'hidden',flex:1}}>
-            <div style={{fontSize:13,fontWeight:500,color:'#1f2937',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{nombre}</div>
-            <div style={{fontSize:11,color:'#9ca3af',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{user?.email||''}</div>
+          <div style={{overflow: 'hidden', flex: 1}}>
+            <div style={{fontSize: 11, fontWeight: 500, color: t.sidebarText, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{nombre}</div>
+            <div style={{fontSize: 8, color: t.sidebarSubtext}}>Audify</div>
           </div>
         )}
         <button onClick={() => setCollapsed(!collapsed)}
-          style={{position:'absolute',right:8,top:'50%',transform:'translateY(-50%)',background:'#f9fafb',border:'0.5px solid #e5e7eb',borderRadius:6,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:4,color:'#9ca3af',flexShrink:0}}
-          onMouseEnter={e => e.currentTarget.style.background='#f3f4f6'}
-          onMouseLeave={e => e.currentTarget.style.background='#f9fafb'}>
-          {collapsed?<ChevronRight size={13}/>:<ChevronLeft size={13}/>}
+          style={{position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.06)', border: `0.5px solid ${t.sidebarBorder}`, borderRadius: 5, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 3, color: t.sidebarSubtext, flexShrink: 0}}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}>
+          {collapsed ? <ChevronRight size={12}/> : <ChevronLeft size={12}/>}
         </button>
       </div>
 
-      <SelectorCliente collapsed={collapsed} />
+      {/* Selector cliente */}
+      <SelectorCliente collapsed={collapsed} t={t} />
 
+      {/* Selector módulo */}
       {!collapsed && (
-        <div style={{padding:'8px 10px',borderBottom:'0.5px solid #f3f4f6',position:'relative',zIndex:10}}>
+        <div style={{padding: '6px 8px', borderBottom: `0.5px solid ${t.sidebarBorder}`, position: 'relative', zIndex: 10}}>
           <button onClick={() => setModuloOpen(!moduloOpen)}
-            style={{width:'100%',padding:'7px 10px',background:'#f8fafc',border:'0.5px solid #e5e7eb',borderRadius:8,cursor:'pointer',display:'flex',alignItems:'center',gap:8,justifyContent:'space-between'}}>
-            <div style={{display:'flex',alignItems:'center',gap:7}}>
-              <i className={`ti ${modulo.icon}`} style={{fontSize:16,color:modulo.color}} aria-hidden="true"></i>
-              <span style={{fontSize:12,fontWeight:500,color:'#374151'}}>{modulo.tag}</span>
+            style={{width: '100%', padding: '5px 7px', background: t.sidebarBox, border: `0.5px solid ${t.sidebarBoxBorder}`, borderRadius: 7, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'space-between'}}>
+            <div style={{display: 'flex', alignItems: 'center', gap: 6}}>
+              <i className={`ti ${modulo.icon}`} style={{fontSize: 12, color: modulo.color}} aria-hidden="true"></i>
+              <span style={{fontSize: 10, color: t.sidebarItem, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 80}}>{modulo.label}</span>
             </div>
-            <ChevronDown size={12} color="#9ca3af" style={{transform:moduloOpen?'rotate(180deg)':'rotate(0)',transition:'transform 0.15s'}} />
+            <ChevronDown size={10} color={t.sidebarSec} style={{transform: moduloOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.15s', flexShrink: 0}} />
           </button>
           {moduloOpen && (
-            <div style={{position:'absolute',left:10,right:10,top:'calc(100% - 4px)',background:'white',border:'0.5px solid #e5e7eb',borderRadius:9,overflow:'hidden',boxShadow:'0 4px 16px rgba(0,0,0,0.08)',zIndex:100}}>
+            <div style={{position: 'absolute', left: 8, right: 8, top: 'calc(100% - 4px)', background: darkMode ? '#2c2c2e' : 'white', border: `0.5px solid ${darkMode ? '#3a3a3c' : '#e5e7eb'}`, borderRadius: 9, overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.15)', zIndex: 100}}>
               {MODULOS.map(m => (
-                <button key={m.id} onClick={() => { setModuloActivo(m.id); localStorage.setItem('modulo_activo',m.id); setModuloOpen(false) }}
-                  style={{width:'100%',padding:'8px 12px',border:'none',background:moduloActivo===m.id?'#f8fafc':'none',cursor:'pointer',display:'flex',alignItems:'center',gap:8,borderBottom:'0.5px solid #f3f4f6',textAlign:'left'}}
-                  onMouseEnter={e => { if(moduloActivo!==m.id) e.currentTarget.style.background='#f9fafb' }}
-                  onMouseLeave={e => { if(moduloActivo!==m.id) e.currentTarget.style.background='none' }}>
-                  <i className={`ti ${m.icon}`} style={{fontSize:16,color:m.color}} aria-hidden="true"></i>
-                  <span style={{fontSize:12,color:moduloActivo===m.id?m.color:'#374151',fontWeight:moduloActivo===m.id?500:400}}>{m.tag}</span>
-                  {moduloActivo===m.id && <div style={{marginLeft:'auto',width:5,height:5,borderRadius:'50%',background:m.color}}></div>}
+                <button key={m.id} onClick={() => { setModuloActivo(m.id); localStorage.setItem('modulo_activo', m.id); setModuloOpen(false) }}
+                  style={{width: '100%', padding: '7px 10px', border: 'none', background: moduloActivo === m.id ? (darkMode ? 'rgba(96,165,250,0.1)' : '#EFF6FF') : 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7, borderBottom: `0.5px solid ${darkMode ? '#3a3a3c' : '#f3f4f6'}`, textAlign: 'left'}}
+                  onMouseEnter={e => { if (moduloActivo !== m.id) e.currentTarget.style.background = darkMode ? 'rgba(255,255,255,0.05)' : '#f9fafb' }}
+                  onMouseLeave={e => { if (moduloActivo !== m.id) e.currentTarget.style.background = 'none' }}>
+                  <i className={`ti ${m.icon}`} style={{fontSize: 13, color: m.color}} aria-hidden="true"></i>
+                  <span style={{fontSize: 11, color: moduloActivo === m.id ? (darkMode ? '#93c5fd' : '#185FA5') : (darkMode ? '#9ca3af' : '#374151'), fontWeight: moduloActivo === m.id ? 500 : 400}}>{m.tag}</span>
                 </button>
               ))}
             </div>
@@ -579,53 +636,56 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed 
         </div>
       )}
 
+      {/* Tabs PF/PM */}
       {!collapsed && moduloActivo === 'fiscal' && !clienteActivo && (
-        <div style={{display:'flex',gap:4,padding:'7px 10px',borderBottom:'0.5px solid #f3f4f6'}}>
+        <div style={{display: 'flex', gap: 3, padding: '5px 8px', borderBottom: `0.5px solid ${t.sidebarBorder}`}}>
           {modulo.tabs.map(tab => (
             <button key={tab.id} onClick={() => setTabFiscal(tab.id)}
-              style={{flex:1,padding:'6px 4px',border:'0.5px solid #e5e7eb',borderRadius:6,fontSize:11,cursor:'pointer',fontWeight:500,background:tabFiscal===tab.id?'#185FA5':'#f9fafb',color:tabFiscal===tab.id?'white':'#6b7280',transition:'background 0.15s'}}>
+              style={{flex: 1, padding: '4px 2px', border: `0.5px solid ${t.sidebarBorder}`, borderRadius: 5, fontSize: 9, cursor: 'pointer', fontWeight: 500, background: tabFiscal === tab.id ? '#60a5fa' : t.sidebarBox, color: tabFiscal === tab.id ? 'white' : t.sidebarItem, transition: 'background 0.15s'}}>
               {tab.label}
             </button>
           ))}
         </div>
       )}
 
+      {/* Regímenes del cliente */}
       {!collapsed && clienteActivo && moduloActivo === 'fiscal' && (
-        <div style={{padding:'6px 12px',borderBottom:'0.5px solid #f3f4f6',background:'#f8faff'}}>
-          <div style={{fontSize:9,fontWeight:600,color:'#9ca3af',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:3}}>Regímenes del cliente</div>
-          <div style={{display:'flex',flexWrap:'wrap',gap:3}}>
-            {regimenesActivos.slice(0,3).map(r => (
-              <span key={r} style={{fontSize:9,padding:'2px 6px',borderRadius:20,background:'#dbeafe',color:'#1d4ed8',fontWeight:500}}>{r}</span>
+        <div style={{padding: '5px 10px', borderBottom: `0.5px solid ${t.sidebarBorder}`, background: 'rgba(96,165,250,0.05)'}}>
+          <div style={{fontSize: 8, fontWeight: 600, color: t.sidebarSec, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 3}}>Regímenes</div>
+          <div style={{display: 'flex', flexWrap: 'wrap', gap: 3}}>
+            {regimenesActivos.slice(0, 2).map(r => (
+              <span key={r} style={{fontSize: 8, padding: '1px 5px', borderRadius: 20, background: 'rgba(96,165,250,0.15)', color: '#60a5fa', fontWeight: 500}}>{r}</span>
             ))}
-            {regimenesActivos.length > 3 && <span style={{fontSize:9,color:'#9ca3af'}}>+{regimenesActivos.length-3}</span>}
+            {regimenesActivos.length > 2 && <span style={{fontSize: 8, color: t.sidebarSec}}>+{regimenesActivos.length - 2}</span>}
           </div>
         </div>
       )}
 
-      <nav style={{flex:1,padding:'6px 8px',overflowY:'auto',display:'flex',flexDirection:'column',gap:1}}>
+      {/* Nav */}
+      <nav style={{flex: 1, padding: '4px 6px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 1}}>
         {collapsed ? (
           MODULOS.map(m => (
-            <button key={m.id} onClick={() => { setModuloActivo(m.id); localStorage.setItem('modulo_activo',m.id) }}
+            <button key={m.id} onClick={() => { setModuloActivo(m.id); localStorage.setItem('modulo_activo', m.id) }}
               title={m.tag}
-              style={{width:'100%',padding:'10px',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',border:'none',background:'transparent',marginBottom:2}}>
-              <i className={`ti ${m.icon}`} style={{fontSize:20,color:moduloActivo===m.id?m.color:'#9ca3af'}} aria-hidden="true"></i>
+              style={{width: '100%', padding: '9px', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: 'none', background: moduloActivo === m.id ? t.sidebarItemOn : 'transparent', marginBottom: 2}}>
+              <i className={`ti ${m.icon}`} style={{fontSize: 18, color: moduloActivo === m.id ? m.color : t.sidebarItem}} aria-hidden="true"></i>
             </button>
           ))
         ) : (
           navActual.map(group => (
-            <div key={group.section} style={{marginBottom:2}}>
-              <div style={{fontSize:9,fontWeight:600,color:'#c4c4c4',textTransform:'uppercase',letterSpacing:'0.1em',padding:'6px 8px 3px',whiteSpace:'nowrap'}}>{group.section}</div>
+            <div key={group.section} style={{marginBottom: 2}}>
+              <div style={{fontSize: 7, fontWeight: 600, color: t.sidebarSec, textTransform: 'uppercase', letterSpacing: '0.1em', padding: '5px 8px 2px', whiteSpace: 'nowrap'}}>{group.section}</div>
               {group.items.map(item => {
                 const Icon = item.icon
                 const isActive = pathname === item.href
                 return (
                   <a key={item.label} href={item.href}
-                    style={{display:'flex',alignItems:'center',gap:8,padding:'7px 10px',borderRadius:7,cursor:'pointer',textDecoration:'none',background:isActive?(clienteActivo?'#dbeafe':'#EFF6FF'):'transparent',marginBottom:1,transition:'background 0.15s'}}
-                    onMouseEnter={e => { if(!isActive) e.currentTarget.style.background='#f9fafb' }}
-                    onMouseLeave={e => { if(!isActive) e.currentTarget.style.background='transparent' }}>
-                    <Icon size={14} color={isActive?accentColor:'#9ca3af'} strokeWidth={isActive?2:1.75} />
-                    <span style={{fontSize:12,color:isActive?accentColor:'#4b5563',fontWeight:isActive?500:400,whiteSpace:'nowrap',flex:1}}>{item.label}</span>
-                    {item.chip && <span style={{fontSize:9,padding:'2px 6px',borderRadius:10,background:item.chip==='SAT'?'#EAF3DE':item.chip==='Legacy'?'#f3f4f6':item.chip==='Nuevo'?'#FAEEDA':'#E6F1FB',color:item.chip==='SAT'?'#3B6D11':item.chip==='Legacy'?'#6b7280':item.chip==='Nuevo'?'#854F0B':'#185FA5',fontWeight:500,whiteSpace:'nowrap'}}>{item.chip}</span>}
+                    style={{display: 'flex', alignItems: 'center', gap: 7, padding: '6px 8px', borderRadius: 6, cursor: 'pointer', textDecoration: 'none', background: isActive ? t.sidebarItemOn : 'transparent', marginBottom: 1, transition: 'background 0.15s', borderLeft: isActive ? '2px solid #60a5fa' : '2px solid transparent'}}
+                    onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
+                    onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent' }}>
+                    <Icon size={13} color={isActive ? '#60a5fa' : t.sidebarItem} strokeWidth={isActive ? 2 : 1.75} />
+                    <span style={{fontSize: 10, color: isActive ? t.sidebarItemOnText : t.sidebarItem, fontWeight: isActive ? 500 : 400, whiteSpace: 'nowrap', flex: 1}}>{item.label}</span>
+                    {item.chip && <span style={{fontSize: 8, padding: '1px 5px', borderRadius: 10, background: item.chip === 'SAT' ? 'rgba(59,107,17,0.2)' : 'rgba(96,165,250,0.15)', color: item.chip === 'SAT' ? '#4ade80' : '#60a5fa', fontWeight: 500, whiteSpace: 'nowrap'}}>{item.chip}</span>}
                   </a>
                 )
               })}
@@ -634,20 +694,21 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed 
         )}
       </nav>
 
-      <div style={{padding:'6px 8px',borderTop:'0.5px solid #f3f4f6',display:'flex',flexDirection:'column',gap:1}}>
-        <a href="/configuracion" title={collapsed?'Configuracion':''}
-          style={{display:'flex',alignItems:'center',gap:8,padding:collapsed?'9px':'7px 10px',borderRadius:7,cursor:'pointer',textDecoration:'none',justifyContent:collapsed?'center':'flex-start',background:pathname==='/configuracion'?'#EFF6FF':'transparent',transition:'background 0.15s'}}
-          onMouseEnter={e => { if(pathname!=='/configuracion') e.currentTarget.style.background='#f9fafb' }}
-          onMouseLeave={e => { if(pathname!=='/configuracion') e.currentTarget.style.background=pathname==='/configuracion'?'#EFF6FF':'transparent' }}>
-          <Settings size={14} color={pathname==='/configuracion'?accentColor:'#9ca3af'} strokeWidth={1.75}/>
-          {!collapsed && <span style={{fontSize:12,color:pathname==='/configuracion'?accentColor:'#4b5563',fontWeight:pathname==='/configuracion'?500:400}}>Configuracion</span>}
+      {/* Bottom */}
+      <div style={{padding: '6px 8px', borderTop: `0.5px solid ${t.sidebarBorder}`, display: 'flex', flexDirection: 'column', gap: 1}}>
+        <a href="/configuracion" title={collapsed ? 'Configuracion' : ''}
+          style={{display: 'flex', alignItems: 'center', gap: 7, padding: collapsed ? '8px' : '6px 8px', borderRadius: 6, cursor: 'pointer', textDecoration: 'none', justifyContent: collapsed ? 'center' : 'flex-start', background: pathname === '/configuracion' ? t.sidebarItemOn : 'transparent', transition: 'background 0.15s'}}
+          onMouseEnter={e => { if (pathname !== '/configuracion') e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
+          onMouseLeave={e => { if (pathname !== '/configuracion') e.currentTarget.style.background = pathname === '/configuracion' ? t.sidebarItemOn : 'transparent' }}>
+          <Settings size={13} color={pathname === '/configuracion' ? '#60a5fa' : t.sidebarItem} strokeWidth={1.75}/>
+          {!collapsed && <span style={{fontSize: 10, color: pathname === '/configuracion' ? t.sidebarItemOnText : t.sidebarItem, fontWeight: pathname === '/configuracion' ? 500 : 400}}>Configuracion</span>}
         </a>
-        <button onClick={handleLogout} title={collapsed?'Cerrar sesion':''}
-          style={{display:'flex',alignItems:'center',gap:8,padding:collapsed?'9px':'7px 10px',borderRadius:7,cursor:'pointer',background:'none',border:'none',justifyContent:collapsed?'center':'flex-start',width:'100%',transition:'background 0.15s'}}
-          onMouseEnter={e => e.currentTarget.style.background='#fef2f2'}
-          onMouseLeave={e => e.currentTarget.style.background='none'}>
-          <LogOut size={14} color="#ef4444" strokeWidth={1.75}/>
-          {!collapsed && <span style={{fontSize:12,color:'#ef4444'}}>Cerrar sesion</span>}
+        <button onClick={handleLogout} title={collapsed ? 'Cerrar sesion' : ''}
+          style={{display: 'flex', alignItems: 'center', gap: 7, padding: collapsed ? '8px' : '6px 8px', borderRadius: 6, cursor: 'pointer', background: 'none', border: 'none', justifyContent: collapsed ? 'center' : 'flex-start', width: '100%', transition: 'background 0.15s'}}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+          <LogOut size={13} color="rgba(239,68,68,0.6)" strokeWidth={1.75}/>
+          {!collapsed && <span style={{fontSize: 10, color: 'rgba(239,68,68,0.6)'}}>Cerrar sesion</span>}
         </button>
       </div>
     </aside>
@@ -660,28 +721,31 @@ function AppLayout({ children }) {
   const [collapsed, setCollapsed] = useState(false)
   const [user, setUser] = useState(null)
   const [moduloActivo, setModuloActivo] = useState('fiscal')
-  const [config, setConfig] = useState({})
+  const [darkMode, setDarkMode] = useState(false)
   const isAuthPage = authRoutes.includes(pathname)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user))
     const saved = localStorage.getItem('modulo_activo')
     if (saved) setModuloActivo(saved)
-    const savedConfig = localStorage.getItem('config_app')
-    if (savedConfig) setConfig(JSON.parse(savedConfig))
-    const handler = (e) => setConfig(e.detail)
+    const savedDark = localStorage.getItem('dark_mode')
+    if (savedDark === 'true') setDarkMode(true)
+    const handler = (e) => {
+      if (e.detail?.darkMode !== undefined) {
+        setDarkMode(e.detail.darkMode)
+        localStorage.setItem('dark_mode', e.detail.darkMode)
+      }
+    }
     window.addEventListener('config_actualizada', handler)
     return () => window.removeEventListener('config_actualizada', handler)
   }, [])
 
-  const avatarColor = config.avatarColor || '#185FA5'
-  const appNombre = config.appNombre || 'ContableApp'
-  const nombre = config.nombre || user?.email?.split('@')[0] || 'U'
+  const t = darkMode ? TEMA.oscuro : TEMA.claro
 
   if (isAuthPage) {
     return (
       <html lang="es">
-        <body style={{margin:0,fontFamily:'system-ui,sans-serif'}}>{children}</body>
+        <body style={{margin: 0, fontFamily: 'system-ui,sans-serif'}}>{children}</body>
       </html>
     )
   }
@@ -691,55 +755,41 @@ function AppLayout({ children }) {
       <head>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
       </head>
-      <body style={{margin:0,fontFamily:'system-ui,sans-serif',display:'flex',flexDirection:'column',minHeight:'100vh',background:'#f8fafc'}}>
+      <body style={{margin: 0, fontFamily: 'system-ui,sans-serif', display: 'flex', flexDirection: 'column', minHeight: '100vh', background: t.contentBg}}>
 
-        {/* Topbar centrada */}
-        <div style={{background:'white',padding:'6px 0',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,position:'sticky',top:0,zIndex:100,borderBottom:'0.5px solid #f1f5f9',boxShadow:'0 1px 4px rgba(0,0,0,0.04)'}}>
-          <div style={{display:'flex',alignItems:'center',width:'100%',maxWidth:820,padding:'0 24px'}}>
-            <div style={{width:30,height:30,borderRadius:8,background:avatarColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:'white',flexShrink:0}}>
-              {appNombre.charAt(0)}
-            </div>
-            <div style={{width:0.5,height:20,background:'#e5e7eb',margin:'0 16px',flexShrink:0}}></div>
-            <div style={{display:'flex',alignItems:'center',gap:8,flex:1,justifyContent:'center'}}>
-              {MODULOS.map(m => (
-                <DockBubble key={m.id} modulo={m} activo={moduloActivo===m.id} onClick={() => { setModuloActivo(m.id); localStorage.setItem('modulo_activo',m.id) }} />
-              ))}
-            </div>
-            <div style={{width:0.5,height:20,background:'#e5e7eb',margin:'0 16px',flexShrink:0}}></div>
-            <div style={{display:'flex',alignItems:'center',gap:8,flexShrink:0}}>
-              <button onClick={() => window.location.href='/configuracion'} title="Configuracion"
-                style={{width:30,height:30,borderRadius:'50%',background:'none',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'transform 0.2s'}}
-                onMouseEnter={e => e.currentTarget.style.transform='scale(1.15)'}
-                onMouseLeave={e => e.currentTarget.style.transform='scale(1)'}>
-                <Settings size={15} color="#9ca3af" strokeWidth={1.5}/>
-              </button>
-              <div style={{width:30,height:30,borderRadius:'50%',background:avatarColor,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:600,color:'white',cursor:'pointer'}} title={nombre}>
-                {nombre.charAt(0).toUpperCase()}
-              </div>
-            </div>
+        {/* Topbar */}
+        <div style={{background: t.topbarBg, padding: '5px 20px', display: 'flex', alignItems: 'center', flexShrink: 0, position: 'sticky', top: 0, zIndex: 100, borderBottom: `0.5px solid ${t.topbarBorder}`, boxShadow: t.topbarShadow}}>
+          {/* Logo Audify */}
+          <div style={{width: 28, height: 28, borderRadius: 8, background: '#1e2a4a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'white', flexShrink: 0}}>
+            A
+          </div>
+          <div style={{width: 0.5, height: 20, background: t.sepColor, margin: '0 14px', flexShrink: 0}}></div>
+
+          {/* Burbujas centradas */}
+          <div style={{display: 'flex', alignItems: 'center', gap: 6, flex: 1, justifyContent: 'center'}}>
+            {MODULOS.map(m => (
+              <DockBubble key={m.id} modulo={m} activo={moduloActivo === m.id} t={t}
+                onClick={() => { setModuloActivo(m.id); localStorage.setItem('modulo_activo', m.id) }} />
+            ))}
           </div>
         </div>
 
         {/* Banner cliente */}
         {clienteActivo && (
-          <div style={{background:'#1d4ed8',padding:'6px 20px',display:'flex',alignItems:'center',gap:10,zIndex:50,flexShrink:0}}>
-            <div style={{width:18,height:18,borderRadius:5,background:'rgba(255,255,255,0.2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:700,color:'white',flexShrink:0}}>{clienteActivo.nombre.charAt(0)}</div>
-            <span style={{fontSize:11,color:'rgba(255,255,255,0.75)'}}>Consultando cliente:</span>
-            <span style={{fontSize:12,fontWeight:600,color:'white'}}>{clienteActivo.nombre}</span>
-            <span style={{fontSize:10,color:'rgba(255,255,255,0.6)',fontFamily:'monospace'}}>{clienteActivo.rfc}</span>
-            {clienteActivo.es_persona_moral && <span style={{fontSize:10,background:'rgba(255,255,255,0.15)',color:'white',padding:'2px 7px',borderRadius:20}}>PM</span>}
-            {(clienteActivo.regimenes||[]).slice(0,2).map(r => (
-              <span key={r} style={{fontSize:10,background:'rgba(255,255,255,0.15)',color:'white',padding:'2px 7px',borderRadius:20}}>{r}</span>
-            ))}
+          <div style={{background: '#1e2a4a', padding: '5px 20px', display: 'flex', alignItems: 'center', gap: 10, zIndex: 50, flexShrink: 0}}>
+            <div style={{width: 16, height: 16, borderRadius: 4, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 700, color: 'white', flexShrink: 0}}>{clienteActivo.nombre.charAt(0)}</div>
+            <span style={{fontSize: 11, color: 'rgba(255,255,255,0.6)'}}>Consultando:</span>
+            <span style={{fontSize: 11, fontWeight: 600, color: 'white'}}>{clienteActivo.nombre}</span>
+            <span style={{fontSize: 10, color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace'}}>{clienteActivo.rfc}</span>
           </div>
         )}
 
         {/* Body */}
-        <div style={{display:'flex',flex:1,overflow:'hidden'}}>
-          <Sidebar user={user} moduloActivo={moduloActivo} setModuloActivo={setModuloActivo} collapsed={collapsed} setCollapsed={setCollapsed} />
-          <main style={{flex:1,overflowY:'auto',position:'relative'}}>
+        <div style={{display: 'flex', flex: 1, overflow: 'hidden'}}>
+          <Sidebar user={user} moduloActivo={moduloActivo} setModuloActivo={setModuloActivo} collapsed={collapsed} setCollapsed={setCollapsed} darkMode={darkMode} />
+          <main style={{flex: 1, overflowY: 'auto', position: 'relative', background: t.contentBg}}>
             {children}
-            <ChatBot />
+            <ChatBot darkMode={darkMode} />
           </main>
         </div>
       </body>
