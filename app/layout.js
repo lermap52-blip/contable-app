@@ -577,8 +577,8 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed,
 
   return (
     <aside style={{
-      width: collapsed ? 56 : 155,
-      minWidth: collapsed ? 56 : 155,
+      width: collapsed ? 56 : 200,
+      minWidth: collapsed ? 56 : 200,
       background: t.sidebarBg,
       borderRight: `0.5px solid ${t.sidebarBorder}`,
       display: 'flex', flexDirection: 'column',
