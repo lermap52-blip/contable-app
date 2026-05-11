@@ -583,7 +583,7 @@ function Sidebar({ user, moduloActivo, setModuloActivo, collapsed, setCollapsed,
       borderRight: `0.5px solid ${t.sidebarBorder}`,
       display: 'flex', flexDirection: 'column',
       transition: 'width 0.25s ease, min-width 0.25s ease',
-      overflow: 'hidden', height: '100%',
+      overflow: 'hidden', height: '100vh',
       boxShadow: darkMode ? '1px 0 8px rgba(0,0,0,0.3)' : '1px 0 8px rgba(0,0,0,0.08)',
     }}>
 
