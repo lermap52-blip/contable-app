@@ -4,18 +4,17 @@ import { supabase } from '../../supabase'
 import { useCliente } from '../../ClienteContext'
 import { Plus, Download, Eye, Mail, Send, ChevronDown, ChevronUp, Upload, AlertCircle } from 'lucide-react'
 
-// ── Constantes ───────────────────────────────────────────────────────────────
-const ESTADOS_OC = ['Borrador', 'Enviada', 'Recibida', 'Conciliada', 'Cancelada']
+const ESTADOS_OC = ['Borrador', 'Enviada', 'Recibida y Validada', 'Cancelada']
 
 const ESTADO_COLORS = {
-  'Borrador':   { bg: '#F9FAFB', color: '#6B7280', border: '#E5E7EB' },
-  'Enviada':    { bg: '#EFF6FF', color: '#185FA5', border: '#BFDBFE' },
-  'Recibida':   { bg: '#FFFBEB', color: '#92400E', border: '#FDE68A' },
-  'Conciliada': { bg: '#F0FDF4', color: '#166534', border: '#BBF7D0' },
-  'Cancelada':  { bg: '#FCEBEB', color: '#A32D2D', border: '#FECACA' },
+  'Borrador':            { bg: '#F9FAFB', color: '#6B7280', border: '#E5E7EB' },
+  'Enviada':             { bg: '#EFF6FF', color: '#185FA5', border: '#BFDBFE' },
+  'Recibida y Validada': { bg: '#F0FDF4', color: '#166534', border: '#BBF7D0' },
+  'Cancelada':           { bg: '#FCEBEB', color: '#A32D2D', border: '#FECACA' },
 }
 
 const CONDICIONES_PAGO = ['Contado', 'Crédito 15 días', 'Crédito 30 días', 'Crédito 60 días', '50% anticipo / 50% entrega']
+const FORMAS_PAGO = ['Transferencia electrónica', 'Cheque nominativo', 'Tarjeta de débito', 'Tarjeta de crédito', 'Efectivo']
 
 const ITEM_VACIO = () => ({ desc: '', cant: 1, precio: 0 })
 
@@ -41,10 +40,10 @@ const WA_ICON = () => (
   </svg>
 )
 
-// ── Componente principal ─────────────────────────────────────────────────────
 export default function OrdenesCompra() {
-  const { clienteActivo, empresaId } = useCliente()
+  const { empresaId } = useCliente()
   const [ordenes, setOrdenes] = useState([])
+  const [proveedores, setProveedores] = useState([])
   const [loading, setLoading] = useState(true)
   const [modo, setModo] = useState('lista') // lista | nueva | ver
   const [ordenActiva, setOrdenActiva] = useState(null)
@@ -52,18 +51,19 @@ export default function OrdenesCompra() {
   const [config, setConfig] = useState({})
 
   // Form nueva OC
+  const [proveedorId, setProveedorId] = useState('')
   const [proveedor, setProveedor] = useState('')
   const [rfcProveedor, setRfcProveedor] = useState('')
   const [emailProveedor, setEmailProveedor] = useState('')
   const [telefonoProveedor, setTelefonoProveedor] = useState('')
   const [condicionPago, setCondicionPago] = useState('Contado')
+  const [formaPago, setFormaPago] = useState('Transferencia electrónica')
   const [items, setItems] = useState([ITEM_VACIO()])
   const [notas, setNotas] = useState('')
   const [estado, setEstado] = useState('Borrador')
   const [guardando, setGuardando] = useState(false)
 
   // Conciliación XML
-  const [xmlData, setXmlData] = useState(null)
   const [xmlNombre, setXmlNombre] = useState('')
   const [conciliacion, setConciliacion] = useState(null)
 
@@ -74,37 +74,52 @@ export default function OrdenesCompra() {
   const [chatCargando, setChatCargando] = useState(false)
 
   useEffect(() => {
-    if (empresaId) cargarOrdenes()
+    if (empresaId) { cargarOrdenes(); cargarProveedores() }
     const saved = localStorage.getItem('config_app')
     if (saved) setConfig(JSON.parse(saved))
   }, [empresaId])
 
   const cargarOrdenes = async () => {
     setLoading(true)
-    const { data } = await supabase
-      .from('ordenes_compra')
-      .select('*')
-      .eq('empresa_id', empresaId)
-      .order('created_at', { ascending: false })
+    const { data } = await supabase.from('ordenes_compra').select('*').eq('empresa_id', empresaId).order('created_at', { ascending: false })
     setOrdenes(data || [])
     setLoading(false)
   }
 
+  const cargarProveedores = async () => {
+    const { data } = await supabase.from('proveedores').select('*').eq('empresa_id', empresaId).order('nombre')
+    setProveedores(data || [])
+  }
+
+  // Auto-relleno desde catálogo
+  const seleccionarProveedor = (id) => {
+    const p = proveedores.find(p => p.id === id)
+    if (!p) { setProveedorId(''); return }
+    setProveedorId(p.id)
+    setProveedor(p.nombre)
+    setRfcProveedor(p.rfc || '')
+    setEmailProveedor(p.email || '')
+    setTelefonoProveedor(p.telefono || '')
+  }
+
   const subtotal = items.reduce((a, i) => a + (Number(i.cant) * Number(i.precio)), 0)
   const requiereElectronico = subtotal > 2000
+  const formaInvalida = requiereElectronico && formaPago === 'Efectivo'
 
   const guardar = async () => {
-    if (!empresaId || !proveedor) return
+    if (!empresaId || !proveedor || formaInvalida) return
     setGuardando(true)
     const folio = folioNuevo(ordenes)
     const payload = {
       empresa_id: empresaId,
+      proveedor_id: proveedorId || null,
       folio,
       proveedor,
       rfc_proveedor: rfcProveedor,
       email_proveedor: emailProveedor,
       telefono_proveedor: telefonoProveedor,
       condicion_pago: condicionPago,
+      forma_pago: formaPago,
       items: JSON.stringify(items),
       total: subtotal,
       notas,
@@ -126,31 +141,70 @@ export default function OrdenesCompra() {
     if (ordenActiva?.id === id) setOrdenActiva(prev => ({ ...prev, estado: nuevoEstado }))
   }
 
-  // ── Conciliación XML ─────────────────────────────────────────────────────
-  const leerXML = (file) => {
-    if (!file) return
+  // Conciliación XML — guarda en tabla gastos si coincide
+  const leerXML = async (file) => {
+    if (!file || !ordenActiva) return
     setXmlNombre(file.name)
     const reader = new FileReader()
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
-        const texto = e.target.result
-        const parser = new DOMParser()
-        const doc = parser.parseFromString(texto, 'text/xml')
+        const doc = new DOMParser().parseFromString(e.target.result, 'text/xml')
+        const comp = doc.querySelector('Comprobante') || doc.documentElement
+        const totalXML = parseFloat(comp?.getAttribute('Total') || '0')
+        const subtotalXML = parseFloat(comp?.getAttribute('SubTotal') || '0')
+        const emisor = doc.querySelector('Emisor')?.getAttribute('Nombre') || '—'
+        const folioCFDI = comp?.getAttribute('Folio') || '—'
+        const uuid = doc.querySelector('TimbreFiscalDigital')?.getAttribute('UUID') || '—'
+        const fechaCFDI = comp?.getAttribute('Fecha')?.split('T')[0] || null
 
-        // Leer total del CFDI (atributo Total en nodo Comprobante)
-        const comprobante = doc.querySelector('Comprobante') || doc.documentElement
-        const totalXML = parseFloat(comprobante?.getAttribute('Total') || comprobante?.getAttribute('total') || '0')
-        const emisor = doc.querySelector('Emisor')?.getAttribute('Nombre') || doc.querySelector('Emisor')?.getAttribute('nombre') || '—'
-        const folioCFDI = comprobante?.getAttribute('Folio') || comprobante?.getAttribute('folio') || '—'
-        const fechaCFDI = comprobante?.getAttribute('Fecha') || comprobante?.getAttribute('fecha') || '—'
+        // Separar IVA 16% y 8% desde nodos Traslado
+        let iva16 = 0, iva8 = 0
+        doc.querySelectorAll('Traslado').forEach(t => {
+          const tasa = parseFloat(t.getAttribute('TasaOCuota') || '0')
+          const imp = parseFloat(t.getAttribute('Importe') || '0')
+          if (Math.abs(tasa - 0.16) < 0.001) iva16 += imp
+          else if (Math.abs(tasa - 0.08) < 0.001) iva8 += imp
+        })
 
-        setXmlData({ totalXML, emisor, folioCFDI, fechaCFDI })
+        const coincide = Math.abs(totalXML - ordenActiva.total) < 1
+        const concData = { totalXML, totalOC: ordenActiva.total, diferencia: totalXML - ordenActiva.total, coincide, emisor, folioCFDI, uuid, iva16, iva8, subtotalXML, fechaCFDI }
+        setConciliacion(concData)
 
-        const totalOC = ordenActiva ? ordenActiva.total : subtotal
-        const diferencia = totalXML - totalOC
-        const coincide = Math.abs(diferencia) < 0.01
+        if (coincide) {
+          // Marcar OC como Recibida y Validada
+          await supabase.from('ordenes_compra').update({
+            estado: 'Recibida y Validada',
+            conciliada: true,
+            xml_total: totalXML,
+            xml_folio: folioCFDI,
+            xml_emisor: emisor,
+          }).eq('id', ordenActiva.id)
 
-        setConciliacion({ totalXML, totalOC, diferencia, coincide, emisor, folioCFDI, fechaCFDI })
+          setOrdenActiva(prev => ({ ...prev, estado: 'Recibida y Validada', conciliada: true }))
+          setOrdenes(prev => prev.map(o => o.id === ordenActiva.id ? { ...o, estado: 'Recibida y Validada', conciliada: true } : o))
+
+          // Guardar en tabla gastos para DIOT
+          const mes = new Date().getMonth() + 1
+          const anio = new Date().getFullYear()
+          await supabase.from('gastos').insert({
+            empresa_id: empresaId,
+            orden_compra_id: ordenActiva.id,
+            proveedor_id: ordenActiva.proveedor_id || null,
+            rfc_emisor: ordenActiva.rfc_proveedor,
+            nombre_emisor: emisor,
+            folio_cfdi: folioCFDI,
+            uuid_cfdi: uuid,
+            fecha_cfdi: fechaCFDI,
+            subtotal: subtotalXML,
+            iva_16: iva16,
+            iva_8: iva8,
+            total: totalXML,
+            tipo_tercero: '04',
+            tipo_operacion: '85',
+            mes,
+            anio,
+          })
+        }
       } catch {
         setConciliacion({ error: 'No se pudo leer el XML. Verifica que sea un CFDI válido.' })
       }
@@ -158,7 +212,7 @@ export default function OrdenesCompra() {
     reader.readAsText(file)
   }
 
-  // ── Asistente IA ──────────────────────────────────────────────────────────
+  // Asistente IA
   const enviarChat = async () => {
     if (!chatInput.trim()) return
     const userMsg = { role: 'user', content: chatInput }
@@ -173,29 +227,25 @@ export default function OrdenesCompra() {
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 1000,
-          system: `Eres un asistente especializado en negociación con proveedores para despachos fiscales y contables mexicanos.
-Ayudas a redactar correos, mensajes de WhatsApp y cartas para solicitar presupuestos, mejores precios o condiciones de pago.
-Contexto del proveedor actual: ${proveedor || ordenActiva?.proveedor || 'no especificado'}.
-Responde siempre en español, de forma profesional y concisa.`,
+          system: `Eres un asistente fiscal mexicano especializado en deducciones, CFDI y negociación con proveedores. Contexto del proveedor actual: ${proveedor || ordenActiva?.proveedor || 'no especificado'}. Responde en español, conciso y profesional.`,
           messages: nuevosMsgs,
         }),
       })
       const data = await res.json()
-      const respuesta = data.content?.[0]?.text || 'No pude generar una respuesta.'
-      setChatMsgs(prev => [...prev, { role: 'assistant', content: respuesta }])
+      setChatMsgs(prev => [...prev, { role: 'assistant', content: data.content?.[0]?.text || 'Sin respuesta.' }])
     } catch {
-      setChatMsgs(prev => [...prev, { role: 'assistant', content: 'Error al conectar con el asistente.' }])
+      setChatMsgs(prev => [...prev, { role: 'assistant', content: 'Error de conexión.' }])
     }
     setChatCargando(false)
   }
 
-  // ── WhatsApp y Correo ─────────────────────────────────────────────────────
+  // WhatsApp y Correo
   const enviarWhatsApp = (oc) => {
     const tel = oc.telefono_proveedor?.replace(/\D/g, '')
     if (!tel || tel.length !== 10) { alert('El número no tiene 10 dígitos válidos.'); return }
     const empresa = config.appNombre || 'nuestra empresa'
     const msg = encodeURIComponent(
-      `Buen día, le contactamos de parte de ${empresa}.\n\nAdjuntamos la Orden de Compra *${oc.folio}* por un total de *${fmt(oc.total)}*.\n\nCondición de pago: ${oc.condicion_pago}.\n\nEl PDF con el detalle completo se encuentra adjunto. Quedamos a sus órdenes para cualquier aclaración.`
+      `Buen día, le contactamos de parte de ${empresa}.\n\nAdjuntamos la Orden de Compra *${oc.folio}* por un total de *${fmt(oc.total)}*.\nCondición de pago: ${oc.condicion_pago}.\n\nEl PDF con el detalle completo se encuentra adjunto. Quedamos a sus órdenes para cualquier aclaración.`
     )
     window.open(`https://wa.me/521${tel}?text=${msg}`, '_blank')
   }
@@ -204,16 +254,15 @@ Responde siempre en español, de forma profesional y concisa.`,
     const empresa = config.appNombre || 'nuestra empresa'
     const asunto = encodeURIComponent(`Orden de Compra ${oc.folio} — ${empresa}`)
     const cuerpo = encodeURIComponent(
-      `Estimado proveedor ${oc.proveedor},%0A%0AEsperamos que se encuentre bien.%0A%0APor medio del presente le hacemos llegar la Orden de Compra ${oc.folio} emitida por ${empresa}.%0A%0ATotal: ${fmt(oc.total)}%0ACondición de pago: ${oc.condicion_pago}%0A%0AEl detalle completo se encuentra en el PDF adjunto.%0A%0AQuedamos a sus órdenes para cualquier aclaración.%0A%0AAtentamente,%0A${empresa}`
+      `Estimado proveedor ${oc.proveedor},%0A%0AEsperamos que se encuentre bien.%0A%0AAnexamos la Orden de Compra ${oc.folio} por ${fmt(oc.total)}.%0ACondición de pago: ${oc.condicion_pago}.%0AForma de pago: ${oc.forma_pago}.%0A%0AEl PDF adjunto contiene el detalle completo.%0A%0AQuedamos a sus órdenes para cualquier aclaración.%0A%0AAtentamente,%0A${empresa}`
     )
     window.open(`mailto:${oc.email_proveedor}?subject=${asunto}&body=${cuerpo}`)
   }
 
-  // ── PDF ───────────────────────────────────────────────────────────────────
+  // PDF
   const generarPDF = (oc) => {
     const itemsParsed = JSON.parse(oc.items || '[]')
     const empresa = config.appNombre || 'Audify'
-    const total = oc.total || subtotal
     const { bg, color } = ESTADO_COLORS[oc.estado] || {}
     const html = `
       <html><head><meta charset="utf-8"/><style>
@@ -252,8 +301,9 @@ Responde siempre en español, de forma profesional y concisa.`,
             ${oc.email_proveedor ? `<div style="font-size:11px;color:#6b7280;">${oc.email_proveedor}</div>` : ''}
           </div>
           <div>
-            <div style="font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Condición de pago:</div>
-            <div style="font-size:13px;font-weight:500;">${oc.condicion_pago}</div>
+            <div style="font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Condiciones:</div>
+            <div style="font-size:12px;font-weight:500;">${oc.condicion_pago}</div>
+            <div style="font-size:12px;color:#6b7280;">Forma de pago: ${oc.forma_pago}</div>
           </div>
         </div>
 
@@ -269,7 +319,7 @@ Responde siempre en español, de forma profesional y concisa.`,
               <td>${i.desc}</td>
               <td style="text-align:center;">${i.cant}</td>
               <td style="text-align:right;font-family:monospace;">${fmt(i.precio)}</td>
-              <td style="text-align:right;font-family:monospace;">${fmt(Number(i.cant)*Number(i.precio))}</td>
+              <td style="text-align:right;font-family:monospace;">${fmt(Number(i.cant) * Number(i.precio))}</td>
             </tr>`).join('')}
           </tbody>
         </table>
@@ -278,19 +328,17 @@ Responde siempre en español, de forma profesional y concisa.`,
           <div style="width:220px;border-top:2px solid #1e2a4a;padding-top:10px;">
             <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:600;">
               <span>Total</span>
-              <span style="font-family:monospace;color:#16a34a;">${fmt(total)}</span>
+              <span style="font-family:monospace;color:#16a34a;">${fmt(oc.total)}</span>
             </div>
           </div>
         </div>
 
-        ${total > 2000 ? `<div class="alerta">⚠️ Deducibilidad: Esta compra supera los $2,000 pesos. Requiere pago por medios electrónicos (transferencia, cheque nominativo o tarjeta) para ser deducible fiscalmente.</div>` : ''}
-
-        ${oc.notas ? `<div style="background:#f8fafc;border-radius:8px;padding:12px;font-size:12px;color:#374151;margin-bottom:16px;"><strong>Notas:</strong> ${oc.notas}</div>` : ''}
+        ${oc.total > 2000 ? `<div class="alerta">⚠️ Deducibilidad: Esta compra supera $2,000 MXN. Requiere pago por medios electrónicos para ser deducible (Art. 27, fracción VIII, LISR).</div>` : ''}
+        ${oc.notas ? `<div style="background:#f8fafc;border-radius:8px;padding:12px;font-size:12px;color:#374151;margin-bottom:14px;"><strong>Notas:</strong> ${oc.notas}</div>` : ''}
 
         <div style="border-top:1px solid #e5e7eb;padding-top:12px;font-size:11px;color:#6b7280;">
           La presente Orden de Compra autoriza la adquisición de los bienes/servicios descritos bajo las condiciones indicadas.
         </div>
-
         <div class="footer">GENERADO POR ${empresa.toUpperCase()}</div>
       </body></html>
     `
@@ -303,8 +351,9 @@ Responde siempre en español, de forma profesional y concisa.`,
   const ordenesFiltradas = ordenes.filter(o => filtro === 'Todos' || o.estado === filtro)
   const card = { background: 'white', borderRadius: 12, border: '0.5px solid #e5e7eb', padding: 18 }
   const btn = (extra = {}) => ({ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 13px', borderRadius: 8, fontSize: 12, fontWeight: 500, cursor: 'pointer', border: '0.5px solid #e5e7eb', background: '#f9fafb', color: '#374151', ...extra })
+  const inp = { width: '100%', padding: '8px 11px', border: '0.5px solid #e5e7eb', borderRadius: 8, fontSize: 12, color: '#374151', outline: 'none', boxSizing: 'border-box' }
 
-  // ── VISTA: NUEVA OC ──────────────────────────────────────────────────────
+  // ── VISTA: NUEVA OC ───────────────────────────────────────────────────────
   if (modo === 'nueva') return (
     <div style={{ padding: 28, background: '#F8F9FA', minHeight: '100vh', fontFamily: 'system-ui,sans-serif' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
@@ -315,26 +364,43 @@ Responde siempre en español, de forma profesional y concisa.`,
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 16 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-          {/* Datos del proveedor */}
+          {/* Proveedor */}
           <div style={card}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Datos del proveedor</div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Proveedor</div>
+
+            {proveedores.length > 0 && (
+              <div style={{ marginBottom: 14 }}>
+                <label style={{ display: 'block', fontSize: 11, color: '#6b7280', marginBottom: 5 }}>Seleccionar del catálogo</label>
+                <select value={proveedorId} onChange={e => seleccionarProveedor(e.target.value)} style={{ ...inp, background: 'white' }}>
+                  <option value="">Seleccionar proveedor...</option>
+                  {proveedores.map(p => (
+                    <option key={p.id} value={p.id}>{p.nombre} — {p.rfc}</option>
+                  ))}
+                </select>
+                {proveedorId && proveedores.find(p => p.id === proveedorId)?.es_efos && (
+                  <div style={{ marginTop: 8, background: '#FCEBEB', border: '1px solid #FECACA', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#A32D2D' }}>
+                    🚨 Este proveedor está marcado como EFOS (Lista 69-B). Las operaciones con él pueden no ser deducibles.
+                  </div>
+                )}
+              </div>
+            )}
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               {[
-                ['Nombre / Razón social', proveedor, setProveedor],
+                ['Nombre / Razón Social', proveedor, setProveedor],
                 ['RFC', rfcProveedor, setRfcProveedor],
                 ['Correo electrónico', emailProveedor, setEmailProveedor],
                 ['Teléfono (10 dígitos)', telefonoProveedor, setTelefonoProveedor],
               ].map(([lbl, val, set]) => (
                 <div key={lbl}>
                   <label style={{ display: 'block', fontSize: 11, color: '#6b7280', marginBottom: 5 }}>{lbl}</label>
-                  <input value={val} onChange={e => set(e.target.value)}
-                    style={{ width: '100%', padding: '8px 11px', border: '0.5px solid #e5e7eb', borderRadius: 8, fontSize: 12, color: '#374151', outline: 'none', boxSizing: 'border-box' }} />
+                  <input value={val} onChange={e => set(e.target.value)} style={inp} />
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Servicios / productos */}
+          {/* Items */}
           <div style={card}>
             <div style={{ fontSize: 11, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>Productos / Servicios</div>
             <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 10 }}>
@@ -352,7 +418,7 @@ Responde siempre en español, de forma profesional y concisa.`,
                   <tr key={i}>
                     <td style={{ padding: '6px 10px', borderBottom: '0.5px solid #f9fafb' }}>
                       <input value={item.desc} onChange={e => setItems(prev => prev.map((it, j) => j === i ? { ...it, desc: e.target.value } : it))}
-                        placeholder="Descripción"
+                        placeholder="Descripción del producto o servicio"
                         style={{ width: '100%', border: 'none', background: 'transparent', fontSize: 12, color: '#374151', outline: 'none' }} />
                     </td>
                     <td style={{ padding: '6px 10px', borderBottom: '0.5px solid #f9fafb', textAlign: 'center' }}>
@@ -381,20 +447,17 @@ Responde siempre en español, de forma profesional y concisa.`,
             </button>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <div style={{ width: 220 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0 0', fontSize: 15, fontWeight: 600, borderTop: '2px solid #1e2a4a' }}>
-                  <span>Total</span>
-                  <span style={{ fontFamily: 'monospace', color: '#16a34a' }}>{fmt(subtotal)}</span>
-                </div>
+              <div style={{ width: 220, borderTop: '2px solid #1e2a4a', paddingTop: 8, display: 'flex', justifyContent: 'space-between', fontSize: 15, fontWeight: 600 }}>
+                <span>Total</span>
+                <span style={{ fontFamily: 'monospace', color: '#16a34a' }}>{fmt(subtotal)}</span>
               </div>
             </div>
 
-            {/* Alerta deducibilidad */}
             {requiereElectronico && (
               <div style={{ marginTop: 14, background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: 8, padding: '10px 14px', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
                 <AlertCircle size={16} color="#C2500A" style={{ flexShrink: 0, marginTop: 1 }} />
                 <div style={{ fontSize: 12, color: '#C2500A' }}>
-                  <strong>Deducibilidad:</strong> Esta compra supera los $2,000 pesos. Requiere pago por medios electrónicos (transferencia, cheque nominativo o tarjeta) para ser deducible fiscalmente.
+                  <strong>Art. 27, fracción VIII LISR:</strong> Esta compra supera $2,000 MXN. El pago en efectivo no es deducible. Se requiere transferencia electrónica, cheque nominativo o tarjeta.
                 </div>
               </div>
             )}
@@ -405,21 +468,21 @@ Responde siempre en español, de forma profesional y concisa.`,
             <div style={{ fontSize: 11, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>Notas / Condiciones adicionales</div>
             <textarea value={notas} onChange={e => setNotas(e.target.value)} rows={3}
               placeholder="Ej: Entrega en 5 días hábiles, incluye flete..."
-              style={{ width: '100%', padding: '8px 11px', border: '0.5px solid #e5e7eb', borderRadius: 8, fontSize: 12, color: '#374151', outline: 'none', boxSizing: 'border-box', resize: 'vertical' }} />
+              style={{ ...inp, resize: 'vertical' }} />
           </div>
 
-          {/* Asistente negociación */}
+          {/* Asistente IA */}
           <div style={card}>
             <button onClick={() => setChatAbierto(v => !v)}
               style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.08em' }}>🤖 Asistente de negociación</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.08em' }}>🤖 Asistente Fiscal</div>
               {chatAbierto ? <ChevronUp size={14} color="#9ca3af" /> : <ChevronDown size={14} color="#9ca3af" />}
             </button>
             {chatAbierto && (
               <div style={{ marginTop: 12 }}>
                 <div style={{ background: '#f8fafc', borderRadius: 8, padding: 12, minHeight: 120, maxHeight: 260, overflowY: 'auto', marginBottom: 10 }}>
                   {chatMsgs.length === 0 && (
-                    <div style={{ fontSize: 12, color: '#9ca3af' }}>Pídeme que redacte un correo o mensaje para solicitar presupuesto, mejores precios o condiciones de pago a tu proveedor.</div>
+                    <div style={{ fontSize: 12, color: '#9ca3af' }}>Pregúntame sobre deducibilidad, redacción de descripciones o condiciones de negociación con este proveedor.</div>
                   )}
                   {chatMsgs.map((m, i) => (
                     <div key={i} style={{ marginBottom: 10, textAlign: m.role === 'user' ? 'right' : 'left' }}>
@@ -433,7 +496,7 @@ Responde siempre en español, de forma profesional y concisa.`,
                 <div style={{ display: 'flex', gap: 8 }}>
                   <input value={chatInput} onChange={e => setChatInput(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && enviarChat()}
-                    placeholder="Ej: Redacta un correo pidiendo descuento por volumen"
+                    placeholder="Ej: ¿Este gasto es deducible? / Redacta una descripción profesional"
                     style={{ flex: 1, padding: '8px 11px', border: '0.5px solid #e5e7eb', borderRadius: 8, fontSize: 12, outline: 'none' }} />
                   <button onClick={enviarChat} disabled={chatCargando}
                     style={{ padding: '8px 14px', borderRadius: 8, background: '#1e2a4a', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, fontSize: 12 }}>
@@ -452,18 +515,24 @@ Responde siempre en español, de forma profesional y concisa.`,
 
             <div style={{ marginBottom: 12 }}>
               <label style={{ display: 'block', fontSize: 11, color: '#6b7280', marginBottom: 5 }}>Condición de pago</label>
-              <select value={condicionPago} onChange={e => setCondicionPago(e.target.value)}
-                style={{ width: '100%', padding: '8px 11px', border: '0.5px solid #e5e7eb', borderRadius: 8, fontSize: 12, color: '#374151', outline: 'none', background: 'white' }}>
+              <select value={condicionPago} onChange={e => setCondicionPago(e.target.value)} style={{ ...inp, background: 'white' }}>
                 {CONDICIONES_PAGO.map(c => <option key={c}>{c}</option>)}
               </select>
             </div>
 
             <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', fontSize: 11, color: '#6b7280', marginBottom: 5 }}>Estado inicial</label>
-              <select value={estado} onChange={e => setEstado(e.target.value)}
-                style={{ width: '100%', padding: '8px 11px', border: '0.5px solid #e5e7eb', borderRadius: 8, fontSize: 12, color: '#374151', outline: 'none', background: 'white' }}>
-                {ESTADOS_OC.map(e => <option key={e}>{e}</option>)}
+              <label style={{ display: 'block', fontSize: 11, color: '#6b7280', marginBottom: 5 }}>Forma de pago</label>
+              <select value={formaPago} onChange={e => setFormaPago(e.target.value)}
+                style={{ ...inp, background: 'white', borderColor: formaInvalida ? '#fca5a5' : '#e5e7eb' }}>
+                {FORMAS_PAGO.map(f => (
+                  <option key={f} disabled={requiereElectronico && f === 'Efectivo'}>{f}</option>
+                ))}
               </select>
+              {formaInvalida && (
+                <div style={{ fontSize: 10, color: '#dc2626', marginTop: 4 }}>
+                  ⛔ Efectivo no permitido para montos mayores a $2,000 MXN
+                </div>
+              )}
             </div>
 
             <div style={{ background: '#f8fafc', borderRadius: 8, padding: 12, marginBottom: 14 }}>
@@ -472,8 +541,8 @@ Responde siempre en español, de forma profesional y concisa.`,
               {requiereElectronico && <div style={{ fontSize: 10, color: '#C2500A', marginTop: 4 }}>⚠ Requiere pago electrónico</div>}
             </div>
 
-            <button onClick={guardar} disabled={guardando || !proveedor}
-              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '9px', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: proveedor ? 'pointer' : 'not-allowed', background: '#1e2a4a', color: 'white', border: 'none', opacity: proveedor ? 1 : 0.5 }}>
+            <button onClick={guardar} disabled={guardando || !proveedor || formaInvalida}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '9px', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: (proveedor && !formaInvalida) ? 'pointer' : 'not-allowed', background: '#1e2a4a', color: 'white', border: 'none', opacity: (proveedor && !formaInvalida) ? 1 : 0.5 }}>
               {guardando ? 'Guardando...' : '💾 Guardar OC'}
             </button>
           </div>
@@ -491,7 +560,7 @@ Responde siempre en español, de forma profesional y concisa.`,
     return (
       <div style={{ padding: 28, background: '#F8F9FA', minHeight: '100vh', fontFamily: 'system-ui,sans-serif' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-          <button onClick={() => { setModo('lista'); setConciliacion(null); setXmlData(null); setXmlNombre('') }} style={btn()}>← Volver</button>
+          <button onClick={() => { setModo('lista'); setConciliacion(null); setXmlNombre('') }} style={btn()}>← Volver</button>
           <div style={{ fontSize: 18, fontWeight: 600, color: '#0f172a' }}>{oc.folio}</div>
           <span style={{ background: bg, color, border: `1px solid ${border}`, padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 500 }}>{oc.estado}</span>
         </div>
@@ -526,39 +595,40 @@ Responde siempre en español, de forma profesional y concisa.`,
                   {oc.email_proveedor && <div style={{ fontSize: 11, color: '#6b7280' }}>{oc.email_proveedor}</div>}
                 </div>
                 <div>
-                  <div style={{ fontSize: 10, color: '#9ca3af', textTransform: 'uppercase', marginBottom: 4 }}>Condición de pago:</div>
-                  <div style={{ fontSize: 13, fontWeight: 500 }}>{oc.condicion_pago}</div>
+                  <div style={{ fontSize: 10, color: '#9ca3af', textTransform: 'uppercase', marginBottom: 4 }}>Condiciones:</div>
+                  <div style={{ fontSize: 12, fontWeight: 500 }}>{oc.condicion_pago}</div>
+                  <div style={{ fontSize: 12, color: '#6b7280' }}>Forma de pago: {oc.forma_pago}</div>
                 </div>
               </div>
 
               <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 14 }}>
                 <thead>
                   <tr style={{ background: '#f8fafc' }}>
-                    {['Descripción','Cant.','P. Unitario','Importe'].map(h => (
+                    {['Descripción', 'Cant.', 'P. Unitario', 'Importe'].map(h => (
                       <th key={h} style={{ textAlign: h === 'Descripción' ? 'left' : 'right', fontSize: 10, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', padding: '7px 10px', borderBottom: '0.5px solid #e5e7eb' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {itemsParsed.map((item, i) => (
-                    <tr key={i} onMouseEnter={e => e.currentTarget.style.background='#f9fafb'} onMouseLeave={e => e.currentTarget.style.background='white'}>
+                    <tr key={i} onMouseEnter={e => e.currentTarget.style.background = '#f9fafb'} onMouseLeave={e => e.currentTarget.style.background = 'white'}>
                       <td style={{ padding: '9px 10px', borderBottom: '0.5px solid #f3f4f6', fontSize: 13 }}>{item.desc}</td>
                       <td style={{ padding: '9px 10px', borderBottom: '0.5px solid #f3f4f6', fontSize: 12, textAlign: 'right' }}>{item.cant}</td>
                       <td style={{ padding: '9px 10px', borderBottom: '0.5px solid #f3f4f6', fontSize: 12, textAlign: 'right', fontFamily: 'monospace' }}>{fmt(item.precio)}</td>
-                      <td style={{ padding: '9px 10px', borderBottom: '0.5px solid #f3f4f6', fontSize: 12, textAlign: 'right', fontFamily: 'monospace', fontWeight: 500 }}>{fmt(Number(item.cant)*Number(item.precio))}</td>
+                      <td style={{ padding: '9px 10px', borderBottom: '0.5px solid #f3f4f6', fontSize: 12, textAlign: 'right', fontFamily: 'monospace', fontWeight: 500 }}>{fmt(Number(item.cant) * Number(item.precio))}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 14 }}>
                 <div style={{ fontSize: 16, fontWeight: 600 }}>Total: <span style={{ color: '#16a34a', fontFamily: 'monospace' }}>{fmt(oc.total)}</span></div>
               </div>
 
               {oc.total > 2000 && (
                 <div style={{ background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: 8, padding: '10px 14px', display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 14 }}>
                   <AlertCircle size={15} color="#C2500A" style={{ flexShrink: 0, marginTop: 1 }} />
-                  <div style={{ fontSize: 12, color: '#C2500A' }}><strong>Deducibilidad:</strong> Requiere pago por medios electrónicos.</div>
+                  <div style={{ fontSize: 12, color: '#C2500A' }}><strong>Deducibilidad:</strong> Requiere pago por medios electrónicos (Art. 27 LISR).</div>
                 </div>
               )}
 
@@ -575,7 +645,7 @@ Responde siempre en español, de forma profesional y concisa.`,
 
             {/* Conciliación XML */}
             <div style={card}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Conciliación con Factura XML</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Conciliación con CFDI</div>
               <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', border: '1.5px dashed #d1d5db', borderRadius: 8, cursor: 'pointer', fontSize: 12, color: '#6b7280', marginBottom: 12 }}>
                 <Upload size={16} color="#9ca3af" />
                 {xmlNombre || 'Subir XML del CFDI del proveedor'}
@@ -585,22 +655,23 @@ Responde siempre en español, de forma profesional y concisa.`,
               {conciliacion && !conciliacion.error && (
                 <div style={{ background: conciliacion.coincide ? '#f0fdf4' : '#FCEBEB', border: `1px solid ${conciliacion.coincide ? '#bbf7d0' : '#FECACA'}`, borderRadius: 8, padding: 14 }}>
                   <div style={{ fontSize: 12, fontWeight: 600, color: conciliacion.coincide ? '#166534' : '#A32D2D', marginBottom: 10 }}>
-                    {conciliacion.coincide ? '✅ Totales coinciden correctamente' : '⚠️ Se detectó una diferencia en los totales'}
+                    {conciliacion.coincide ? '✅ Totales coinciden — OC marcada como Recibida y Validada' : '⚠️ Diferencia detectada en los totales'}
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    {[
-                      ['Emisor XML', conciliacion.emisor],
-                      ['Folio CFDI', conciliacion.folioCFDI],
-                      ['Total OC', fmt(conciliacion.totalOC)],
-                      ['Total XML', fmt(conciliacion.totalXML)],
-                      ['Diferencia', fmt(conciliacion.diferencia)],
-                    ].map(([lbl, val]) => (
-                      <div key={lbl} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
-                        <span style={{ color: '#6b7280' }}>{lbl}</span>
-                        <span style={{ fontFamily: 'monospace', fontWeight: 500 }}>{val}</span>
-                      </div>
-                    ))}
-                  </div>
+                  {[
+                    ['Emisor', conciliacion.emisor],
+                    ['Folio CFDI', conciliacion.folioCFDI],
+                    ['UUID', conciliacion.uuid?.slice(0, 20) + '...'],
+                    ['Total OC', fmt(conciliacion.totalOC)],
+                    ['Total XML', fmt(conciliacion.totalXML)],
+                    ['IVA 16%', fmt(conciliacion.iva16)],
+                    ['IVA 8% (fronterizo)', fmt(conciliacion.iva8)],
+                    ['Diferencia', fmt(conciliacion.diferencia)],
+                  ].map(([l, v]) => (
+                    <div key={l} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, padding: '4px 0', borderBottom: '0.5px solid #f3f4f6' }}>
+                      <span style={{ color: '#6b7280' }}>{l}</span>
+                      <span style={{ fontFamily: 'monospace', fontWeight: 500 }}>{v}</span>
+                    </div>
+                  ))}
                 </div>
               )}
               {conciliacion?.error && (
@@ -608,18 +679,18 @@ Responde siempre en español, de forma profesional y concisa.`,
               )}
             </div>
 
-            {/* Asistente negociación en vista ver */}
+            {/* Asistente en vista ver */}
             <div style={card}>
               <button onClick={() => setChatAbierto(v => !v)}
                 style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.08em' }}>🤖 Asistente de negociación</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.08em' }}>🤖 Asistente Fiscal</div>
                 {chatAbierto ? <ChevronUp size={14} color="#9ca3af" /> : <ChevronDown size={14} color="#9ca3af" />}
               </button>
               {chatAbierto && (
                 <div style={{ marginTop: 12 }}>
                   <div style={{ background: '#f8fafc', borderRadius: 8, padding: 12, minHeight: 120, maxHeight: 260, overflowY: 'auto', marginBottom: 10 }}>
                     {chatMsgs.length === 0 && (
-                      <div style={{ fontSize: 12, color: '#9ca3af' }}>Pídeme que redacte un correo o mensaje para negociar con {oc.proveedor}.</div>
+                      <div style={{ fontSize: 12, color: '#9ca3af' }}>Pídeme que redacte un correo de negociación o resuelve dudas sobre la deducibilidad de este gasto.</div>
                     )}
                     {chatMsgs.map((m, i) => (
                       <div key={i} style={{ marginBottom: 10, textAlign: m.role === 'user' ? 'right' : 'left' }}>
@@ -633,7 +704,7 @@ Responde siempre en español, de forma profesional y concisa.`,
                   <div style={{ display: 'flex', gap: 8 }}>
                     <input value={chatInput} onChange={e => setChatInput(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && enviarChat()}
-                      placeholder="Ej: Redacta un correo pidiendo plazo de pago a 30 días"
+                      placeholder="Ej: ¿Por qué este gasto no es deducible?"
                       style={{ flex: 1, padding: '8px 11px', border: '0.5px solid #e5e7eb', borderRadius: 8, fontSize: 12, outline: 'none' }} />
                     <button onClick={enviarChat} disabled={chatCargando}
                       style={{ padding: '8px 14px', borderRadius: 8, background: '#1e2a4a', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, fontSize: 12 }}>
@@ -669,12 +740,14 @@ Responde siempre en español, de forma profesional y concisa.`,
 
                 <button onClick={() => enviarWhatsApp(oc)}
                   disabled={!oc.telefono_proveedor}
+                  title={!oc.telefono_proveedor ? 'Sin número de teléfono' : ''}
                   style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '7px', borderRadius: 8, fontSize: 12, fontWeight: 500, cursor: oc.telefono_proveedor ? 'pointer' : 'not-allowed', background: oc.telefono_proveedor ? '#25D366' : '#f3f4f6', color: oc.telefono_proveedor ? 'white' : '#9ca3af', border: 'none', opacity: oc.telefono_proveedor ? 1 : 0.6 }}>
                   <WA_ICON /> Enviar por WhatsApp
                 </button>
 
                 <button onClick={() => enviarCorreo(oc)}
                   disabled={!oc.email_proveedor}
+                  title={!oc.email_proveedor ? 'Sin correo electrónico' : ''}
                   style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '7px', borderRadius: 8, fontSize: 12, fontWeight: 500, cursor: oc.email_proveedor ? 'pointer' : 'not-allowed', background: oc.email_proveedor ? '#185FA5' : '#f3f4f6', color: oc.email_proveedor ? 'white' : '#9ca3af', border: 'none', opacity: oc.email_proveedor ? 1 : 0.6 }}>
                   <Mail size={14} /> Enviar por correo
                 </button>
@@ -694,13 +767,14 @@ Responde siempre en español, de forma profesional y concisa.`,
           <div style={{ fontSize: 20, fontWeight: 600, color: '#0f172a', marginBottom: 4 }}>Órdenes de Compra</div>
           <div style={{ fontSize: 13, color: '#6b7280' }}>Compras y Gastos</div>
         </div>
-        <button onClick={() => { setModo('nueva'); setProveedor(''); setRfcProveedor(''); setEmailProveedor(''); setTelefonoProveedor(''); setCondicionPago('Contado'); setItems([ITEM_VACIO()]); setNotas(''); setEstado('Borrador') }}
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 18px', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', background: '#1e2a4a', color: 'white', border: 'none' }}>
+        <button onClick={() => {
+          setModo('nueva'); setProveedorId(''); setProveedor(''); setRfcProveedor(''); setEmailProveedor(''); setTelefonoProveedor(''); setCondicionPago('Contado'); setFormaPago('Transferencia electrónica'); setItems([ITEM_VACIO()]); setNotas(''); setEstado('Borrador')
+        }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 18px', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', background: '#1e2a4a', color: 'white', border: 'none' }}>
           <Plus size={14} /> Nueva OC
         </button>
       </div>
 
-      <div style={{ ...card, padding: 0, overflow: 'hidden' }}>
+      <div style={{ background: 'white', borderRadius: 12, border: '0.5px solid #e5e7eb', overflow: 'hidden' }}>
         <div style={{ padding: '14px 18px', borderBottom: '0.5px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ fontSize: 11, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Órdenes</div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -729,7 +803,7 @@ Responde siempre en español, de forma profesional y concisa.`,
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#fafafa' }}>
-                  {['Folio','Proveedor','Condición Pago','Total','Deducibilidad','Estado','Acciones'].map(h => (
+                  {['Folio', 'Proveedor', 'Condición', 'Forma Pago', 'Total', 'Deducibilidad', 'Estado', 'Acciones'].map(h => (
                     <th key={h} style={{ textAlign: 'left', fontSize: 10, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '9px 12px', borderBottom: '0.5px solid #f3f4f6', whiteSpace: 'nowrap' }}>{h}</th>
                   ))}
                 </tr>
@@ -747,6 +821,7 @@ Responde siempre en español, de forma profesional y concisa.`,
                         <div style={{ fontSize: 10, color: '#9ca3af', fontFamily: 'monospace' }}>{oc.rfc_proveedor || '—'}</div>
                       </td>
                       <td style={{ padding: '11px 12px', borderBottom: '0.5px solid #f3f4f6', fontSize: 12, color: '#6b7280' }}>{oc.condicion_pago}</td>
+                      <td style={{ padding: '11px 12px', borderBottom: '0.5px solid #f3f4f6', fontSize: 11, color: '#6b7280' }}>{oc.forma_pago}</td>
                       <td style={{ padding: '11px 12px', borderBottom: '0.5px solid #f3f4f6', textAlign: 'right', fontFamily: 'monospace', fontWeight: 500, color: '#16a34a' }}>{fmt(oc.total)}</td>
                       <td style={{ padding: '11px 12px', borderBottom: '0.5px solid #f3f4f6' }}>
                         {oc.total > 2000
@@ -758,10 +833,19 @@ Responde siempre en español, de forma profesional y concisa.`,
                       </td>
                       <td style={{ padding: '11px 12px', borderBottom: '0.5px solid #f3f4f6' }}>
                         <div style={{ display: 'flex', gap: 5 }}>
-                          <button onClick={() => { setOrdenActiva(oc); setModo('ver'); setChatMsgs([]); setConciliacion(null); setXmlData(null); setXmlNombre('') }} style={btn({ padding: '4px 8px' })}><Eye size={12} /></button>
-                          <button onClick={() => generarPDF(oc)} style={btn({ padding: '4px 8px' })}><Download size={12} /></button>
+                          <button onClick={() => { setOrdenActiva(oc); setModo('ver'); setChatMsgs([]); setConciliacion(null); setXmlNombre('') }}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 8px', borderRadius: 8, fontSize: 11, cursor: 'pointer', border: '0.5px solid #e5e7eb', background: '#f9fafb', color: '#374151' }}>
+                            <Eye size={12} />
+                          </button>
+                          <button onClick={() => generarPDF(oc)}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 8px', borderRadius: 8, fontSize: 11, cursor: 'pointer', border: '0.5px solid #e5e7eb', background: '#f9fafb', color: '#374151' }}>
+                            <Download size={12} />
+                          </button>
                           {oc.telefono_proveedor && (
-                            <button onClick={() => enviarWhatsApp(oc)} style={btn({ padding: '4px 8px', color: '#25D366', borderColor: '#86efac' })}><WA_ICON /></button>
+                            <button onClick={() => enviarWhatsApp(oc)}
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 8px', borderRadius: 8, fontSize: 11, cursor: 'pointer', border: '0.5px solid #86efac', background: '#f9fafb', color: '#25D366' }}>
+                              <WA_ICON />
+                            </button>
                           )}
                         </div>
                       </td>
